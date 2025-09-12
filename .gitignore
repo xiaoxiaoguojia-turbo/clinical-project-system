@@ -1,0 +1,28 @@
+# node_modules
+node_modules
+
+# .next
+.next
+
+# build
+build
+
+# .env
+.env
+.env.local
+.env.example
+
+# logs
+logs
+
+# uploads
+uploads
+
+# .vscode
+.vscode
+
+# .idea
+.idea
+
+# .DS_Store
+.DS_Store

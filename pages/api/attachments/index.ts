@@ -171,11 +171,14 @@ async function handler(
   } catch (error) {
     console.error('附件管理API错误:', error)
     
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        error: '无效的ID格式'
-      })
+    // 类型安全的错误处理
+    if (error instanceof Error) {
+      if (error.name === 'CastError') {
+        return res.status(400).json({
+          success: false,
+          error: '无效的ID格式'
+        })
+      }
     }
 
     res.status(500).json({

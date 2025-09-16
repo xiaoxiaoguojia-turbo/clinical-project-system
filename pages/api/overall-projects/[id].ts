@@ -189,18 +189,20 @@ async function handler(
   } catch (error) {
     console.error('总体项目操作API错误:', error)
     
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      })
-    }
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.message
+        })
+      }
 
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        error: '无效的项目ID格式'
-      })
+      if (error.name === 'CastError') {
+        return res.status(400).json({
+          success: false,
+          error: '无效的项目ID格式'
+        })
+      }
     }
 
     res.status(500).json({

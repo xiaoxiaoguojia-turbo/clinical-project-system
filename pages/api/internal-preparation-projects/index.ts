@@ -172,18 +172,21 @@ async function handler(
   } catch (error) {
     console.error('院内制剂项目管理API错误:', error)
     
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      })
-    }
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.message
+        })
+      }
 
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        error: '备案号已存在'
-      })
+      // 处理MongoDB唯一约束错误
+      if ('code' in error && error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          error: '备案号已存在'
+        })
+      }
     }
 
     res.status(500).json({

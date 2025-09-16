@@ -148,27 +148,47 @@ async function handler(
       fs.unlinkSync(file.path)
     }
 
-    if (error.message === '不支持的文件类型') {
-      return res.status(400).json({
-        success: false,
-        error: '不支持的文件类型，请上传PDF、DOC、DOCX、TXT、MD或图片文件'
-      })
+    // 类型安全的错误处理
+    if (error instanceof Error) {
+      // 处理自定义业务错误
+      if (error.message === '不支持的文件类型') {
+        return res.status(400).json({
+          success: false,
+          error: '不支持的文件类型，请上传PDF、DOC、DOCX、TXT、MD或图片文件'
+        })
+      }
+
+      // 处理 Multer 文件上传错误
+      if ('code' in error) {
+        switch (error.code) {
+          case 'LIMIT_FILE_SIZE':
+            return res.status(400).json({
+              success: false,
+              error: '文件大小超出限制'
+            })
+          case 'LIMIT_FILE_COUNT':
+            return res.status(400).json({
+              success: false,
+              error: '文件数量超出限制'
+            })
+          case 'LIMIT_UNEXPECTED_FILE':
+            return res.status(400).json({
+              success: false,
+              error: '意外的文件字段'
+            })
+        }
+      }
+
+      // 处理 mongoose 验证错误
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.message
+        })
+      }
     }
 
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        error: '文件大小超出限制'
-      })
-    }
-
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      })
-    }
-
+    // 处理其他未知错误（兜底错误处理）
     res.status(500).json({
       success: false,
       error: '服务器内部错误'

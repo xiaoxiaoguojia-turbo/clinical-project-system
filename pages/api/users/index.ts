@@ -2,11 +2,11 @@ import { NextApiResponse } from 'next'
 import { adminMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
-import { ApiResponse, PaginatedResponse, User as IUser } from '@/types'
+import { ApiResponse, PaginatedResponse, UserResponse } from '@/types'
 
 async function handler(
   req: AuthenticatedRequest,
-  res: NextApiResponse<ApiResponse<PaginatedResponse<IUser> | IUser>>
+  res: NextApiResponse<ApiResponse<PaginatedResponse<UserResponse> | UserResponse>>
 ) {
   try {
     // 连接数据库
@@ -52,7 +52,7 @@ async function handler(
         .limit(pageSize)
         .populate('createdBy', 'username realName')
 
-      const formattedUsers = users.map(user => ({
+      const formattedUsers: UserResponse[] = users.map(user => ({
         _id: user._id.toString(),
         username: user.username,
         role: user.role,
@@ -69,7 +69,7 @@ async function handler(
       res.status(200).json({
         success: true,
         data: {
-          data: formattedUsers as any[],
+          data: formattedUsers,
           pagination: {
             current: page,
             pageSize,
@@ -114,19 +114,24 @@ async function handler(
 
       const savedUser = await newUser.save()
 
+      // 构造响应数据（不包含密码）
+      const userResponse: UserResponse = {
+        _id: savedUser._id.toString(),
+        username: savedUser.username,
+        role: savedUser.role,
+        email: savedUser.email,
+        realName: savedUser.realName,
+        department: savedUser.department,
+        status: savedUser.status,
+        createTime: savedUser.createTime,
+        updateTime: savedUser.updateTime,
+        lastLogin: savedUser.lastLogin,
+        createdBy: savedUser.createdBy?.toString()
+      }
+
       res.status(201).json({
         success: true,
-        data: {
-          _id: savedUser._id.toString(),
-          username: savedUser.username,
-          role: savedUser.role,
-          email: savedUser.email,
-          realName: savedUser.realName,
-          department: savedUser.department,
-          status: savedUser.status,
-          createTime: savedUser.createTime,
-          updateTime: savedUser.updateTime,
-        },
+        data: userResponse,
         message: '创建用户成功'
       })
 
@@ -140,11 +145,22 @@ async function handler(
   } catch (error) {
     console.error('用户管理API错误:', error)
     
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      })
+    // 类型安全的错误处理
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.message
+        })
+      }
+
+      // 处理MongoDB唯一约束错误
+      if ('code' in error && error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          error: '用户名已存在'
+        })
+      }
     }
 
     res.status(500).json({

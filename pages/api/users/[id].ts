@@ -2,11 +2,11 @@ import { NextApiResponse } from 'next'
 import { adminMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
-import { ApiResponse, User as IUser } from '@/types'
+import { ApiResponse, UserResponse } from '@/types'
 
 async function handler(
   req: AuthenticatedRequest,
-  res: NextApiResponse<ApiResponse<IUser>>
+  res: NextApiResponse<ApiResponse<UserResponse>>
 ) {
   try {
     // 连接数据库
@@ -32,21 +32,23 @@ async function handler(
         })
       }
 
+      const userResponse: UserResponse = {
+        _id: user._id.toString(),
+        username: user.username,
+        role: user.role,
+        email: user.email,
+        realName: user.realName,
+        department: user.department,
+        status: user.status,
+        createTime: user.createTime,
+        updateTime: user.updateTime,
+        lastLogin: user.lastLogin,
+        createdBy: user.createdBy?.toString()
+      }
+
       res.status(200).json({
         success: true,
-        data: {
-          _id: user._id.toString(),
-          username: user.username,
-          role: user.role,
-          email: user.email,
-          realName: user.realName,
-          department: user.department,
-          status: user.status,
-          createTime: user.createTime,
-          updateTime: user.updateTime,
-          lastLogin: user.lastLogin,
-          createdBy: user.createdBy?.toString()
-        } as any,
+        data: userResponse,
         message: '获取用户详情成功'
       })
 
@@ -88,20 +90,23 @@ async function handler(
         })
       }
 
+      const userResponse: UserResponse = {
+        _id: updatedUser._id.toString(),
+        username: updatedUser.username,
+        role: updatedUser.role,
+        email: updatedUser.email,
+        realName: updatedUser.realName,
+        department: updatedUser.department,
+        status: updatedUser.status,
+        createTime: updatedUser.createTime,
+        updateTime: updatedUser.updateTime,
+        lastLogin: updatedUser.lastLogin,
+        createdBy: updatedUser.createdBy?.toString()
+      }
+
       res.status(200).json({
         success: true,
-        data: {
-          _id: updatedUser._id.toString(),
-          username: updatedUser.username,
-          role: updatedUser.role,
-          email: updatedUser.email,
-          realName: updatedUser.realName,
-          department: updatedUser.department,
-          status: updatedUser.status,
-          createTime: updatedUser.createTime,
-          updateTime: updatedUser.updateTime,
-          lastLogin: updatedUser.lastLogin,
-        } as any,
+        data: userResponse,
         message: '更新用户成功'
       })
 
@@ -142,18 +147,29 @@ async function handler(
   } catch (error) {
     console.error('用户操作API错误:', error)
     
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      })
-    }
+    // 类型安全的错误处理
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.message
+        })
+      }
 
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        error: '无效的用户ID格式'
-      })
+      if (error.name === 'CastError') {
+        return res.status(400).json({
+          success: false,
+          error: '无效的用户ID格式'
+        })
+      }
+
+      // 处理MongoDB唯一约束错误
+      if ('code' in error && error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          error: '用户名已存在'
+        })
+      }
     }
 
     res.status(500).json({

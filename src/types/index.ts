@@ -14,6 +14,21 @@ export interface User {
   createdBy?: string
 }
 
+// 用户响应类型（不包含敏感信息）
+export interface UserResponse {
+  _id: string
+  username: string
+  role: 'admin' | 'user'
+  email?: string
+  realName?: string
+  department?: string
+  status: 'active' | 'inactive'
+  createTime: Date
+  updateTime: Date
+  lastLogin?: Date
+  createdBy?: string
+}
+
 // 总体项目类型
 export interface OverallProject {
   _id: string

@@ -200,6 +200,7 @@ async function handler(
 export const config = {
   api: {
     bodyParser: false,
+    sizeLimit: '10mb', // 设置请求体大小限制
   },
 }
 

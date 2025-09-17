@@ -1,3 +1,133 @@
+/**
+ * @swagger
+ * /api/attachments/{id}/download:
+ *   get:
+ *     tags:
+ *       - 附件管理
+ *     summary: 下载附件文件
+ *     description: |
+ *       下载指定ID的附件文件，支持流式下载，自动更新下载计数。
+ *       
+ *       **功能特性：**
+ *       - 权限验证：确保用户有访问权限
+ *       - 流式下载：支持大文件下载
+ *       - 下载统计：自动记录下载次数
+ *       - 安全检查：防止路径遍历攻击
+ *       
+ *       **权限要求：**
+ *       - 管理员：可下载任何附件
+ *       - 普通用户：可下载自己上传的附件或有权限访问的项目附件
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: 附件ID（MongoDB ObjectId）
+ *         example: "64f123456789abcd12345679"
+ *     responses:
+ *       200:
+ *         description: 文件下载成功
+ *         headers:
+ *           Content-Disposition:
+ *             description: 文件下载disposition header
+ *             schema:
+ *               type: string
+ *               example: "attachment; filename=\"项目申报书.pdf\""
+ *           Content-Type:
+ *             description: 文件MIME类型
+ *             schema:
+ *               type: string
+ *               example: "application/pdf"
+ *           Content-Length:
+ *             description: 文件大小（字节）
+ *             schema:
+ *               type: integer
+ *               example: 2048576
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               description: 文件二进制内容
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               description: PDF文件内容
+ *           image/*:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               description: 图片文件内容
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               description: 文本文件内容
+ *       400:
+ *         description: 请求错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               invalid_id:
+ *                 summary: 无效的附件ID
+ *                 value:
+ *                   success: false
+ *                   error: "无效的附件ID格式"
+ *       403:
+ *         description: 权限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               permission_denied:
+ *                 summary: 权限不足
+ *                 value:
+ *                   success: false
+ *                   error: "权限不足：无法访问此附件"
+ *       404:
+ *         description: 附件不存在或文件不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               attachment_not_found:
+ *                 summary: 附件记录不存在
+ *                 value:
+ *                   success: false
+ *                   error: "附件不存在"
+ *               file_not_found:
+ *                 summary: 物理文件不存在
+ *                 value:
+ *                   success: false
+ *                   error: "文件不存在"
+ *       401:
+ *         description: 未授权访问
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 服务器内部错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 服务器错误
+ *                 value:
+ *                   success: false
+ *                   error: "服务器内部错误"
+ */
+
 import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'

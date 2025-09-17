@@ -5,7 +5,20 @@
  *     tags:
  *       - 总体项目管理
  *     summary: 获取总体项目列表
- *     description: 分页获取总体项目列表，支持搜索和筛选
+ *     description: |
+ *       分页获取总体项目列表，支持多种搜索和筛选条件。
+ *       
+ *       **搜索功能：**
+ *       - 按项目名称搜索
+ *       - 按研发团队搜索
+ *       - 按技术领域搜索
+ *       - 按合作方式搜索
+ *       
+ *       **筛选功能：**
+ *       - 按项目状态筛选
+ *       - 按技术领域筛选
+ *       - 按合作方式筛选
+ *       - 按创建者筛选
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -14,24 +27,50 @@
  *         schema:
  *           type: integer
  *           default: 1
+ *           minimum: 1
  *         description: 页码
+ *         example: 1
  *       - in: query
  *         name: pageSize
  *         schema:
  *           type: integer
  *           default: 10
+ *           minimum: 1
+ *           maximum: 100
  *         description: 每页大小
+ *         example: 10
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: 搜索关键词
+ *         description: 搜索关键词（项目名称、研发团队、技术领域、合作方式）
+ *         example: "人工智能"
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: [active, completed, paused]
  *         description: 项目状态筛选
+ *         example: "active"
+ *       - in: query
+ *         name: technologyField
+ *         schema:
+ *           type: string
+ *         description: 技术领域筛选
+ *         example: "人工智能"
+ *       - in: query
+ *         name: cooperationMode
+ *         schema:
+ *           type: string
+ *         description: 合作方式筛选
+ *         example: "技术开发"
+ *       - in: query
+ *         name: createdBy
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: 创建者ID筛选
+ *         example: "64f123456789abcd12345677"
  *     responses:
  *       200:
  *         description: 获取项目列表成功
@@ -51,11 +90,70 @@
  *                               type: array
  *                               items:
  *                                 $ref: '#/components/schemas/OverallProject'
+ *             examples:
+ *               success:
+ *                 summary: 成功响应示例
+ *                 value:
+ *                   success: true
+ *                   data:
+ *                     data:
+ *                       - _id: "64f123456789abcd12345678"
+ *                         department: "转移转化与投资部门"
+ *                         projectName: "智能诊断辅助系统"
+ *                         researchTeam: "上海交通大学AI实验室"
+ *                         technologyField: "人工智能"
+ *                         cooperationMode: "技术开发"
+ *                         projectDescription: "基于深度学习的医学影像智能诊断系统"
+ *                         technologyDescription: "采用卷积神经网络和注意力机制进行医学影像分析"
+ *                         expectedResults: "提高诊断准确率至95%以上"
+ *                         riskAssessment: "技术风险：中等；市场风险：低；监管风险：低"
+ *                         budget: "500万元"
+ *                         timeline: "24个月"
+ *                         milestones: "需求分析（3个月）、原型开发（8个月）、临床试验（10个月）、产品化（3个月）"
+ *                         status: "active"
+ *                         createTime: "2024-01-15T08:30:00.000Z"
+ *                         updateTime: "2024-01-15T08:30:00.000Z"
+ *                         createdBy: "64f123456789abcd12345677"
+ *                     pagination:
+ *                       current: 1
+ *                       pageSize: 10
+ *                       total: 45
+ *                       totalPages: 5
+ *                   message: "获取总体项目列表成功"
+ *       401:
+ *         description: 未授权访问
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 服务器内部错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   post:
  *     tags:
  *       - 总体项目管理
- *     summary: 创建新项目
- *     description: 创建新的总体项目
+ *     summary: 创建总体项目
+ *     description: |
+ *       创建新的总体项目记录。
+ *       
+ *       **必填字段：**
+ *       - 项目名称
+ *       - 研发团队
+ *       - 技术领域
+ *       - 合作方式
+ *       - 项目描述
+ *       - 技术描述
+ *       - 预期成果
+ *       
+ *       **可选字段：**
+ *       - 风险评估
+ *       - 预算
+ *       - 时间节点
+ *       - 里程碑
+ *       - 备注
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -65,27 +163,151 @@
  *           schema:
  *             type: object
  *             required:
- *               - name
- *               - leader
- *               - startDate
+ *               - projectName
+ *               - researchTeam
+ *               - technologyField
+ *               - cooperationMode
+ *               - projectDescription
+ *               - technologyDescription
+ *               - expectedResults
  *             properties:
- *               name:
+ *               department:
  *                 type: string
+ *                 default: "转移转化与投资部门"
+ *                 description: 部门名称
+ *               projectName:
+ *                 type: string
+ *                 maxLength: 200
  *                 description: 项目名称
- *               leader:
+ *                 example: "智能诊断辅助系统"
+ *               researchTeam:
  *                 type: string
- *                 description: 项目负责人
- *               startDate:
+ *                 maxLength: 200
+ *                 description: 研发团队
+ *                 example: "上海交通大学AI实验室"
+ *               technologyField:
  *                 type: string
- *                 format: date
- *                 description: 开始日期
+ *                 maxLength: 100
+ *                 description: 技术领域
+ *                 example: "人工智能"
+ *               cooperationMode:
+ *                 type: string
+ *                 maxLength: 100
+ *                 description: 合作方式
+ *                 example: "技术开发"
+ *               projectDescription:
+ *                 type: string
+ *                 description: 项目描述
+ *                 example: "基于深度学习的医学影像智能诊断系统，能够辅助医生进行疾病诊断"
+ *               technologyDescription:
+ *                 type: string
+ *                 description: 技术描述
+ *                 example: "采用卷积神经网络和注意力机制进行医学影像分析"
+ *               expectedResults:
+ *                 type: string
+ *                 description: 预期成果
+ *                 example: "提高诊断准确率至95%以上，减少误诊率30%"
+ *               riskAssessment:
+ *                 type: string
+ *                 description: 风险评估
+ *                 example: "技术风险：中等；市场风险：低；监管风险：低"
+ *               budget:
+ *                 type: string
+ *                 description: 预算
+ *                 example: "500万元"
+ *               timeline:
+ *                 type: string
+ *                 description: 时间节点
+ *                 example: "24个月"
+ *               milestones:
+ *                 type: string
+ *                 description: 里程碑
+ *                 example: "需求分析（3个月）、原型开发（8个月）、临床试验（10个月）、产品化（3个月）"
+ *               remarks:
+ *                 type: string
+ *                 description: 备注
+ *                 example: "与上海市第一人民医院合作进行临床试验"
+ *           examples:
+ *             ai_diagnosis:
+ *               summary: AI诊断系统项目
+ *               value:
+ *                 projectName: "智能诊断辅助系统"
+ *                 researchTeam: "上海交通大学AI实验室"
+ *                 technologyField: "人工智能"
+ *                 cooperationMode: "技术开发"
+ *                 projectDescription: "基于深度学习的医学影像智能诊断系统，能够辅助医生进行疾病诊断，提高诊断效率和准确性"
+ *                 technologyDescription: "采用卷积神经网络和注意力机制进行医学影像分析，结合多模态数据融合技术"
+ *                 expectedResults: "提高诊断准确率至95%以上，减少误诊率30%，提升诊断效率50%"
+ *                 riskAssessment: "技术风险：中等（深度学习模型复杂性）；市场风险：低（医疗需求大）；监管风险：低"
+ *                 budget: "500万元"
+ *                 timeline: "24个月"
+ *                 milestones: "需求分析（3个月）、原型开发（8个月）、临床试验（10个月）、产品化（3个月）"
+ *                 remarks: "与上海市第一人民医院合作进行临床试验验证"
+ *             drug_discovery:
+ *               summary: 药物发现项目
+ *               value:
+ *                 projectName: "AI驱动的新药发现平台"
+ *                 researchTeam: "复旦大学药学院"
+ *                 technologyField: "生物技术"
+ *                 cooperationMode: "联合研发"
+ *                 projectDescription: "利用人工智能技术加速新药发现和开发过程"
+ *                 technologyDescription: "分子对接、QSAR建模、深度生成模型"
+ *                 expectedResults: "缩短药物发现周期40%，提高命中率20%"
+ *                 budget: "800万元"
+ *                 timeline: "36个月"
  *     responses:
  *       201:
  *         description: 创建项目成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/OverallProject'
+ *             examples:
+ *               success:
+ *                 summary: 创建成功响应
+ *                 value:
+ *                   success: true
+ *                   data:
+ *                     _id: "64f123456789abcd12345678"
+ *                     department: "转移转化与投资部门"
+ *                     projectName: "智能诊断辅助系统"
+ *                     researchTeam: "上海交通大学AI实验室"
+ *                     technologyField: "人工智能"
+ *                     cooperationMode: "技术开发"
+ *                     projectDescription: "基于深度学习的医学影像智能诊断系统"
+ *                     technologyDescription: "采用卷积神经网络和注意力机制进行医学影像分析"
+ *                     expectedResults: "提高诊断准确率至95%以上"
+ *                     riskAssessment: "技术风险：中等；市场风险：低；监管风险：低"
+ *                     budget: "500万元"
+ *                     timeline: "24个月"
+ *                     milestones: "需求分析（3个月）、原型开发（8个月）、临床试验（10个月）、产品化（3个月）"
+ *                     remarks: "与上海市第一人民医院合作进行临床试验"
+ *                     status: "active"
+ *                     createTime: "2024-01-15T08:30:00.000Z"
+ *                     updateTime: "2024-01-15T08:30:00.000Z"
+ *                     createdBy: "64f123456789abcd12345677"
+ *                   message: "创建总体项目成功"
  *       400:
  *         description: 请求参数错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 参数验证错误
+ *                 value:
+ *                   success: false
+ *                   error: "请填写所有必填字段"
  *       401:
  *         description: 未授权访问
+ *       500:
+ *         description: 服务器内部错误
  */
 
 import { NextApiResponse } from 'next'

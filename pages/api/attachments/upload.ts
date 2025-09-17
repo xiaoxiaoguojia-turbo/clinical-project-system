@@ -1,3 +1,149 @@
+/**
+ * @swagger
+ * /api/attachments/upload:
+ *   post:
+ *     tags:
+ *       - 附件管理
+ *     summary: 上传附件文件
+ *     description: |
+ *       上传附件文件到服务器，支持多种文件类型。
+ *       
+ *       **支持的文件类型：**
+ *       - 文档：pdf, doc, docx, xls, xlsx, ppt, pptx, txt
+ *       - 图片：jpg, jpeg, png, gif, bmp, webp
+ *       - 其他：zip, rar, 7z
+ *       
+ *       **文件大小限制：** 10MB
+ *       
+ *       **使用步骤：**
+ *       1. 选择要上传的文件
+ *       2. 设置关联的项目ID和项目类型
+ *       3. 调用此接口上传
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - projectId
+ *               - projectType
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: 要上传的文件
+ *               projectId:
+ *                 type: string
+ *                 pattern: '^[0-9a-fA-F]{24}$'
+ *                 description: 关联项目ID（MongoDB ObjectId）
+ *                 example: "64f123456789abcd12345678"
+ *               projectType:
+ *                 type: string
+ *                 enum: [overall, internal-preparation]
+ *                 description: 项目类型
+ *                 example: "overall"
+ *               description:
+ *                 type: string
+ *                 maxLength: 200
+ *                 description: 文件描述（可选）
+ *                 example: "项目申报书最终版本"
+ *           encoding:
+ *             file:
+ *               contentType: 'application/*'
+ *     responses:
+ *       201:
+ *         description: 文件上传成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Attachment'
+ *             examples:
+ *               success:
+ *                 summary: 上传成功响应
+ *                 value:
+ *                   success: true
+ *                   data:
+ *                     _id: "64f123456789abcd12345679"
+ *                     filename: "项目申报书.pdf"
+ *                     originalname: "项目申报书_最终版.pdf"
+ *                     mimetype: "application/pdf"
+ *                     size: 2048576
+ *                     path: "uploads/2024/01/64f123456789abcd12345679_项目申报书.pdf"
+ *                     projectId: "64f123456789abcd12345678"
+ *                     projectType: "overall"
+ *                     uploadedBy: "64f123456789abcd12345677"
+ *                     description: "项目申报书最终版本"
+ *                     downloadCount: 0
+ *                     createTime: "2024-01-15T10:30:00.000Z"
+ *                     updateTime: "2024-01-15T10:30:00.000Z"
+ *                   message: "文件上传成功"
+ *       400:
+ *         description: 请求错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               no_file:
+ *                 summary: 未选择文件
+ *                 value:
+ *                   success: false
+ *                   error: "请选择要上传的文件"
+ *               invalid_type:
+ *                 summary: 文件类型不支持
+ *                 value:
+ *                   success: false
+ *                   error: "不支持的文件类型"
+ *               file_too_large:
+ *                 summary: 文件过大
+ *                 value:
+ *                   success: false
+ *                   error: "文件大小超过限制（10MB）"
+ *               missing_params:
+ *                 summary: 缺少必需参数
+ *                 value:
+ *                   success: false
+ *                   error: "缺少必需参数：projectId 和 projectType"
+ *               invalid_project:
+ *                 summary: 项目不存在
+ *                 value:
+ *                   success: false
+ *                   error: "关联的项目不存在"
+ *       401:
+ *         description: 未授权访问
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       413:
+ *         description: 文件过大
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               payload_too_large:
+ *                 summary: 请求体过大
+ *                 value:
+ *                   success: false
+ *                   error: "文件大小超过限制"
+ *       500:
+ *         description: 服务器内部错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 import { NextApiRequest, NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'

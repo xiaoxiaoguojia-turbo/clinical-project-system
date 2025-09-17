@@ -1,3 +1,93 @@
+/**
+ * @swagger
+ * /api/overall-projects:
+ *   get:
+ *     tags:
+ *       - 总体项目管理
+ *     summary: 获取总体项目列表
+ *     description: 分页获取总体项目列表，支持搜索和筛选
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 页码
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 每页大小
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: 搜索关键词
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, completed, paused]
+ *         description: 项目状态筛选
+ *     responses:
+ *       200:
+ *         description: 获取项目列表成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       allOf:
+ *                         - $ref: '#/components/schemas/PaginatedResponse'
+ *                         - type: object
+ *                           properties:
+ *                             data:
+ *                               type: array
+ *                               items:
+ *                                 $ref: '#/components/schemas/OverallProject'
+ *   post:
+ *     tags:
+ *       - 总体项目管理
+ *     summary: 创建新项目
+ *     description: 创建新的总体项目
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - leader
+ *               - startDate
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: 项目名称
+ *               leader:
+ *                 type: string
+ *                 description: 项目负责人
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: 开始日期
+ *     responses:
+ *       201:
+ *         description: 创建项目成功
+ *       400:
+ *         description: 请求参数错误
+ *       401:
+ *         description: 未授权访问
+ */
+
 import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'

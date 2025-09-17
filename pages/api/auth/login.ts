@@ -1,3 +1,64 @@
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     tags:
+ *       - 用户认证
+ *     summary: 用户登录
+ *     description: 用户使用用户名和密码进行登录，成功后返回JWT访问令牌和刷新令牌
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: 用户名
+ *                 example: "admin"
+ *               password:
+ *                 type: string
+ *                 description: 密码
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         user:
+ *                           $ref: '#/components/schemas/UserResponse'
+ *                         accessToken:
+ *                           type: string
+ *                           description: JWT访问令牌
+ *                         refreshToken:
+ *                           type: string
+ *                           description: JWT刷新令牌
+ *       400:
+ *         description: 请求参数错误或登录失败
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 服务器内部错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 import { NextApiRequest, NextApiResponse } from 'next'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'

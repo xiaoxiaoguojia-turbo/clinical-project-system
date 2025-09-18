@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import swaggerJsdoc from 'swagger-jsdoc'
 import path from 'path'
+import { SwaggerSpec } from '@/lib/swagger'
 
 /**
  * @swagger
@@ -59,7 +60,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // 生成swagger规范
-    const testSpecs = swaggerJsdoc(testOptions)
+    const testSpecs = swaggerJsdoc(testOptions) as SwaggerSpec
     
     // 收集调试信息
     const debugInfo = {

@@ -1,6 +1,16 @@
 import swaggerJsdoc from 'swagger-jsdoc'
 import path from 'path'
 
+// 定义 Swagger 规范的基础类型
+export interface SwaggerSpec {
+  openapi?: string
+  swagger?: string
+  info?: any
+  paths?: Record<string, any>
+  components?: any
+  [key: string]: any
+}
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -465,10 +475,10 @@ const options: swaggerJsdoc.Options = {
   ],
 }
 
-// 生成swagger规范
-const specs = swaggerJsdoc(options)
+// 生成swagger规范并指定类型
+const specs = swaggerJsdoc(options) as SwaggerSpec
 
-// 添加调试信息
+// 添加调试信息（修复后的版本）
 if (process.env.NODE_ENV === 'development') {
   console.log('Swagger API paths:', options.apis)
   console.log('Generated swagger spec keys:', Object.keys(specs))

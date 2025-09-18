@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc'
+import path from 'path'
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -58,33 +59,44 @@ const options: swaggerJsdoc.Options = {
             success: {
               type: 'boolean',
               description: '请求是否成功',
+              example: true,
             },
             data: {
-              type: 'object',
               description: '响应数据',
             },
             message: {
               type: 'string',
               description: '响应消息',
-            },
-            error: {
-              type: 'string',
-              description: '错误信息（仅在失败时返回）',
+              example: '操作成功',
             },
           },
           required: ['success'],
         },
-        
+        // 错误响应结构
+        ErrorResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: '请求是否成功',
+              example: false,
+            },
+            error: {
+              type: 'string',
+              description: '错误信息',
+              example: '参数验证失败',
+            },
+          },
+          required: ['success', 'error'],
+        },
         // 分页响应结构
         PaginatedResponse: {
           type: 'object',
           properties: {
             data: {
               type: 'array',
-              items: {
-                type: 'object',
-              },
               description: '数据列表',
+              items: {},
             },
             pagination: {
               type: 'object',
@@ -92,291 +104,351 @@ const options: swaggerJsdoc.Options = {
                 current: {
                   type: 'integer',
                   description: '当前页码',
+                  example: 1,
                 },
                 pageSize: {
                   type: 'integer',
                   description: '每页大小',
+                  example: 10,
                 },
                 total: {
                   type: 'integer',
                   description: '总记录数',
+                  example: 100,
                 },
                 totalPages: {
                   type: 'integer',
                   description: '总页数',
+                  example: 10,
                 },
               },
+              required: ['current', 'pageSize', 'total', 'totalPages'],
             },
           },
+          required: ['data', 'pagination'],
         },
-        
-        // 用户响应数据
+        // 用户响应模型
         UserResponse: {
           type: 'object',
           properties: {
             _id: {
               type: 'string',
               description: '用户ID',
+              example: '64f123456789abcd12345678',
             },
             username: {
               type: 'string',
               description: '用户名',
+              example: 'zhangsan',
             },
             role: {
               type: 'string',
               enum: ['admin', 'user'],
               description: '用户角色',
+              example: 'user',
             },
             email: {
               type: 'string',
-              format: 'email',
-              description: '邮箱地址',
+              description: '邮箱',
+              example: 'zhangsan@example.com',
             },
             realName: {
               type: 'string',
               description: '真实姓名',
+              example: '张三',
             },
             department: {
               type: 'string',
               description: '部门',
+              example: '转移转化与投资部门',
             },
             status: {
               type: 'string',
               enum: ['active', 'inactive'],
               description: '用户状态',
+              example: 'active',
             },
             createTime: {
               type: 'string',
               format: 'date-time',
               description: '创建时间',
+              example: '2024-01-15T08:30:00.000Z',
             },
             updateTime: {
               type: 'string',
               format: 'date-time',
               description: '更新时间',
+              example: '2024-01-15T08:30:00.000Z',
             },
             lastLogin: {
               type: 'string',
               format: 'date-time',
               description: '最后登录时间',
-            },
-            createdBy: {
-              type: 'string',
-              description: '创建者ID',
+              example: '2024-01-15T08:30:00.000Z',
             },
           },
-          required: ['_id', 'username', 'role', 'status', 'createTime', 'updateTime'],
         },
-        
-        // 总体项目数据
+        // 总体项目模型
         OverallProject: {
           type: 'object',
           properties: {
             _id: {
               type: 'string',
               description: '项目ID',
+              example: '64f123456789abcd12345678',
             },
             department: {
               type: 'string',
-              description: '部门',
+              description: '部门名称',
+              example: '转移转化与投资部门',
             },
-            type: {
-              type: 'string',
-              description: '项目类型',
-            },
-            source: {
-              type: 'string',
-              description: '项目来源',
-            },
-            name: {
+            projectName: {
               type: 'string',
               description: '项目名称',
+              example: '智能诊断辅助系统',
             },
-            leader: {
+            researchTeam: {
               type: 'string',
-              description: '项目负责人',
+              description: '研发团队',
+              example: '上海交通大学AI实验室',
             },
-            startDate: {
+            technologyField: {
               type: 'string',
-              format: 'date',
-              description: '开始日期',
+              description: '技术领域',
+              example: '人工智能',
             },
-            indication: {
+            cooperationMode: {
               type: 'string',
-              description: '适应症',
+              description: '合作方式',
+              example: '技术开发',
             },
-            followUpWeeks: {
-              type: 'integer',
-              description: '随访周数',
-            },
-            importance: {
+            projectDescription: {
               type: 'string',
-              enum: ['high', 'medium', 'low'],
-              description: '重要性',
+              description: '项目描述',
+              example: '基于深度学习的医学影像智能诊断系统',
+            },
+            technologyDescription: {
+              type: 'string',
+              description: '技术描述',
+              example: '采用卷积神经网络和注意力机制进行医学影像分析',
+            },
+            expectedResults: {
+              type: 'string',
+              description: '预期成果',
+              example: '提高诊断准确率至95%以上',
+            },
+            riskAssessment: {
+              type: 'string',
+              description: '风险评估',
+              example: '技术风险：中等；市场风险：低',
+            },
+            budget: {
+              type: 'string',
+              description: '预算',
+              example: '500万元',
+            },
+            timeline: {
+              type: 'string',
+              description: '时间节点',
+              example: '24个月',
+            },
+            milestones: {
+              type: 'string',
+              description: '里程碑',
+              example: '需求分析、原型开发、临床试验、产品化',
+            },
+            remarks: {
+              type: 'string',
+              description: '备注',
+              example: '与上海市第一人民医院合作进行临床试验',
             },
             status: {
               type: 'string',
               enum: ['active', 'completed', 'paused'],
               description: '项目状态',
+              example: 'active',
             },
             createTime: {
               type: 'string',
               format: 'date-time',
               description: '创建时间',
+              example: '2024-01-15T08:30:00.000Z',
             },
             updateTime: {
               type: 'string',
               format: 'date-time',
               description: '更新时间',
+              example: '2024-01-15T08:30:00.000Z',
             },
             createdBy: {
               type: 'string',
               description: '创建者ID',
+              example: '64f123456789abcd12345677',
             },
           },
-          required: ['_id', 'name', 'status', 'createTime', 'updateTime', 'createdBy'],
         },
-        
-        // 院内制剂项目数据
+        // 院内制剂项目模型
         InternalPreparationProject: {
           type: 'object',
           properties: {
             _id: {
               type: 'string',
               description: '项目ID',
+              example: '64f123456789abcd12345678',
             },
             department: {
               type: 'string',
-              description: '部门',
+              description: '部门名称',
+              example: '转移转化与投资部门',
             },
             source: {
               type: 'string',
-              description: '来源',
+              description: '制剂来源',
+              example: '中医科',
             },
             name: {
               type: 'string',
               description: '制剂名称',
+              example: '清热解毒颗粒',
             },
             composition: {
               type: 'string',
-              description: '组方',
+              description: '组方成分',
+              example: '金银花15g、连翘12g、板蓝根10g',
             },
             function: {
               type: 'string',
-              description: '功能',
+              description: '功能主治',
+              example: '清热解毒，抗病毒感染',
             },
             specification: {
               type: 'string',
               description: '规格',
+              example: '10g/袋',
             },
             duration: {
               type: 'string',
-              description: '年限',
+              description: '有效期',
+              example: '3年',
             },
             dosage: {
               type: 'string',
-              description: '用量',
+              description: '用法用量',
+              example: '每次1袋，每日3次，温水冲服',
             },
             recordNumber: {
               type: 'string',
               description: '备案号',
+              example: 'ZZ-2024-001',
             },
             patent: {
               type: 'string',
-              description: '专利',
+              description: '专利信息',
+              example: '已申请发明专利ZL202410001234.5',
+            },
+            remarks: {
+              type: 'string',
+              description: '备注信息',
+              example: '临床试验阶段，疗效显著',
             },
             status: {
               type: 'string',
               enum: ['active', 'completed', 'paused'],
               description: '项目状态',
+              example: 'active',
             },
             createTime: {
               type: 'string',
               format: 'date-time',
               description: '创建时间',
+              example: '2024-01-15T08:30:00.000Z',
             },
             updateTime: {
               type: 'string',
               format: 'date-time',
               description: '更新时间',
+              example: '2024-01-15T08:30:00.000Z',
             },
             createdBy: {
               type: 'string',
               description: '创建者ID',
+              example: '64f123456789abcd12345677',
             },
           },
-          required: ['_id', 'name', 'recordNumber', 'status', 'createTime', 'updateTime', 'createdBy'],
         },
-        
-        // 附件数据
+        // 附件模型
         Attachment: {
           type: 'object',
           properties: {
             _id: {
               type: 'string',
               description: '附件ID',
+              example: '64f123456789abcd12345679',
             },
             filename: {
               type: 'string',
               description: '文件名',
+              example: '项目申报书.pdf',
             },
-            originalName: {
+            originalname: {
               type: 'string',
               description: '原始文件名',
+              example: '项目申报书_最终版.pdf',
             },
-            mimeType: {
+            mimetype: {
               type: 'string',
-              description: 'MIME类型',
+              description: '文件类型',
+              example: 'application/pdf',
             },
             size: {
               type: 'integer',
               description: '文件大小（字节）',
+              example: 2048576,
             },
-            storageType: {
+            path: {
               type: 'string',
-              enum: ['filesystem', 'gridfs'],
-              description: '存储类型',
-            },
-            projectType: {
-              type: 'string',
-              enum: ['overall', 'internal-preparation'],
-              description: '关联项目类型',
+              description: '文件路径',
+              example: 'uploads/2024/01/64f123456789abcd12345679_项目申报书.pdf',
             },
             projectId: {
               type: 'string',
               description: '关联项目ID',
+              example: '64f123456789abcd12345678',
             },
-            description: {
+            projectType: {
               type: 'string',
-              description: '文件描述',
-            },
-            uploadTime: {
-              type: 'string',
-              format: 'date-time',
-              description: '上传时间',
+              enum: ['overall', 'internal-preparation'],
+              description: '项目类型',
+              example: 'overall',
             },
             uploadedBy: {
               type: 'string',
               description: '上传者ID',
+              example: '64f123456789abcd12345677',
             },
-          },
-          required: ['_id', 'filename', 'originalName', 'mimeType', 'size', 'projectType', 'projectId', 'uploadTime', 'uploadedBy'],
-        },
-        
-        // 错误响应
-        ErrorResponse: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              example: false,
-            },
-            error: {
+            description: {
               type: 'string',
-              description: '错误信息',
+              description: '文件描述',
+              example: '项目申报书最终版本',
+            },
+            downloadCount: {
+              type: 'integer',
+              description: '下载次数',
+              example: 5,
+            },
+            createTime: {
+              type: 'string',
+              format: 'date-time',
+              description: '创建时间',
+              example: '2024-01-15T10:30:00.000Z',
+            },
+            updateTime: {
+              type: 'string',
+              format: 'date-time',
+              description: '更新时间',
+              example: '2024-01-15T10:30:00.000Z',
             },
           },
-          required: ['success', 'error'],
         },
       },
     },
@@ -387,10 +459,20 @@ const options: swaggerJsdoc.Options = {
     ],
   },
   apis: [
-    './pages/api/**/*.ts', // 扫描所有API文件以查找JSDoc注释
+    // 使用绝对路径，确保能正确找到API文件
+    path.join(process.cwd(), 'pages', 'api', '**', '*.ts'),
+    path.join(process.cwd(), 'pages', 'api', '*.ts'),
   ],
 }
 
+// 生成swagger规范
 const specs = swaggerJsdoc(options)
+
+// 添加调试信息
+if (process.env.NODE_ENV === 'development') {
+  console.log('Swagger API paths:', options.apis)
+  console.log('Generated swagger spec keys:', Object.keys(specs))
+  console.log('Generated paths count:', specs.paths ? Object.keys(specs.paths).length : 0)
+}
 
 export default specs

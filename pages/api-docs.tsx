@@ -32,18 +32,18 @@ const ApiDocsPage: React.FC = () => {
         // 预加载CSS
         const cssLink = document.createElement('link')
         cssLink.rel = 'stylesheet'
-        cssLink.href = 'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css'
+        cssLink.href = 'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css'
         cssLink.onload = () => {
           console.log('✅ Swagger CSS loaded')
         }
         document.head.appendChild(cssLink)
 
         // 等待一下让CSS加载
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise(resolve => setTimeout(resolve, 200))
 
-        // 动态加载SwaggerUI
+        // 动态加载SwaggerUI - 使用更稳定的版本
         const script = document.createElement('script')
-        script.src = 'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js'
+        script.src = 'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js'
         script.onload = () => {
           console.log('✅ Swagger JS loaded')
           // 再等待一下确保脚本完全初始化
@@ -51,7 +51,7 @@ const ApiDocsPage: React.FC = () => {
             if (mounted) {
               initializeSwaggerUI()
             }
-          }, 200)
+          }, 300)
         }
         script.onerror = () => {
           console.error('❌ Failed to load SwaggerUI script')
@@ -88,6 +88,7 @@ const ApiDocsPage: React.FC = () => {
 
         const SwaggerUIBundle = (window as any).SwaggerUIBundle
 
+        // 修复后的配置
         SwaggerUIBundle({
           url: '/api/docs',
           dom_id: '#swagger-ui',
@@ -99,7 +100,7 @@ const ApiDocsPage: React.FC = () => {
           plugins: [
             SwaggerUIBundle.plugins.DownloadUrl
           ],
-          layout: "StandaloneLayout",
+          layout: "BaseLayout", // 修复：使用 BaseLayout 而不是 StandaloneLayout
           validatorUrl: null,
           tryItOutEnabled: true,
           filter: true,
@@ -110,6 +111,16 @@ const ApiDocsPage: React.FC = () => {
           operationsSorter: 'alpha',
           tagsSorter: 'alpha',
           supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+          requestInterceptor: (request: any) => {
+            // 可以在这里添加请求拦截器
+            console.log('Request:', request)
+            return request
+          },
+          responseInterceptor: (response: any) => {
+            // 可以在这里添加响应拦截器
+            console.log('Response:', response)
+            return response
+          },
           onComplete: () => {
             console.log('✅ SwaggerUI initialized successfully')
             if (mounted) {
@@ -120,7 +131,7 @@ const ApiDocsPage: React.FC = () => {
           onFailure: (err: any) => {
             console.error('❌ SwaggerUI initialization failed:', err)
             if (mounted) {
-              setError('SwaggerUI初始化失败')
+              setError('SwaggerUI初始化失败: ' + (err?.message || '未知错误'))
               setLoading(false)
             }
           }
@@ -136,44 +147,118 @@ const ApiDocsPage: React.FC = () => {
 
     const customizeUI = () => {
       try {
-        // 添加自定义样式
-        const style = document.createElement('style')
-        style.textContent = `
-          .swagger-ui .topbar { display: none; }
-          .swagger-ui .info { margin: 20px 0; }
-          .swagger-ui .info .title { color: #3b82f6; font-size: 2rem; }
-          .swagger-ui .scheme-container { margin: 20px 0; padding: 15px; background: #f8fafc; border-radius: 8px; }
-          .swagger-ui .opblock { margin-bottom: 10px; border-radius: 8px; }
-          .swagger-ui .opblock.opblock-get { border-color: #10b981; }
-          .swagger-ui .opblock.opblock-post { border-color: #3b82f6; }
-          .swagger-ui .opblock.opblock-put { border-color: #f59e0b; }
-          .swagger-ui .opblock.opblock-delete { border-color: #ef4444; }
-          .swagger-ui .opblock-summary { padding: 15px; }
-          .api-stats { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            margin-bottom: 20px;
-            text-align: center;
+        // 等待DOM渲染完成后再应用样式
+        setTimeout(() => {
+          // 隐藏顶部栏（如果存在）
+          const topbar = document.querySelector('.swagger-ui .topbar') as HTMLElement
+          if (topbar) {
+            topbar.style.display = 'none'
           }
-          .api-stats h3 { margin: 0 0 10px 0; font-size: 1.5rem; }
-          .api-stats .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
-            gap: 15px; 
-            margin-top: 15px;
-          }
-          .api-stats .stat-item { 
-            background: rgba(255,255,255,0.2); 
-            padding: 10px; 
-            border-radius: 8px; 
-            backdrop-filter: blur(10px);
-          }
-          .api-stats .stat-number { font-size: 1.5rem; font-weight: bold; }
-          .api-stats .stat-label { font-size: 0.9rem; opacity: 0.9; }
-        `
-        document.head.appendChild(style)
+
+          // 添加自定义样式
+          const style = document.createElement('style')
+          style.textContent = `
+            .swagger-ui .topbar { display: none !important; }
+            .swagger-ui .info { margin: 20px 0; }
+            .swagger-ui .info .title { color: #3b82f6; font-size: 2rem; }
+            .swagger-ui .scheme-container { 
+              margin: 20px 0; 
+              padding: 15px; 
+              background: #f8fafc; 
+              border-radius: 8px; 
+            }
+            .swagger-ui .opblock { 
+              margin-bottom: 10px; 
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .swagger-ui .opblock.opblock-get { 
+              border-color: #10b981; 
+            }
+            .swagger-ui .opblock.opblock-get .opblock-summary {
+              background: rgba(16, 185, 129, 0.1);
+              border-color: #10b981;
+            }
+            .swagger-ui .opblock.opblock-post { 
+              border-color: #3b82f6; 
+            }
+            .swagger-ui .opblock.opblock-post .opblock-summary {
+              background: rgba(59, 130, 246, 0.1);
+              border-color: #3b82f6;
+            }
+            .swagger-ui .opblock.opblock-put { 
+              border-color: #f59e0b; 
+            }
+            .swagger-ui .opblock.opblock-put .opblock-summary {
+              background: rgba(245, 158, 11, 0.1);
+              border-color: #f59e0b;
+            }
+            .swagger-ui .opblock.opblock-delete { 
+              border-color: #ef4444; 
+            }
+            .swagger-ui .opblock.opblock-delete .opblock-summary {
+              background: rgba(239, 68, 68, 0.1);
+              border-color: #ef4444;
+            }
+            .swagger-ui .opblock-summary { 
+              padding: 15px; 
+            }
+            .swagger-ui .authorization__btn {
+              background: #3b82f6;
+              color: white;
+              border-radius: 6px;
+            }
+            .swagger-ui .btn.authorize {
+              background: #10b981;
+              color: white;
+            }
+            .api-stats { 
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white; 
+              padding: 20px; 
+              border-radius: 10px; 
+              margin-bottom: 20px;
+              text-align: center;
+              box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            }
+            .api-stats h3 { 
+              margin: 0 0 10px 0; 
+              font-size: 1.5rem; 
+              font-weight: 600;
+            }
+            .api-stats .stats-grid { 
+              display: grid; 
+              grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+              gap: 15px; 
+              margin-top: 15px;
+            }
+            .api-stats .stat-item { 
+              background: rgba(255,255,255,0.2); 
+              padding: 15px; 
+              border-radius: 8px; 
+              backdrop-filter: blur(10px);
+              transition: transform 0.2s ease;
+            }
+            .api-stats .stat-item:hover {
+              transform: translateY(-2px);
+            }
+            .api-stats .stat-number { 
+              font-size: 1.8rem; 
+              font-weight: bold; 
+              margin-bottom: 4px;
+            }
+            .api-stats .stat-label { 
+              font-size: 0.9rem; 
+              opacity: 0.9; 
+            }
+            .swagger-ui .wrapper {
+              padding: 20px;
+            }
+          `
+          document.head.appendChild(style)
+
+          console.log('✅ Custom styles applied')
+        }, 1000)
       } catch (err) {
         console.error('Failed to apply custom styles:', err)
       }
@@ -186,6 +271,12 @@ const ApiDocsPage: React.FC = () => {
       mounted = false
     }
   }, [])
+
+  const handleRetry = () => {
+    setError(null)
+    setLoading(true)
+    window.location.reload()
+  }
 
   return (
     <>
@@ -215,6 +306,10 @@ const ApiDocsPage: React.FC = () => {
                 <div className="stat-item">
                   <div className="stat-number">v{apiStats.version}</div>
                   <div className="stat-label">版本号</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">JWT</div>
+                  <div className="stat-label">认证方式</div>
                 </div>
               </div>
             </div>
@@ -262,14 +357,16 @@ const ApiDocsPage: React.FC = () => {
               <h3 style={{ color: '#dc2626', margin: '0 0 10px 0' }}>❌ 加载失败</h3>
               <p style={{ color: '#7f1d1d', margin: '0 0 15px 0' }}>{error}</p>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={handleRetry}
                 style={{
                   background: '#dc2626',
                   color: 'white',
                   border: 'none',
-                  padding: '10px 20px',
+                  padding: '12px 24px',
                   borderRadius: '6px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
                 }}
               >
                 重新加载
@@ -285,7 +382,7 @@ const ApiDocsPage: React.FC = () => {
               borderRadius: '10px',
               overflow: 'hidden',
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              display: loading ? 'none' : 'block'
+              display: loading || error ? 'none' : 'block'
             }}
           ></div>
           
@@ -298,7 +395,8 @@ const ApiDocsPage: React.FC = () => {
               fontSize: '14px'
             }}>
               <p>💡 提示：点击接口可以展开详细信息和测试功能</p>
-              <p>🔐 需要认证的接口请在右上角Authorize按钮中添加JWT Token</p>
+              <p>🔐 需要认证的接口请在右上角Authorize按钮中添加 JWT Token</p>
+              <p>🚀 开发环境：{process.env.NODE_ENV} | API基础URL：{process.env.API_BASE_URL || 'http://localhost:3000'}</p>
             </div>
           )}
         </div>

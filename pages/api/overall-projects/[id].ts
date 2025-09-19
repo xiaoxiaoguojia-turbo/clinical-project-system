@@ -321,6 +321,7 @@ import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import OverallProject from '@/models/OverallProject'
+import Attachment from '@/models/Attachment'  
 import { ApiResponse, OverallProject as IOverallProject } from '@/types'
 
 async function handler(

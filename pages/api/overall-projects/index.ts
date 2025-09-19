@@ -314,6 +314,7 @@ import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import OverallProject from '@/models/OverallProject'
+import Attachment from '@/models/Attachment'  // 添加Attachment模型导入
 import { ApiResponse, PaginatedResponse, OverallProject as IOverallProject } from '@/types'
 
 async function handler(

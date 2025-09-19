@@ -277,6 +277,7 @@ import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import InternalPreparationProject from '@/models/InternalPreparationProject'
+import Attachment from '@/models/Attachment'
 import { ApiResponse, InternalPreparationProject as IInternalPreparationProject } from '@/types'
 import mongoose from 'mongoose'
 

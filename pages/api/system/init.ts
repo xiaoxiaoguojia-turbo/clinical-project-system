@@ -117,6 +117,10 @@ export default async function handler(
     // 连接数据库
     await connectDB()
 
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    const ensureModels = [User]
+    ensureModels.forEach(model => model.modelName)
+
     // 🔍 检查系统是否已经初始化（是否已有管理员）
     const existingAdmin = await User.findOne({ role: 'admin' })
     

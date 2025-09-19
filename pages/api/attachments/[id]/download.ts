@@ -156,6 +156,10 @@ async function handler(
     // 连接数据库
     await connectDB()
 
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    const ensureModels = [Attachment, OverallProject, InternalPreparationProject]
+    ensureModels.forEach(model => model.modelName)
+
     const { id } = req.query
 
     if (!id || typeof id !== 'string') {

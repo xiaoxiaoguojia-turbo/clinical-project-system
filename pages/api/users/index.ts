@@ -139,6 +139,10 @@ async function handler(
     // 连接数据库
     await connectDB()
 
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    const ensureModels = [User]
+    ensureModels.forEach(model => model.modelName)
+
     if (req.method === 'GET') {
       // 获取用户列表
       const page = parseInt(req.query.page as string) || 1

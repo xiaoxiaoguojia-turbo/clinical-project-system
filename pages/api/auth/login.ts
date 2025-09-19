@@ -80,6 +80,10 @@ export default async function handler(
     // 连接数据库
     await connectDB()
 
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    const ensureModels = [User]
+    ensureModels.forEach(model => model.modelName)
+
     const { username, password }: LoginRequest = req.body
 
     // 验证输入

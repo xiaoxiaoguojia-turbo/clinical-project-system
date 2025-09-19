@@ -148,6 +148,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import Attachment from '@/models/Attachment'
+import OverallProject from '@/models/OverallProject'
+import InternalPreparationProject from '@/models/InternalPreparationProject'
 import { ApiResponse, Attachment as IAttachment } from '@/types'
 import multer from 'multer'
 import path from 'path'
@@ -212,6 +214,10 @@ async function handler(
   try {
     // 连接数据库
     await connectDB()
+
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    const ensureModels = [Attachment, OverallProject, InternalPreparationProject]
+    ensureModels.forEach(model => model.modelName)
 
     // 处理文件上传
     await uploadSingle(req as any, res as any)

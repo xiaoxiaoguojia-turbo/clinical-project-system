@@ -324,6 +324,10 @@ async function handler(
   try {
     // 连接数据库
     await connectDB()
+    
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    const ensureModels = [OverallProject, Attachment]
+    ensureModels.forEach(model => model.modelName)
 
     if (req.method === 'GET') {
       // 获取总体项目列表

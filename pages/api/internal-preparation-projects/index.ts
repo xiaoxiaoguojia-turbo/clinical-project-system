@@ -256,6 +256,11 @@ async function handler(
   try {
     // 连接数据库
     await connectDB()
+    
+    // 确保所有相关模型都被注册（解决MissingSchemaError）
+    // 通过访问模型属性来强制触发注册
+    const ensureModels = [InternalPreparationProject, Attachment]
+    ensureModels.forEach(model => model.modelName) // 强制引用每个模型
 
     if (req.method === 'GET') {
       // 获取院内制剂项目列表

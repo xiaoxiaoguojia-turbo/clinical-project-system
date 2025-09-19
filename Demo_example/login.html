@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临床创新项目管理系统 - 登录</title>
+    <link rel="stylesheet" href="css/login.css">
+    <!-- 引入字体图标库 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-left">
+                <div class="login-logo">
+                    <img src="images/logo-1.png" alt="上海临床创新转化研究院">
+                </div>
+                <div class="login-slogan">
+                    <h2>临床创新项目管理系统</h2>
+                    <p>转移转化与投资部门专用管理平台</p>
+                </div>
+                <div class="login-features">
+                    <div class="feature-item">
+                        <i class="fa fa-line-chart"></i>
+                        <span>项目进度实时监控</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa fa-file-text-o"></i>
+                        <span>院内制剂数据管理</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa fa-bar-chart"></i>
+                        <span>数据统计与分析</span>
+                    </div>
+                </div>
+            </div>
+            <div class="login-right">
+                <div class="login-form-container">
+                    <div class="login-header">
+                        <h3>系统登录</h3>
+                        <p>欢迎使用临床创新项目管理系统</p>
+                    </div>
+                    <form class="login-form" id="loginForm">
+                        <div class="form-group">
+                            <label for="username">用户名</label>
+                            <div class="input-with-icon">
+                                <i class="fa fa-user"></i>
+                                <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">密码</label>
+                            <div class="input-with-icon">
+                                <i class="fa fa-lock"></i>
+                                <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                            </div>
+                        </div>
+                        <div class="form-options">
+                            <div class="remember-me">
+                                <input type="checkbox" id="remember" name="remember">
+                                <label for="remember">记住我</label>
+                            </div>
+                            <a href="#" class="forgot-password">忘记密码?</a>
+                        </div>
+                        <button type="submit" class="login-btn">登 录</button>
+                    </form>
+                    <div class="login-footer">
+                        <p>© 2025 上海临床创新转化研究院 版权所有</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/login.js"></script>
+</body>
+</html>

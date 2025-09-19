@@ -54,9 +54,10 @@ const options: swaggerJsdoc.Options = {
     ],
     components: {
       securitySchemes: {
+        // Swagger UI内部处理机制
         bearerAuth: {
           type: 'http',
-          scheme: 'bearer',
+          scheme: 'bearer',  // ← 这里已经定义了Bearer方案
           bearerFormat: 'JWT',
           description: 'JWT令牌认证',
         },

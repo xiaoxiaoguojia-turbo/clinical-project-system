@@ -119,7 +119,7 @@
   filePath: String, // 文件系统路径
   gridfsId: ObjectId, // GridFS文件ID
   projectId: ObjectId, // 关联项目ID
-  projectType: String, // 'overall' | 'internal_preparation'
+  projectType: String, // 'overall' | 'internal-preparation'
   uploadTime: Date, // 上传时间
   uploadedBy: ObjectId // 上传者ID
 }

@@ -80,7 +80,7 @@
 - filePath: String (文件系统路径)
 - gridfsId: ObjectId (GridFS文件ID)
 - projectId: ObjectId (关联项目)
-- projectType: String (overall/internal_preparation)
+- projectType: String (overall/internal-preparation)
 ```
 
 ### 设计评估

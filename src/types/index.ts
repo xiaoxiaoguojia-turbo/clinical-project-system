@@ -86,7 +86,7 @@ export interface Attachment {
   filePath?: string
   gridfsId?: string
   projectId: string
-  projectType: 'overall' | 'internal_preparation'
+  projectType: 'overall' | 'internal-preparation'
   uploadTime: Date
   uploadedBy: string
 }

@@ -1,7 +1,7 @@
 import React from 'react'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import '@/styles/globals.css'
+import '../styles/globals.css'
 
 // 全局应用配置
 export default function App({ Component, pageProps }: AppProps) {

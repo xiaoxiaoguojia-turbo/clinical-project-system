@@ -119,10 +119,10 @@ const LoginPage: NextPage = () => {
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-6xl">
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[600px] flex">
+        <div className="w-full max-w-6xl fade-in">
+          <div className="bg-white rounded-2xl shadow-custom overflow-hidden min-h-[600px] flex">
             {/* 左侧品牌展示区 */}
-            <div className="flex-1 bg-gradient-to-br from-blue-600 to-blue-800 text-white p-12 flex flex-col justify-between">
+            <div className="flex-1 gradient-blue text-white p-12 flex flex-col justify-between">
               {/* Logo和标题 */}
               <div>
                 <div className="mb-6">
@@ -168,7 +168,7 @@ const LoginPage: NextPage = () => {
                 <form onSubmit={handleLogin} className="space-y-6">
                   {/* 用户名输入 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="form-label">
                       用户名
                     </label>
                     <div className="relative">
@@ -179,7 +179,7 @@ const LoginPage: NextPage = () => {
                         type="text"
                         value={form.username}
                         onChange={(e) => handleInputChange('username', e.target.value)}
-                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        className="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                         placeholder="请输入用户名"
                         disabled={loading}
                       />
@@ -188,7 +188,7 @@ const LoginPage: NextPage = () => {
 
                   {/* 密码输入 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="form-label">
                       密码
                     </label>
                     <div className="relative">
@@ -199,7 +199,7 @@ const LoginPage: NextPage = () => {
                         type={showPassword ? 'text' : 'password'}
                         value={form.password}
                         onChange={(e) => handleInputChange('password', e.target.value)}
-                        className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        className="form-input block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                         placeholder="请输入密码"
                         disabled={loading}
                       />
@@ -218,11 +218,7 @@ const LoginPage: NextPage = () => {
                   </div>
 
                   {/* 错误信息 */}
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                      {error}
-                    </div>
-                  )}
+                  {error && <div className="alert alert-error">{error}</div>}
 
                   {/* 记住我和忘记密码 */}
                   <div className="flex items-center justify-between">
@@ -231,7 +227,7 @@ const LoginPage: NextPage = () => {
                         type="checkbox"
                         checked={form.remember}
                         onChange={(e) => handleInputChange('remember', e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="checkbox h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         disabled={loading}
                       />
                       <span className="ml-2 text-sm text-gray-600">记住我</span>
@@ -245,7 +241,7 @@ const LoginPage: NextPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="btn-primary w-full flex justify-center py-3 px-4 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <div className="flex items-center">
@@ -272,19 +268,6 @@ const LoginPage: NextPage = () => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .shake {
-          animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        
-        @keyframes shake {
-          10%, 90% { transform: translate3d(-1px, 0, 0); }
-          20%, 80% { transform: translate3d(2px, 0, 0); }
-          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-          40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-      `}</style>
     </>
   )
 }

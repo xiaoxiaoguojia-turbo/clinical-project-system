@@ -152,7 +152,7 @@ const LoginPage: NextPage = () => {
             {/* Logo和标题 */}
             <div className="brand-header">
               <div className="logo-container">
-                <span className="logo-text">LOGO</span>
+                <img src="/images/logo-1.png" alt="Logo" className="logo" />
               </div>
               <div className="title-section">
                 <h2 className="main-title">临床创新项目管理系统</h2>
@@ -161,7 +161,7 @@ const LoginPage: NextPage = () => {
             </div>
 
             {/* 功能特色展示 */}
-            <div className="space-y-6">
+            <div className="space-y-6 mb-6">
               <div className="flex items-center space-x-4">
                 <ChartBarIcon className="w-8 h-8" />
                 <span className="text-lg">项目进度实时监控</span>
@@ -321,18 +321,24 @@ const LoginPage: NextPage = () => {
         }
 
         .brand-header {
-          margin-bottom: 64px;
+          margin-bottom: 24px;
         }
 
         .logo-container {
-          width: 128px;
-          height: 64px;
+          width: 350px;
+          height: 200px;
           background: rgba(255, 255, 255, 0.2);
           border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 24px;
+          margin-bottom: 16px;
+        }
+
+        .logo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .logo-text {
@@ -612,7 +618,7 @@ const LoginPage: NextPage = () => {
         }
 
         .copyright {
-          margin-top: 32px;
+          margin-top: 52px;
           text-align: center;
         }
 

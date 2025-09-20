@@ -281,6 +281,13 @@ const UnauthorizedPage: NextPage = () => {
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
+        /* 修复按钮图标尺寸问题 - 使用更强的选择器 */
+        .action-button svg.button-icon {
+          width: 16px !important;
+          height: 16px !important;
+          flex-shrink: 0;
+        }
+
         .button-icon {
           width: 16px;
           height: 16px;

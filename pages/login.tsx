@@ -363,9 +363,11 @@ const LoginPage: NextPage = () => {
           gap: 16px;
         }
 
-        .feature-icon {
-          width: 32px;
-          height: 32px;
+        /* 修复图标尺寸问题 - 使用更强的选择器 */
+        .feature-item svg.feature-icon {
+          width: 32px !important;
+          height: 32px !important;
+          flex-shrink: 0;
         }
 
         .feature-title {
@@ -424,6 +426,7 @@ const LoginPage: NextPage = () => {
 
         .input-wrapper {
           position: relative;
+          width: 100%;
         }
 
         .input-icon {
@@ -432,14 +435,18 @@ const LoginPage: NextPage = () => {
           top: 50%;
           transform: translateY(-50%);
           pointer-events: none;
+          z-index: 1;
         }
 
-        .icon {
-          width: 20px;
-          height: 20px;
+        /* 修复图标尺寸问题 - 使用更强的选择器 */
+        .input-icon svg.icon {
+          width: 20px !important;
+          height: 20px !important;
           color: #9ca3af;
+          flex-shrink: 0;
         }
 
+        /* 修复输入框宽度问题 - 统一box-sizing */
         .form-input {
           display: block;
           width: 100%;
@@ -449,6 +456,7 @@ const LoginPage: NextPage = () => {
           font-size: 16px;
           transition: all 0.2s ease;
           background: white;
+          box-sizing: border-box; /* 关键修复 */
         }
 
         .form-input:focus {
@@ -475,8 +483,18 @@ const LoginPage: NextPage = () => {
           border: none;
           cursor: pointer;
           padding: 0;
+          z-index: 1;
         }
 
+        /* 修复密码切换按钮中的图标 */
+        .password-toggle svg.icon {
+          width: 20px !important;
+          height: 20px !important;
+          color: #9ca3af;
+          flex-shrink: 0;
+        }
+
+        /* 修复错误信息宽度问题 - 统一box-sizing */
         .error-message {
           background: #fef2f2;
           border: 1px solid #fecaca;
@@ -484,6 +502,8 @@ const LoginPage: NextPage = () => {
           padding: 12px 16px;
           border-radius: 8px;
           font-size: 14px;
+          box-sizing: border-box; /* 关键修复 */
+          width: 100%;
         }
 
         .form-options {
@@ -527,6 +547,7 @@ const LoginPage: NextPage = () => {
           color: #1d4ed8;
         }
 
+        /* 修复登录按钮宽度问题 - 统一box-sizing */
         .login-button {
           width: 100%;
           display: flex;
@@ -541,6 +562,7 @@ const LoginPage: NextPage = () => {
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
+          box-sizing: border-box; /* 关键修复 */
         }
 
         .login-button:hover:not(:disabled) {
@@ -567,6 +589,7 @@ const LoginPage: NextPage = () => {
           width: 20px;
           height: 20px;
           animation: spin 1s linear infinite;
+          flex-shrink: 0;
         }
 
         .spinner-track {

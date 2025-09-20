@@ -60,7 +60,7 @@ const LoginPage: NextPage = () => {
     e.preventDefault()
     
     if (!form.username.trim() || !form.password.trim()) {
-      setError('用户名和密码不能为空')
+      setError('⚠️ 用户名和密码不能为空！')
       return
     }
 
@@ -86,10 +86,10 @@ const LoginPage: NextPage = () => {
         // 跳转到仪表板
         router.push('/dashboard')
       } else {
-        setError(result.error || '登录失败，请检查用户名和密码')
+        setError(result.error || '⚠️ 登录失败，请检查用户名和密码！')
       }
     } catch (err: any) {
-      setError(err.message || '网络错误，请稍后重试')
+      setError(err.message || '⚠️ 网络错误，请稍后重试！')
       console.error('Login error:', err)
     } finally {
       setLoading(false)

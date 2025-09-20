@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('password').value;
         
         // 默认账号和密码
-        const defaultUsername = 'admin_hhzn';
-        const defaultPassword = '123456';
+        const defaultUsername = 'admin';
+        const defaultPassword = 'admin123456';
         
         // 创建或获取错误提示元素
         let errorMessage = document.getElementById('error-message');

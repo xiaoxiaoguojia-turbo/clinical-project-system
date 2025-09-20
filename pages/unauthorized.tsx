@@ -70,8 +70,8 @@ const UnauthorizedPage: NextPage = () => {
         <div className="content-wrapper">
           <div className="error-card">
             {/* 警告图标 */}
-            <div className="icon-container">
-              <ExclamationTriangleIcon className="warning-icon" />
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+              <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
             </div>
 
             {/* 标题和描述 */}
@@ -101,17 +101,22 @@ const UnauthorizedPage: NextPage = () => {
             )}
 
             {/* 操作按钮 */}
-            <div className="action-buttons">
-              {actionButtons.map((button, index) => (
-                <button
-                  key={index}
-                  onClick={button.onClick}
-                  className={`action-button ${button.variant}`}
-                >
-                  <button.icon className="button-icon" />
-                  {button.label}
-                </button>
-              ))}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleGoBack}
+                className="flex-1 flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                返回上页
+              </button>
+
+              <button
+                onClick={handleGoHome}
+                className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <HomeIcon className="h-4 w-4 mr-2" />
+                返回首页
+              </button>
             </div>
 
             {/* 联系信息 */}

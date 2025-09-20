@@ -161,13 +161,19 @@ const LoginPage: NextPage = () => {
             </div>
 
             {/* 功能特色展示 */}
-            <div className="features-section">
-              {features.map((feature, index) => (
-                <div key={index} className="feature-item">
-                  <feature.icon className="feature-icon" />
-                  <span className="feature-title">{feature.title}</span>
-                </div>
-              ))}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <ChartBarIcon className="w-8 h-8" />
+                <span className="text-lg">项目进度实时监控</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <DocumentTextIcon className="w-8 h-8" />
+                <span className="text-lg">院内制剂数据管理</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <ChartPieIcon className="w-8 h-8" />
+                <span className="text-lg">数据统计与分析</span>
+              </div>
             </div>
           </div>
 
@@ -184,8 +190,8 @@ const LoginPage: NextPage = () => {
                 <div className="input-group">
                   <label className="input-label">用户名</label>
                   <div className="input-wrapper">
-                    <div className="input-icon">
-                      <UserIcon className="icon" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <UserIcon className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       type="text"
@@ -202,8 +208,8 @@ const LoginPage: NextPage = () => {
                 <div className="input-group">
                   <label className="input-label">密码</label>
                   <div className="input-wrapper">
-                    <div className="input-icon">
-                      <LockClosedIcon className="icon" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <LockClosedIcon className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -215,13 +221,13 @@ const LoginPage: NextPage = () => {
                     />
                     <button
                       type="button"
-                      className="password-toggle"
+                      className="absolute inset-y-0 right-0 pr-2 flex items-center border-none bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeSlashIcon className="icon" />
+                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
                       ) : (
-                        <EyeIcon className="icon" />
+                        <EyeIcon className="h-5 w-5 text-gray-400" />
                       )}
                     </button>
                   </div>
@@ -267,7 +273,7 @@ const LoginPage: NextPage = () => {
 
               {/* 版权信息 */}
               <div className="copyright">
-                <p> 2025 上海临床创新转化研究院 版权所有</p>
+                <p>© 2025 上海临床创新转化研究院 版权所有</p>
               </div>
             </div>
           </div>

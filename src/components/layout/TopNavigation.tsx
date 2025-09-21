@@ -49,7 +49,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
   // 事件处理函数
   const handlePersonnelManagement = () => {
     if (isAdmin) {
-      router.push('/personnel-management')
+      router.push('/users')
     } else {
       router.push('/unauthorized')
     }

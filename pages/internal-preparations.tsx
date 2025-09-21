@@ -18,9 +18,15 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   XMarkIcon,
-  EllipsisVerticalIcon
+  EllipsisVerticalIcon,
+  PaperClipIcon,
+  SparklesIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
-import { ApiResponse, PaginatedResponse } from '@/types'
+import { 
+  ApiResponse, 
+  PaginatedResponse 
+} from '@/types'
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -770,6 +776,22 @@ export default function InternalPreparationsPage() {
       default: return 'gray'
     }
   }
+
+  const handleAttachmentManagement = (project: InternalPreparationProject) => {
+    console.log('跳转到附件管理页面:', project.name)
+    // TODO: 实现跳转到附件管理页面的逻辑
+  }
+
+  const handleGenerateAIReport = (project: InternalPreparationProject) => {
+    console.log('生成AI报告:', project.name)
+    // TODO: 实现生成AI报告的逻辑
+  }
+
+  const handleViewAIReport = (project: InternalPreparationProject) => {
+    console.log('查看AI报告:', project.name)
+    // TODO: 实现查看AI报告的逻辑
+  }
+
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -1132,29 +1154,55 @@ export default function InternalPreparationsPage() {
                         <td className="project-date">
                           {new Date(project.createTime).toLocaleDateString('zh-CN')}
                         </td>
-                        <td className="project-actions">
+                        <td className="actions-cell">
                           <div className="action-buttons">
-                            <button 
-                              className="action-btn view" 
-                              onClick={() => handleViewProject(project)}
-                              title="查看详情"
-                            >
-                              <EyeIcon className="w-4 h-4" />
-                            </button>
-                            <button 
-                              className="action-btn edit" 
-                              onClick={() => handleEditProject(project)}
-                              title="编辑项目"
-                            >
-                              <PencilIcon className="w-4 h-4" />
-                            </button>
-                            <button 
-                              className="action-btn delete" 
-                              onClick={() => handleDeleteProject(project)}
-                              title="删除项目"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                            </button>
+                            <div className="action-group primary-actions">
+                              <button
+                                onClick={() => handleViewProject(project)}
+                                className="action-btn view-btn"
+                                title="查看详情"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleEditProject(project)}
+                                className="action-btn edit-btn"
+                                title="编辑项目"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProject(project)}
+                                className="action-btn delete-btn"
+                                title="删除项目"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                            
+                            <div className="action-group extended-actions">
+                              <button
+                                onClick={() => handleAttachmentManagement(project)}
+                                className="action-btn attachment-btn"
+                                title="附件管理"
+                              >
+                                <PaperClipIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleGenerateAIReport(project)}
+                                className="action-btn ai-generate-btn"
+                                title="生成AI报告"
+                              >
+                                <SparklesIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleViewAIReport(project)}
+                                className="action-btn ai-view-btn"
+                                title="查看AI报告"
+                              >
+                                <DocumentTextIcon className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -2210,34 +2258,58 @@ export default function InternalPreparationsPage() {
             transition: all 0.2s ease;
           }
 
-          .action-btn.view {
-            background: #f0f9ff;
-            color: #0284c7;
+          .action-btn.view-btn {
+            color: #3b82f6;
           }
 
-          .action-btn.view:hover {
-            background: #e0f2fe;
-            color: #0369a1;
+          .action-btn.view-btn:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
           }
 
-          .action-btn.edit {
-            background: #f0fdf4;
-            color: #16a34a;
+          .action-btn.edit-btn {
+            color: #10b981;
           }
 
-          .action-btn.edit:hover {
-            background: #dcfce7;
-            color: #15803d;
+          .action-btn.edit-btn:hover {
+            background: #d1fae5;
+            color: #047857;
           }
 
-          .action-btn.delete {
-            background: #fef2f2;
+          .action-btn.delete-btn {
+            color: #ef4444;
+          }
+
+          .action-btn.delete-btn:hover {
+            background: #fee2e2;
             color: #dc2626;
           }
 
-          .action-btn.delete:hover {
-            background: #fee2e2;
-            color: #b91c1c;
+          .action-btn.attachment-btn {
+            color: #8b5cf6;
+          }
+
+          .action-btn.attachment-btn:hover {
+            background: #ede9fe;
+            color: #7c3aed;
+          }
+
+          .action-btn.ai-generate-btn {
+            color: #f59e0b;
+          }
+
+          .action-btn.ai-generate-btn:hover {
+            background: #fef3c7;
+            color: #d97706;
+          }
+
+          .action-btn.ai-view-btn {
+            color: #06b6d4;
+          }
+
+          .action-btn.ai-view-btn:hover {
+            background: #cffafe;
+            color: #0891b2;
           }
 
           .loading-row td {
@@ -2699,6 +2771,52 @@ export default function InternalPreparationsPage() {
             .detail-value {
               padding: 10px 12px;
             }
+          }
+
+          .actions-cell {
+            padding: 16px 20px;
+            text-align: center;
+            background: white;
+            border-bottom: 1px solid #f1f5f9;
+          }
+
+          .action-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+          }
+
+          .action-group {
+            display: flex;
+            gap: 6px;
+            padding: 4px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+          }
+
+          .primary-actions {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+          }
+
+          .extended-actions {
+            background: #fef7ff;
+            border-color: #e9d5ff;
+          }
+
+          .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
           }
         `}</style>
       </div>

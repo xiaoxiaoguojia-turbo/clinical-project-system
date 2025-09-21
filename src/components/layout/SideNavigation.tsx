@@ -7,7 +7,6 @@ import {
   DocumentTextIcon,
   BeakerIcon
 } from '@heroicons/react/24/outline'
-import { useHydrationSafe } from '@/hooks/useHydrationSafe'
 
 interface SideNavigationProps {
   className?: string
@@ -24,9 +23,8 @@ interface MenuItem {
 
 const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
   /* ------------------------------------------------------------------------------------------ */
-  // 状态和路由管理 - 使用Hydration安全的Hook
+  // 状态和路由管理
   const router = useRouter()
-  const isHydrated = useHydrationSafe()
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['dept-main', 'project-types']))
   const currentPath = router.pathname
   /* ------------------------------------------------------------------------------------------ */
@@ -101,101 +99,6 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
   ]
   /* ------------------------------------------------------------------------------------------ */
 
-  const renderMenuItem = (item: MenuItem) => {
-    const isExpanded = expandedItems.has(item.id)
-    const hasChildren = item.children && item.children.length > 0
-    const active = isParentActive(item)
-    const directActive = isActive(item.route)
-
-    return (
-      <li key={item.id} className={`menu-item level-${item.level}`}>
-        <button
-          onClick={() => handleNavigation(item)}
-          className={`menu-button ${active ? 'active' : ''} ${directActive ? 'direct-active' : ''}`}
-        >
-          <div className="button-content">
-            {/* 图标 */}
-            {item.icon && (
-              <item.icon className="w-5 h-5 menu-icon" />
-            )}
-            
-            {/* 标签 */}
-            <span className="menu-label">{item.label}</span>
-          </div>
-
-          {/* 展开/收起箭头 */}
-          {hasChildren && (
-            <div className="expand-icon">
-              {isExpanded ? (
-                <ChevronDownIcon className="w-4 h-4" />
-              ) : (
-                <ChevronRightIcon className="w-4 h-4" />
-              )}
-            </div>
-          )}
-        </button>
-
-        {/* 子菜单 */}
-        {hasChildren && isExpanded && (
-          <ul className="submenu">
-            {item.children!.map(child => renderMenuItem(child))}
-          </ul>
-        )}
-      </li>
-    )
-  }
-
-  // 在hydration完成之前，返回样式化的占位符
-  if (!isHydrated) {
-    return (
-      <aside className="side-navigation-placeholder">
-        <div className="placeholder-content">
-          <div className="loading-indicator">
-            <div className="loading-spinner"></div>
-          </div>
-        </div>
-        
-        <style jsx>{`
-          .side-navigation-placeholder {
-            position: fixed;
-            top: 64px;
-            left: 0;
-            width: 280px;
-            height: calc(100vh - 64px);
-            background: #f8fafc;
-            border-right: 1px solid #e2e8f0;
-            z-index: 900;
-          }
-
-          .placeholder-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-          }
-
-          .loading-indicator {
-            text-align: center;
-            color: #64748b;
-          }
-
-          .loading-spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #e2e8f0;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </aside>
-    )
-  }
-
   return (
     <aside className={`side-navigation ${className}`}>
       <div className="navigation-header">
@@ -204,7 +107,115 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
       
       <div className="navigation-content">
         <ul className="menu-list">
-          {menuItems.map(item => renderMenuItem(item))}
+          {menuItems.map((item) => {
+            const isExpanded = expandedItems.has(item.id)
+            const hasChildren = item.children && item.children.length > 0
+            const active = isParentActive(item)
+            const directActive = isActive(item.route)
+
+            return (
+              <li key={item.id} className={`menu-item level-${item.level}`}>
+                <button
+                  onClick={() => handleNavigation(item)}
+                  className={`menu-button ${active ? 'active' : ''} ${directActive ? 'direct-active' : ''}`}
+                >
+                  <div className="button-content">
+                    {/* 图标 */}
+                    {item.icon && (
+                      <item.icon className="w-5 h-5 menu-icon" />
+                    )}
+                    
+                    {/* 标签 */}
+                    <span className="menu-label">{item.label}</span>
+                  </div>
+
+                  {/* 展开/收起箭头 */}
+                  {hasChildren && (
+                    <div className="expand-icon">
+                      {isExpanded ? (
+                        <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronRightIcon className="w-4 h-4" />
+                      )}
+                    </div>
+                  )}
+                </button>
+
+                {/* 子菜单 - 递归渲染 */}
+                {hasChildren && isExpanded && (
+                  <ul className="submenu">
+                    {item.children!.map((child) => {
+                      const isChildExpanded = expandedItems.has(child.id)
+                      const hasChildChildren = child.children && child.children.length > 0
+                      const childActive = isParentActive(child)
+                      const childDirectActive = isActive(child.route)
+
+                      return (
+                        <li key={child.id} className={`menu-item level-${child.level}`}>
+                          <button
+                            onClick={() => handleNavigation(child)}
+                            className={`menu-button ${childActive ? 'active' : ''} ${childDirectActive ? 'direct-active' : ''}`}
+                          >
+                            <div className="button-content">
+                              {/* 图标 */}
+                              {child.icon && (
+                                <child.icon className="w-5 h-5 menu-icon" />
+                              )}
+                              
+                              {/* 标签 */}
+                              <span className="menu-label">{child.label}</span>
+                            </div>
+
+                            {/* 展开/收起箭头 */}
+                            {hasChildChildren && (
+                              <div className="expand-icon">
+                                {isChildExpanded ? (
+                                  <ChevronDownIcon className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRightIcon className="w-4 h-4" />
+                                )}
+                              </div>
+                            )}
+                          </button>
+
+                          {/* 子菜单 - 递归渲染 */}
+                          {hasChildChildren && isChildExpanded && (
+                            <ul className="submenu">
+                              {child.children!.map((grandchild) => {
+                                const isGrandchildExpanded = expandedItems.has(grandchild.id)
+                                const hasGrandchildChildren = grandchild.children && grandchild.children.length > 0
+                                const grandchildActive = isParentActive(grandchild)
+                                const grandchildDirectActive = isActive(grandchild.route)
+
+                                return (
+                                  <li key={grandchild.id} className={`menu-item level-${grandchild.level}`}>
+                                    <button
+                                      onClick={() => handleNavigation(grandchild)}
+                                      className={`menu-button ${grandchildActive ? 'active' : ''} ${grandchildDirectActive ? 'direct-active' : ''}`}
+                                    >
+                                      <div className="button-content">
+                                        {/* 图标 */}
+                                        {grandchild.icon && (
+                                          <grandchild.icon className="w-5 h-5 menu-icon" />
+                                        )}
+                                        
+                                        {/* 标签 */}
+                                        <span className="menu-label">{grandchild.label}</span>
+                                      </div>
+                                    </button>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </li>
+            )
+          })}
         </ul>
       </div>
 

@@ -140,6 +140,23 @@ export default function InternalPreparationsPage() {
   })
   const [createFormErrors, setCreateFormErrors] = useState<{[key: string]: string}>({})
   const [createFormLoading, setCreateFormLoading] = useState(false)
+
+  // 编辑项目表单状态
+  const [editFormData, setEditFormData] = useState({
+    source: '',
+    name: '',
+    composition: '',
+    function: '',
+    specification: '',
+    duration: '',
+    dosage: '',
+    recordNumber: '',
+    patent: '',
+    remarks: ''
+  })
+  const [editFormErrors, setEditFormErrors] = useState<{[key: string]: string}>({})
+  const [editFormLoading, setEditFormLoading] = useState(false)
+
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -478,6 +495,20 @@ export default function InternalPreparationsPage() {
 
   const handleEditProject = (project: InternalPreparationProject) => {
     setSelectedProject(project)
+    // 预填充编辑表单数据
+    setEditFormData({
+      source: project.source,
+      name: project.name,
+      composition: project.composition,
+      function: project.function,
+      specification: project.specification,
+      duration: project.duration,
+      dosage: project.dosage,
+      recordNumber: project.recordNumber || '',
+      patent: project.patent || '',
+      remarks: project.remarks || ''
+    })
+    setEditFormErrors({})
     setShowEditModal(true)
   }
 
@@ -596,6 +627,125 @@ export default function InternalPreparationsPage() {
       remarks: ''
     })
     setCreateFormErrors({})
+  }
+
+  const handleEditFormChange = (field: string, value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+    
+    // 清除该字段的错误信息
+    if (editFormErrors[field]) {
+      setEditFormErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }))
+    }
+  }
+
+  const validateEditForm = () => {
+    const errors: {[key: string]: string} = {}
+    
+    if (!editFormData.source.trim()) {
+      errors.source = '来源科室不能为空'
+    }
+    if (!editFormData.name.trim()) {
+      errors.name = '项目名称不能为空'
+    }
+    if (!editFormData.composition.trim()) {
+      errors.composition = '组方不能为空'
+    }
+    if (!editFormData.function.trim()) {
+      errors.function = '功能不能为空'
+    }
+    if (!editFormData.specification.trim()) {
+      errors.specification = '规格不能为空'
+    }
+    if (!editFormData.duration.trim()) {
+      errors.duration = '有效期不能为空'
+    } else if (isNaN(Number(editFormData.duration))) {
+      errors.duration = '有效期必须为数字'
+    }
+    if (!editFormData.dosage.trim()) {
+      errors.dosage = '用量不能为空'
+    }
+    if (!editFormData.recordNumber.trim()) {
+      errors.recordNumber = '备案号不能为空'
+    }
+    
+    setEditFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleEditSubmit = async () => {
+    if (!validateEditForm() || !selectedProject) {
+      return
+    }
+
+    setEditFormLoading(true)
+    
+    try {
+      const { ApiClient } = await import('@/utils/auth')
+      
+      const updateData = {
+        source: editFormData.source.trim(),
+        name: editFormData.name.trim(),
+        composition: editFormData.composition.trim(),
+        function: editFormData.function.trim(),
+        specification: editFormData.specification.trim(),
+        duration: editFormData.duration.trim(),
+        dosage: editFormData.dosage.trim(),
+        recordNumber: editFormData.recordNumber.trim(),
+        patent: editFormData.patent.trim(),
+        remarks: editFormData.remarks.trim()
+      }
+
+      const response = await ApiClient.put(`/internal-preparation-projects/${selectedProject._id}`, updateData) as ApiResponse<InternalPreparationProject>
+      
+      if (response.success) {
+        setShowEditModal(false)
+        setSelectedProject(null)
+        setEditFormData({
+          source: '',
+          name: '',
+          composition: '',
+          function: '',
+          specification: '',
+          duration: '',
+          dosage: '',
+          recordNumber: '',
+          patent: '',
+          remarks: ''
+        })
+        await loadProjectsList()
+      } else {
+        alert('更新失败：' + (response.error || '未知错误'))
+      }
+    } catch (error) {
+      console.error('更新项目失败:', error)
+      alert('更新失败，请稍后重试')
+    } finally {
+      setEditFormLoading(false)
+    }
+  }
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false)
+    setSelectedProject(null)
+    setEditFormData({
+      source: '',
+      name: '',
+      composition: '',
+      function: '',
+      specification: '',
+      duration: '',
+      dosage: '',
+      recordNumber: '',
+      patent: '',
+      remarks: ''
+    })
+    setEditFormErrors({})
   }
 
   const getStatusText = (status: string) => {
@@ -1217,6 +1367,159 @@ export default function InternalPreparationsPage() {
                   disabled={createFormLoading}
                 >
                   {createFormLoading ? '创建中...' : '创建项目'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 编辑项目模态框 */}
+        {showEditModal && selectedProject && (
+          <div className="modal-overlay" onClick={handleCloseEditModal}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>编辑项目</h2>
+                <button
+                  onClick={handleCloseEditModal}
+                  className="modal-close"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>来源科室 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.source ? 'error' : ''}`}
+                      placeholder="请输入来源科室"
+                      value={editFormData.source}
+                      onChange={(e) => handleEditFormChange('source', e.target.value)}
+                    />
+                    {editFormErrors.source && <div className="error-text">{editFormErrors.source}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>项目名称 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.name ? 'error' : ''}`}
+                      placeholder="请输入项目名称"
+                      value={editFormData.name}
+                      onChange={(e) => handleEditFormChange('name', e.target.value)}
+                    />
+                    {editFormErrors.name && <div className="error-text">{editFormErrors.name}</div>}
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>组方 *</label>
+                    <textarea
+                      className={`form-textarea ${editFormErrors.composition ? 'error' : ''}`}
+                      placeholder="请输入组方"
+                      value={editFormData.composition}
+                      onChange={(e) => handleEditFormChange('composition', e.target.value)}
+                    />
+                    {editFormErrors.composition && <div className="error-text">{editFormErrors.composition}</div>}
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>功能 *</label>
+                    <textarea
+                      className={`form-textarea ${editFormErrors.function ? 'error' : ''}`}
+                      placeholder="请输入功能"
+                      value={editFormData.function}
+                      onChange={(e) => handleEditFormChange('function', e.target.value)}
+                    />
+                    {editFormErrors.function && <div className="error-text">{editFormErrors.function}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>规格 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.specification ? 'error' : ''}`}
+                      placeholder="请输入规格"
+                      value={editFormData.specification}
+                      onChange={(e) => handleEditFormChange('specification', e.target.value)}
+                    />
+                    {editFormErrors.specification && <div className="error-text">{editFormErrors.specification}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>有效期（年）*</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.duration ? 'error' : ''}`}
+                      placeholder="请输入有效期"
+                      value={editFormData.duration}
+                      onChange={(e) => handleEditFormChange('duration', e.target.value)}
+                    />
+                    {editFormErrors.duration && <div className="error-text">{editFormErrors.duration}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>用量 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.dosage ? 'error' : ''}`}
+                      placeholder="请输入用量"
+                      value={editFormData.dosage}
+                      onChange={(e) => handleEditFormChange('dosage', e.target.value)}
+                    />
+                    {editFormErrors.dosage && <div className="error-text">{editFormErrors.dosage}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>备案号 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.recordNumber ? 'error' : ''}`}
+                      placeholder="请输入备案号"
+                      value={editFormData.recordNumber}
+                      onChange={(e) => handleEditFormChange('recordNumber', e.target.value)}
+                    />
+                    {editFormErrors.recordNumber && <div className="error-text">{editFormErrors.recordNumber}</div>}
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>专利情况</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="请输入专利情况（可选）"
+                      value={editFormData.patent}
+                      onChange={(e) => handleEditFormChange('patent', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>备注</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="请输入备注（可选）"
+                      value={editFormData.remarks}
+                      onChange={(e) => handleEditFormChange('remarks', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  onClick={handleCloseEditModal}
+                  className="btn-secondary"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEditSubmit}
+                  disabled={editFormLoading}
+                  className="btn-primary"
+                >
+                  {editFormLoading ? '更新中...' : '更新项目'}
                 </button>
               </div>
             </div>

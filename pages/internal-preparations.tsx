@@ -9,7 +9,14 @@ import {
   ClipboardDocumentListIcon,
   CheckCircleIcon,
   PauseCircleIcon,
-  BuildingOffice2Icon
+  BuildingOffice2Icon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline'
 import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
 import { ApiResponse, PaginatedResponse } from '@/types'
@@ -100,6 +107,22 @@ export default function InternalPreparationsPage() {
   
   const [preparations, setPreparations] = useState<InternalPreparationProject[]>([])
   const [charts, setCharts] = useState<{[key: string]: any}>({})
+
+  // 项目列表相关状态
+  const [projectsLoading, setProjectsLoading] = useState(false)
+  const [projects, setProjects] = useState<InternalPreparationProject[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [projectStatusFilter, setProjectStatusFilter] = useState('')
+  const [sourceFilter, setSourceFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalProjects, setTotalProjects] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<InternalPreparationProject | null>(null)
+  const [sourceDepartments, setSourceDepartments] = useState<string[]>([])
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -133,6 +156,13 @@ export default function InternalPreparationsPage() {
       initializeCharts()
     }
   }, [loading, activeTab, preparationStats])
+
+  // 项目列表数据加载
+  useEffect(() => {
+    if (activeTab === 'projects' && isAuthenticated) {
+      loadProjectsList()
+    }
+  }, [activeTab, isAuthenticated, currentPage, pageSize, searchTerm, projectStatusFilter, sourceFilter])
 
   // 清理图表
   useEffect(() => {
@@ -398,7 +428,83 @@ export default function InternalPreparationsPage() {
   }
 
   const handleRefreshData = () => {
-    loadPreparationData()
+    if (activeTab === 'statistics') {
+      loadPreparationData()
+    } else {
+      loadProjectsList()
+    }
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+    setCurrentPage(1) // 重置到第一页
+  }
+
+  const handleProjectStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setProjectStatusFilter(e.target.value)
+    setCurrentPage(1)
+  }
+
+  const handleSourceFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSourceFilter(e.target.value)
+    setCurrentPage(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleViewProject = (project: InternalPreparationProject) => {
+    setSelectedProject(project)
+    setShowDetailModal(true)
+  }
+
+  const handleEditProject = (project: InternalPreparationProject) => {
+    setSelectedProject(project)
+    setShowEditModal(true)
+  }
+
+  const handleDeleteProject = async (project: InternalPreparationProject) => {
+    if (!window.confirm(`确定要删除项目"${project.name}"吗？`)) {
+      return
+    }
+
+    try {
+      const { ApiClient } = await import('@/utils/auth')
+      const response = await ApiClient.delete(`/internal-preparation-projects/${project._id}`) as unknown as ApiResponse<any>
+      
+      if (response.success) {
+        await loadProjectsList() // 重新加载列表
+      } else {
+        alert('删除失败：' + (response.error || '未知错误'))
+      }
+    } catch (error) {
+      console.error('删除项目失败:', error)
+      alert('删除失败，请稍后重试')
+    }
+  }
+
+  const handleCreateProject = () => {
+    setSelectedProject(null)
+    setShowCreateModal(true)
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return '进行中'
+      case 'completed': return '已完成'
+      case 'paused': return '已暂停'
+      default: return status
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'green'
+      case 'completed': return 'blue'
+      case 'paused': return 'yellow'
+      default: return 'gray'
+    }
   }
   /* ------------------------------------------------------------------------------------------ */
 
@@ -461,6 +567,40 @@ export default function InternalPreparationsPage() {
     }
   ]
   /* ------------------------------------------------------------------------------------------ */
+
+  const loadProjectsList = async () => {
+    try {
+      setProjectsLoading(true)
+      
+      const { ApiClient } = await import('@/utils/auth')
+      
+      // 构建查询参数
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString()
+      })
+      
+      if (searchTerm) params.append('search', searchTerm)
+      if (projectStatusFilter) params.append('status', projectStatusFilter)
+      if (sourceFilter) params.append('source', sourceFilter)
+      
+      const response = await ApiClient.get<ApiResponse<PaginatedResponse<InternalPreparationProject>>>(`/internal-preparation-projects?${params}`)
+      
+      if (response.success && response.data) {
+        setProjects(response.data.data || [])
+        setTotalProjects(response.data.pagination.total)
+        setTotalPages(response.data.pagination.totalPages)
+        
+        // 提取科室列表
+        const departments = new Set(response.data.data.map(p => p.source))
+        setSourceDepartments(Array.from(departments))
+      }
+    } catch (error) {
+      console.error('加载项目列表失败:', error)
+    } finally {
+      setProjectsLoading(false)
+    }
+  }
 
   if (!mounted) {
     return null
@@ -631,409 +771,857 @@ export default function InternalPreparationsPage() {
 
         {/* 项目列表内容 */}
         {activeTab === 'projects' && (
-          <div className="projects-placeholder">
-            <div className="placeholder-content">
-              <ClipboardDocumentListIcon className="w-16 h-16 placeholder-icon" />
-              <h3>项目列表</h3>
-              <p>项目列表界面开发中，敬请期待...</p>
+          <div className="projects-section">
+            {/* 顶部操作栏 */}
+            <div className="project-header">
+              <div className="search-section">
+                <div className="search-input-wrapper">
+                  <MagnifyingGlassIcon className="w-5 h-5 search-icon" />
+                  <input 
+                    type="search" 
+                    value={searchTerm} 
+                    onChange={handleSearchChange}
+                    placeholder="搜索项目名称、组方、功能或备案号" 
+                    className="search-input"
+                  />
+                </div>
+              </div>
+              <div className="action-section">
+                <button className="create-button" onClick={handleCreateProject}>
+                  <PlusIcon className="w-4 h-4" />
+                  新建项目
+                </button>
+              </div>
             </div>
+
+            {/* 筛选控制栏 */}
+            <div className="filter-bar">
+              <div className="filter-controls">
+                <div className="filter-item">
+                  <FunnelIcon className="w-4 h-4 filter-icon" />
+                  <select 
+                    value={projectStatusFilter} 
+                    onChange={handleProjectStatusFilterChange}
+                    className="filter-select"
+                  >
+                    <option value="">全部状态</option>
+                    <option value="active">进行中</option>
+                    <option value="completed">已完成</option>
+                    <option value="paused">已暂停</option>
+                  </select>
+                </div>
+                <div className="filter-item">
+                  <BuildingOffice2Icon className="w-4 h-4 filter-icon" />
+                  <select 
+                    value={sourceFilter} 
+                    onChange={handleSourceFilterChange}
+                    className="filter-select"
+                  >
+                    <option value="">全部科室</option>
+                    {sourceDepartments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button className="refresh-button" onClick={handleRefreshData}>
+                刷新数据
+              </button>
+            </div>
+
+            {/* 项目表格 */}
+            <div className="project-table-container">
+              <table className="project-table">
+                <thead>
+                  <tr>
+                    <th>项目名称</th>
+                    <th>来源科室</th>
+                    <th>备案号</th>
+                    <th>状态</th>
+                    <th>有效期</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projectsLoading ? (
+                    // 加载状态
+                    Array.from({ length: pageSize }).map((_, index) => (
+                      <tr key={index} className="loading-row">
+                        <td colSpan={7}>
+                          <div className="loading-shimmer"></div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : projects.length > 0 ? (
+                    projects.map((project) => (
+                      <tr key={project._id} className="project-row">
+                        <td className="project-name">{project.name}</td>
+                        <td className="project-source">{project.source}</td>
+                        <td className="project-record">{project.recordNumber}</td>
+                        <td>
+                          <span className={`status-badge ${getStatusColor(project.status)}`}>
+                            {getStatusText(project.status)}
+                          </span>
+                        </td>
+                        <td className="project-duration">{project.duration}年</td>
+                        <td className="project-date">
+                          {new Date(project.createTime).toLocaleDateString('zh-CN')}
+                        </td>
+                        <td className="project-actions">
+                          <div className="action-buttons">
+                            <button 
+                              className="action-btn view" 
+                              onClick={() => handleViewProject(project)}
+                              title="查看详情"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                            </button>
+                            <button 
+                              className="action-btn edit" 
+                              onClick={() => handleEditProject(project)}
+                              title="编辑项目"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                            </button>
+                            <button 
+                              className="action-btn delete" 
+                              onClick={() => handleDeleteProject(project)}
+                              title="删除项目"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="no-data">
+                        <div className="no-data-content">
+                          <BeakerIcon className="w-12 h-12 no-data-icon" />
+                          <p>暂无项目数据</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 分页控制 */}
+            {totalPages > 1 && (
+              <div className="pagination-container">
+                <div className="pagination-info">
+                  共 {totalProjects} 条记录，第 {currentPage} / {totalPages} 页
+                </div>
+                <div className="pagination-controls">
+                  <button 
+                    className="page-btn"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    首页
+                  </button>
+                  <button 
+                    className="page-btn"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeftIcon className="w-4 h-4" />
+                  </button>
+                  <span className="page-numbers">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
+                      return pageNum <= totalPages ? (
+                        <button
+                          key={pageNum}
+                          className={`page-number ${currentPage === pageNum ? 'active' : ''}`}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      ) : null
+                    })}
+                  </span>
+                  <button 
+                    className="page-btn"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
+                  <button 
+                    className="page-btn"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    末页
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </div>
 
-      <style jsx>{`
-        .preparations-page {
-          padding: 24px;
-          background: #f8fafc;
-          min-height: 100vh;
-        }
-
-        /* 页面头部 */
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 24px;
-          background: white;
-          padding: 24px;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .title-section h1 {
-          font-size: 28px;
-          font-weight: 700;
-          color: #1e293b;
-          margin: 0 0 8px 0;
-        }
-
-        .title-section p {
-          font-size: 16px;
-          color: #64748b;
-          margin: 0;
-        }
-
-        .export-button {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-        }
-
-        .export-button:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
-        }
-
-        /* 标签栏 */
-        .tab-bar {
-          display: flex;
-          background: white;
-          border-radius: 12px;
-          padding: 6px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          margin-bottom: 24px;
-          gap: 4px;
-        }
-
-        .tab-button {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 24px;
-          border: none;
-          background: transparent;
-          color: #64748b;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          flex: 1;
-          justify-content: center;
-        }
-
-        .tab-button:hover {
-          background: #f1f5f9;
-          color: #334155;
-        }
-
-        .tab-button.active {
-          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-          color: white;
-          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-        }
-
-        /* 筛选控制栏 */
-        .filter-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: white;
-          padding: 20px 24px;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          margin-bottom: 24px;
-        }
-
-        .filter-controls {
-          display: flex;
-          gap: 20px;
-          align-items: center;
-        }
-
-        .filter-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .filter-icon {
-          color: #6b7280;
-        }
-
-        .filter-select {
-          padding: 8px 12px;
-          border: 2px solid #e5e7eb;
-          border-radius: 6px;
-          font-size: 14px;
-          background: white;
-          color: #374151;
-          cursor: pointer;
-          transition: border-color 0.2s ease;
-        }
-
-        .filter-select:focus {
-          outline: none;
-          border-color: #3b82f6;
-        }
-
-        .refresh-button {
-          padding: 8px 16px;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          color: #64748b;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .refresh-button:hover {
-          background: #f1f5f9;
-          border-color: #cbd5e1;
-        }
-
-        /* 统计卡片网格 */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 20px;
-          margin-bottom: 32px;
-        }
-
-        .stat-card {
-          background: white;
-          padding: 24px;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          transition: all 0.2s ease;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-card.loading {
-          background: #f8fafc;
-        }
-
-        .loading-shimmer {
-          width: 100%;
-          height: 80px;
-          background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 8px;
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-
-        .stat-content {
-          position: relative;
-          z-index: 1;
-        }
-
-        .stat-main {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 16px;
-        }
-
-        .stat-info h3 {
-          font-size: 14px;
-          font-weight: 500;
-          color: #64748b;
-          margin: 0 0 8px 0;
-        }
-
-        .stat-value {
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
-        }
-
-        .stat-value .value {
-          font-size: 32px;
-          font-weight: 700;
-          color: #1e293b;
-          line-height: 1;
-        }
-
-        .stat-value .unit {
-          font-size: 14px;
-          color: #64748b;
-        }
-
-        .stat-icon {
-          padding: 12px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .stat-card.blue .stat-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-        .stat-card.green .stat-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .stat-card.purple .stat-icon { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-        .stat-card.yellow .stat-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .stat-card.indigo .stat-icon { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-        .stat-card.pink .stat-icon { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
-
-        .stat-trend {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-        }
-
-        .trend {
-          font-weight: 600;
-          padding: 2px 6px;
-          border-radius: 4px;
-        }
-
-        .trend.positive { background: #dcfce7; color: #16a34a; }
-        .trend.neutral { background: #f1f5f9; color: #64748b; }
-        .trend.negative { background: #fef2f2; color: #dc2626; }
-
-        .trend-label {
-          color: #64748b;
-        }
-
-        /* 图表网格 */
-        .charts-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-          gap: 24px;
-        }
-
-        .chart-card {
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
-
-        .chart-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 20px 24px 16px 24px;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .chart-header h3 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1e293b;
-          margin: 0;
-        }
-
-        .chart-menu {
-          width: 28px;
-          height: 28px;
-          border: none;
-          background: #f8fafc;
-          color: #64748b;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .chart-menu:hover {
-          background: #f1f5f9;
-          color: #475569;
-        }
-
-        .chart-container {
-          padding: 24px;
-          height: 300px;
-          position: relative;
-        }
-
-        /* 项目列表占位 */
-        .projects-placeholder {
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          padding: 80px 40px;
-          text-align: center;
-        }
-
-        .placeholder-content {
-          max-width: 400px;
-          margin: 0 auto;
-        }
-
-        .placeholder-icon {
-          color: #cbd5e1;
-          margin: 0 auto 24px;
-        }
-
-        .placeholder-content h3 {
-          font-size: 20px;
-          font-weight: 600;
-          color: #64748b;
-          margin: 0 0 12px 0;
-        }
-
-        .placeholder-content p {
-          color: #94a3b8;
-          margin: 0;
-          line-height: 1.6;
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 768px) {
+        <style jsx>{`
           .preparations-page {
-            padding: 16px;
+            padding: 24px;
+            background: #f8fafc;
+            min-height: 100vh;
           }
 
+          /* 页面头部 */
           .page-header {
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-          }
-
-          .filter-bar {
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-          }
-
-          .filter-controls {
+            display: flex;
             justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
           }
 
-          .stats-grid {
-            grid-template-columns: 1fr;
+          .title-section h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 8px 0;
           }
 
-          .charts-grid {
-            grid-template-columns: 1fr;
+          .title-section p {
+            font-size: 16px;
+            color: #64748b;
+            margin: 0;
+          }
+
+          .export-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+          }
+
+          .export-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+          }
+
+          /* 标签栏 */
+          .tab-bar {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            gap: 4px;
           }
 
           .tab-button {
-            font-size: 13px;
-            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            justify-content: center;
           }
-        }
 
-        /* 动画 */
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+          .tab-button:hover {
+            background: #f1f5f9;
+            color: #334155;
+          }
+
+          .tab-button.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+          }
+
+          /* 筛选控制栏 */
+          .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+          }
+
+          .filter-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+          }
+
+          .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .filter-icon {
+            color: #6b7280;
+          }
+
+          .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+          }
+
+          .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+          }
+
+          .refresh-button {
+            padding: 8px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .refresh-button:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+          }
+
+          /* 统计卡片网格 */
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+          }
+
+          .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+          }
+
+          .stat-card.loading {
+            background: #f8fafc;
+          }
+
+          .loading-shimmer {
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+          }
+
+          @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+          }
+
+          .stat-content {
+            position: relative;
+            z-index: 1;
+          }
+
+          .stat-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+          }
+
+          .stat-info h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            margin: 0 0 8px 0;
+          }
+
+          .stat-value {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+          }
+
+          .stat-value .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+          }
+
+          .stat-value .unit {
+            font-size: 14px;
+            color: #64748b;
+          }
+
+          .stat-icon {
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .stat-card.blue .stat-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+          .stat-card.green .stat-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+          .stat-card.purple .stat-icon { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+          .stat-card.yellow .stat-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+          .stat-card.indigo .stat-icon { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+          .stat-card.pink .stat-icon { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+
+          .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+          }
+
+          .trend {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+          }
+
+          .trend.positive { background: #dcfce7; color: #16a34a; }
+          .trend.neutral { background: #f1f5f9; color: #64748b; }
+          .trend.negative { background: #fef2f2; color: #dc2626; }
+
+          .trend-label {
+            color: #64748b;
+          }
+
+          /* 图表网格 */
+          .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+          }
+
+          .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          }
+
+          .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px 16px 24px;
+            border-bottom: 1px solid #f1f5f9;
+          }
+
+          .chart-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+          }
+
+          .chart-menu {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #f8fafc;
+            color: #64748b;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .chart-menu:hover {
+            background: #f1f5f9;
+            color: #475569;
+          }
+
+          .chart-container {
+            padding: 24px;
+            height: 300px;
+            position: relative;
+          }
+
+          /* 项目列表占位 */
+          .projects-placeholder {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 80px 40px;
+            text-align: center;
+          }
+
+          .placeholder-content {
+            max-width: 400px;
+            margin: 0 auto;
+          }
+
+          .placeholder-icon {
+            color: #cbd5e1;
+            margin: 0 auto 24px;
+          }
+
+          .placeholder-content h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #64748b;
+            margin: 0 0 12px 0;
+          }
+
+          .placeholder-content p {
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.6;
+          }
+
+          /* 响应式设计 */
+          @media (max-width: 768px) {
+            .preparations-page {
+              padding: 16px;
+            }
+
+            .page-header {
+              flex-direction: column;
+              gap: 16px;
+              align-items: stretch;
+            }
+
+            .filter-bar {
+              flex-direction: column;
+              gap: 16px;
+              align-items: stretch;
+            }
+
+            .stats-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .tab-button {
+              font-size: 13px;
+              padding: 10px 16px;
+            }
+          }
+
+          /* 动画 */
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+
+          /* 项目列表样式 */
+          .projects-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          }
+
+          .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid #f1f5f9;
+          }
+
+          .search-section {
+            flex: 1;
+            max-width: 400px;
+          }
+
+          .search-input-wrapper {
+            position: relative;
+          }
+
+          .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+          }
+
+          .search-input {
+            width: 100%;
+            padding: 12px 12px 12px 44px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.2s ease;
+          }
+
+          .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+          }
+
+          .create-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+          }
+
+          .create-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+          }
+
+          .project-table-container {
+            overflow-x: auto;
+          }
+
+          .project-table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
+          .project-table th {
+            background: #f8fafc;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+          }
+
+          .project-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+          }
+
+          .project-row:hover {
+            background: #f8fafc;
+          }
+
+          .project-name {
+            font-weight: 600;
+            color: #1e293b;
+          }
+
+          .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+          }
+
+          .status-badge.green {
+            background: #dcfce7;
+            color: #16a34a;
+          }
+
+          .status-badge.blue {
+            background: #dbeafe;
+            color: #2563eb;
+          }
+
+          .status-badge.yellow {
+            background: #fef3c7;
+            color: #d97706;
+          }
+
+          .status-badge.gray {
+            background: #f1f5f9;
+            color: #64748b;
+          }
+
+          .action-buttons {
+            display: flex;
+            gap: 8px;
+          }
+
+          .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .action-btn.view {
+            background: #f0f9ff;
+            color: #0284c7;
+          }
+
+          .action-btn.view:hover {
+            background: #e0f2fe;
+            color: #0369a1;
+          }
+
+          .action-btn.edit {
+            background: #f0fdf4;
+            color: #16a34a;
+          }
+
+          .action-btn.edit:hover {
+            background: #dcfce7;
+            color: #15803d;
+          }
+
+          .action-btn.delete {
+            background: #fef2f2;
+            color: #dc2626;
+          }
+
+          .action-btn.delete:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+          }
+
+          .loading-row td {
+            padding: 20px;
+          }
+
+          .no-data {
+            text-align: center;
+            padding: 60px 20px;
+          }
+
+          .no-data-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            color: #9ca3b8;
+          }
+
+          .no-data-icon {
+            opacity: 0.5;
+          }
+
+          .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-top: 1px solid #f1f5f9;
+            background: #fafbfc;
+          }
+
+          .pagination-info {
+            font-size: 14px;
+            color: #64748b;
+          }
+
+          .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+
+          .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          .page-btn:not(:disabled):hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+          }
+
+          .page-numbers {
+            display: flex;
+            gap: 2px;
+            margin: 0 8px;
+          }
+
+          .page-number {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .page-number.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+          }
+
+          .page-number:not(.active):hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+          }
+        `}</style>
+      </div>
     </DashboardLayout>
   )
 }

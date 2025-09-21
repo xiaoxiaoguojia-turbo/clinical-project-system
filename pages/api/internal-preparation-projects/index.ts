@@ -247,6 +247,7 @@ import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import InternalPreparationProject from '@/models/InternalPreparationProject'
 import Attachment from '@/models/Attachment'  
+import User from '@/models/User'  
 import { ApiResponse, PaginatedResponse, InternalPreparationProject as IInternalPreparationProject } from '@/types'
 
 async function handler(
@@ -259,7 +260,7 @@ async function handler(
     
     // 确保所有相关模型都被注册（解决MissingSchemaError）
     // 通过访问模型属性来强制触发注册
-    const ensureModels = [InternalPreparationProject, Attachment]
+    const ensureModels = [InternalPreparationProject, Attachment, User]
     ensureModels.forEach(model => model.modelName) // 强制引用每个模型
 
     if (req.method === 'GET') {

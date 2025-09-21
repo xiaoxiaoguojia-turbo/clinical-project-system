@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
 import { 
   CalendarIcon, 
   FunnelIcon, 
@@ -167,6 +168,8 @@ export default function InternalPreparationsPage() {
   const [aiReportStatus, setAiReportStatus] = useState<{[key: string]: 'idle' | 'generating' | 'completed' | 'error'}>({})
   const [aiReportUrls, setAiReportUrls] = useState<{[key: string]: string}>({})
   const [currentGeneratingProject, setCurrentGeneratingProject] = useState<string | null>(null)
+
+  const router = useRouter()
 
   /* ------------------------------------------------------------------------------------------ */
 
@@ -783,8 +786,15 @@ export default function InternalPreparationsPage() {
   }
 
   const handleAttachmentManagement = (project: InternalPreparationProject) => {
-    console.log('跳转到附件管理页面:', project.name)
-    // TODO: 实现跳转到附件管理页面的逻辑
+    // 跳转到附件管理页面，传递项目ID和相关信息
+    router.push({
+      pathname: '/internal-preparation-attachments',
+      query: {
+        projectId: project._id,
+        projectName: project.name,
+        projectType: 'internal-preparation'
+      }
+    })
   }
 
   const handleGenerateAIReport = async (project: InternalPreparationProject) => {

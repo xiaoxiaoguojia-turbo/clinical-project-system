@@ -16,7 +16,8 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowLeftIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 
 interface IAttachment {
@@ -49,11 +50,21 @@ interface User {
   realName: string
 }
 
+interface ProjectInfo {
+  id: string
+  name: string
+  type: string
+}
+
 /* ------------------------------------------------------------------------------------------ */
 
 export default function InternalPreparationAttachments() {
   const router = useRouter()
-  const { projectId } = router.query
+  const { projectId, projectName, projectType } = router.query
+
+  // 项目信息状态
+  const [projectInfo, setProjectInfo] = useState<ProjectInfo | null>(null)
+  const [pageReady, setPageReady] = useState(false)
 
   // 状态管理
   const [loading, setLoading] = useState(true)
@@ -78,30 +89,54 @@ export default function InternalPreparationAttachments() {
 
   /* ------------------------------------------------------------------------------------------ */
 
-  // 权限检查和重定向
+  // 初始化页面参数
   useEffect(() => {
+    // 等待路由器完全加载
+    if (!router.isReady) return
+
+    // 权限检查
     const token = localStorage.getItem('authToken')
     if (!token) {
       router.push('/login')
       return
     }
 
-    if (!projectId) {
+    // 参数验证
+    if (!projectId || !projectName || !projectType) {
+      alert('缺少必要的项目参数，将返回项目列表')
       router.push('/internal-preparations')
       return
     }
-  }, [router, projectId])
+
+    // 设置项目信息
+    setProjectInfo({
+      id: projectId as string,
+      name: projectName as string,
+      type: projectType as string
+    })
+
+    setPageReady(true)
+  }, [router.isReady, router, projectId, projectName, projectType])
+
+  // 页面就绪后加载数据
+  useEffect(() => {
+    if (pageReady && projectInfo) {
+      loadAttachments()
+    }
+  }, [pageReady, projectInfo])
 
   // 加载附件列表
   const loadAttachments = async (page = 1, search = '', fileType = '') => {
+    if (!projectInfo) return
+
     try {
       setLoading(true)
       
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: pageSize.toString(),
-        projectType: 'internal-preparation',
-        projectId: projectId as string
+        projectType: projectInfo.type,
+        projectId: projectInfo.id
       })
       
       if (search.trim()) {
@@ -131,7 +166,7 @@ export default function InternalPreparationAttachments() {
 
   // 处理文件上传
   const handleFileUpload = async () => {
-    if (!selectedFile || !projectId) {
+    if (!selectedFile || !projectInfo) {
       alert('请选择要上传的文件')
       return
     }
@@ -141,8 +176,8 @@ export default function InternalPreparationAttachments() {
       
       const formData = new FormData()
       formData.append('file', selectedFile)
-      formData.append('projectId', projectId as string)
-      formData.append('projectType', 'internal-preparation')
+      formData.append('projectId', projectInfo.id)
+      formData.append('projectType', projectInfo.type)
       
       if (uploadDescription.trim()) {
         formData.append('description', uploadDescription.trim())
@@ -280,19 +315,29 @@ export default function InternalPreparationAttachments() {
 
   /* ------------------------------------------------------------------------------------------ */
 
-  // 页面加载时获取数据
-  useEffect(() => {
-    if (projectId) {
-      loadAttachments()
-    }
-  }, [projectId])
+  // 如果页面未就绪，显示加载状态
+  if (!pageReady || !projectInfo) {
+    return (
+      <>
+        <Head>
+          <title>附件管理 - 院内制剂项目</title>
+        </Head>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-500">正在加载...</p>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   /* ------------------------------------------------------------------------------------------ */
 
   return (
     <>
       <Head>
-        <title>附件管理 - 院内制剂项目</title>
+        <title>附件管理 - {projectInfo.name}</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50">
@@ -313,16 +358,19 @@ export default function InternalPreparationAttachments() {
               <div className="flex justify-between items-center">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">附件管理</h1>
-                  <p className="text-gray-600">管理项目相关的文档和文件</p>
+                  <div className="flex items-center text-gray-600">
+                    <InformationCircleIcon className="h-5 w-5 mr-2" />
+                    <span>项目：{projectInfo.name}</span>
+                  </div>
                 </div>
                 
                 <div className="flex space-x-4">
                   <button
-                    onClick={() => router.back()}
+                    onClick={() => router.push('/internal-preparations')}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                    返回
+                    返回项目列表
                   </button>
                   
                   <button
@@ -387,7 +435,9 @@ export default function InternalPreparationAttachments() {
                 <div className="p-12 text-center">
                   <PaperClipIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">暂无附件</h3>
-                  <p className="text-gray-500 mb-6">还没有上传任何附件，点击上传按钮开始添加。</p>
+                  <p className="text-gray-500 mb-6">
+                    项目"{projectInfo.name}"还没有上传任何附件，点击上传按钮开始添加。
+                  </p>
                   <button
                     onClick={() => setUploadModalOpen(true)}
                     className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
@@ -410,7 +460,7 @@ export default function InternalPreparationAttachments() {
                   {/* 附件列表 */}
                   <div className="divide-y divide-gray-200">
                     {attachments.map((attachment) => (
-                      <div key={attachment._id} className="p-6 hover:bg-gray-50">
+                      <div key={attachment._id} className="p-6 hover:bg-gray-50 file-list-item">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center flex-1 min-w-0">
                             <div className="flex-shrink-0 mr-4">
@@ -518,10 +568,19 @@ export default function InternalPreparationAttachments() {
       {/* 上传附件模态框 */}
       {uploadModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 upload-modal">
             <h3 className="text-lg font-medium text-gray-900 mb-4">上传附件</h3>
             
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  项目名称
+                </label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                  {projectInfo.name}
+                </div>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   选择文件

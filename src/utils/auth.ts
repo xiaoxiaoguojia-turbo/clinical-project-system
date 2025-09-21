@@ -104,6 +104,21 @@ export class TokenManager {
     const user = this.getUser()
     return user?.realName || user?.username || '未知用户'
   }
+
+  // 退出登录
+  static logout() {
+    this.clearAuth()
+    // 注意：不在这里处理跳转，由调用方处理
+  }
+
+  // 安全的认证检查（避免hydration错误）
+  static isAuthenticatedSafe(): boolean {
+    // 在服务端渲染时总是返回false，避免hydration不匹配
+    if (typeof window === 'undefined') {
+      return false
+    }
+    return this.isAuthenticated()
+  }
 }
 
 // API 调用封装
@@ -210,7 +225,7 @@ export class ApiClient {
 
 // 权限检查函数
 export const checkPermission = (requiredRole?: 'admin' | 'user'): boolean => {
-  if (!TokenManager.isAuthenticated()) {
+  if (!TokenManager.isAuthenticatedSafe()) {
     return false
   }
 

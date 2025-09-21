@@ -12,6 +12,7 @@ import {
   CheckIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import { ApiResponse, PaginatedResponse, UserResponse } from '@/types'
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -40,14 +41,8 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
   )
 })
 
-interface User {
-  _id: string
-  username: string
-  email: string
-  realName: string
-  role: 'admin' | 'user'
-  department: string
-  status: 'active' | 'inactive'
+// 使用后端的UserResponse类型，重新定义日期字段为字符串
+type User = Omit<UserResponse, 'createTime' | 'updateTime' | 'lastLogin'> & {
   createTime: string
   updateTime: string
   lastLogin?: string
@@ -77,6 +72,12 @@ export default function UsersPage() {
   const [showNewUserModal, setShowNewUserModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+    totalPages: 0
+  })
   const [newUser, setNewUser] = useState<NewUser>({
     username: '',
     email: '',
@@ -118,66 +119,74 @@ export default function UsersPage() {
     checkAuth()
   }, [])
 
-  const loadUsers = async () => {
+  // 搜索和筛选变化时重新加载用户列表
+  useEffect(() => {
+    if (isAuthenticated) {
+      const timer = setTimeout(() => {
+        loadUsers(1) // 重置到第一页
+      }, 300) // 300ms防抖
+
+      return () => clearTimeout(timer)
+    }
+  }, [searchTerm, roleFilter, statusFilter, isAuthenticated])
+
+  const loadUsers = async (page: number = pagination.current) => {
     try {
       setLoading(true)
       
-      setTimeout(() => {
-        const mockUsers: User[] = [
-          {
-            _id: '1',
-            username: 'admin',
-            email: 'admin@clinical-innovation.com',
-            realName: '系统管理员',
-            role: 'admin',
-            department: '转移转化与投资部门',
-            status: 'active',
-            createTime: '2024-01-15T08:30:00Z',
-            updateTime: '2024-09-20T15:45:00Z',
-            lastLogin: '2024-09-21T11:30:00Z'
-          },
-          {
-            _id: '2',
-            username: 'zhangsan',
-            email: 'zhangsan@clinical-innovation.com',
-            realName: '张三',
-            role: 'user',
-            department: '临床研究部',
-            status: 'active',
-            createTime: '2024-03-20T09:15:00Z',
-            updateTime: '2024-09-18T14:20:00Z',
-            lastLogin: '2024-09-20T16:45:00Z'
-          },
-          {
-            _id: '3',
-            username: 'lisi',
-            email: 'lisi@clinical-innovation.com',
-            realName: '李四',
-            role: 'user',
-            department: '转移转化与投资部门',
-            status: 'active',
-            createTime: '2024-04-10T10:00:00Z',
-            updateTime: '2024-09-19T11:30:00Z',
-            lastLogin: '2024-09-19T17:20:00Z'
-          },
-          {
-            _id: '4',
-            username: 'wangwu',
-            email: 'wangwu@clinical-innovation.com',
-            realName: '王五',
-            role: 'user',
-            department: '创新实验室',
-            status: 'inactive',
-            createTime: '2024-05-25T14:30:00Z',
-            updateTime: '2024-08-15T09:45:00Z'
-          }
-        ]
-        
-        setUsers(mockUsers)
-        setLoading(false)
-      }, 800)
+      const { ApiClient } = await import('@/utils/auth')
+      
+      // 构建查询参数
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pagination.pageSize.toString()
+      })
+      
+      if (searchTerm.trim()) {
+        params.append('search', searchTerm.trim())
+      }
+      
+      if (roleFilter !== 'all') {
+        params.append('role', roleFilter)
+      }
+      
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter)
+      }
+      
+      const response = await ApiClient.get<ApiResponse<PaginatedResponse<UserResponse>>>(`/users?${params.toString()}`)
+      
+      if (response.success && response.data) {
+        // API返回的JSON数据中日期已经是字符串格式，使用unknown进行安全转换
+        const users = response.data.data || []
+        setUsers(users as unknown as User[])
+        setPagination({
+          current: response.data.pagination?.current || page,
+          pageSize: response.data.pagination?.pageSize || 20,
+          total: response.data.pagination?.total || 0,
+          totalPages: response.data.pagination?.totalPages || 0
+        })
+      } else {
+        console.error('获取用户列表失败:', response.error)
+        setUsers([])
+        setPagination({
+          current: 1,
+          pageSize: 20,
+          total: 0,
+          totalPages: 0
+        })
+      }
+      
     } catch (error) {
       console.error('加载用户数据失败:', error)
+      setUsers([])
+      setPagination({
+        current: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 0
+      })
+    } finally {
       setLoading(false)
     }
   }
@@ -213,18 +222,26 @@ export default function UsersPage() {
   }
 
   const confirmDeleteUser = async () => {
-    if (userToDelete) {
-      try {
-        // TODO: 调用删除API
-        console.log('删除用户:', userToDelete.realName)
-        
-        // 模拟删除成功
-        setUsers(users.filter(u => u._id !== userToDelete._id))
+    if (!userToDelete) return
+    
+    try {
+      const { ApiClient } = await import('@/utils/auth')
+      
+      const response = await ApiClient.delete<ApiResponse<any>>(`/users/${userToDelete._id}`)
+      
+      if (response.success) {
+        // 重新加载当前页数据
+        await loadUsers()
         setShowDeleteModal(false)
         setUserToDelete(null)
-      } catch (error) {
-        console.error('删除用户失败:', error)
+        alert('用户删除成功！')
+      } else {
+        console.error('删除用户失败:', response.error)
+        alert(`删除用户失败：${response.error || '未知错误'}`)
       }
+    } catch (error) {
+      console.error('删除用户失败:', error)
+      alert('删除用户失败，请重试')
     }
   }
 
@@ -236,30 +253,27 @@ export default function UsersPage() {
         return
       }
 
-      // TODO: 调用创建用户API
-      console.log('创建用户:', newUser)
+      const { ApiClient } = await import('@/utils/auth')
       
-      // 模拟创建成功
-      const createdUser: User = {
-        _id: Date.now().toString(),
-        ...newUser,
-        status: 'active',
-        createTime: new Date().toISOString(),
-        updateTime: new Date().toISOString()
+      const response = await ApiClient.post<ApiResponse<UserResponse>>('/users', newUser)
+      
+      if (response.success) {
+        // 重新加载用户列表
+        await loadUsers(1) // 回到第一页显示新创建的用户
+        setShowNewUserModal(false)
+        setNewUser({
+          username: '',
+          email: '',
+          realName: '',
+          role: 'user',
+          department: '',
+          password: ''
+        })
+        alert('用户创建成功！')
+      } else {
+        console.error('创建用户失败:', response.error)
+        alert(`创建用户失败：${response.error || '未知错误'}`)
       }
-      
-      setUsers([...users, createdUser])
-      setShowNewUserModal(false)
-      setNewUser({
-        username: '',
-        email: '',
-        realName: '',
-        role: 'user',
-        department: '',
-        password: ''
-      })
-      
-      alert('用户创建成功！')
     } catch (error) {
       console.error('创建用户失败:', error)
       alert('创建用户失败，请重试')
@@ -269,19 +283,15 @@ export default function UsersPage() {
   const handleNewUserInputChange = (field: keyof NewUser, value: string) => {
     setNewUser({ ...newUser, [field]: value })
   }
+
+  const handlePageChange = (page: number) => {
+    loadUsers(page)
+  }
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
-  // 数据处理和过滤
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.realName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter
-    
-    return matchesSearch && matchesRole && matchesStatus
-  })
+  // 数据处理和过滤（现在主要在后端完成）
+  const displayUsers = users // 直接使用从后端获取的用户列表
 
   const getRoleBadge = (role: string) => {
     return role === 'admin' ? 
@@ -410,12 +420,12 @@ export default function UsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
+                  {displayUsers.map((user) => (
                     <tr key={user._id}>
                       <td>
                         <div className="user-info">
                           <div className="user-avatar">
-                            {user.realName.charAt(0)}
+                            {user.realName?.charAt(0)}
                           </div>
                           <div className="user-details">
                             <div className="user-name">{user.realName}</div>
@@ -459,7 +469,7 @@ export default function UsersPage() {
               </table>
             )}
 
-            {!loading && filteredUsers.length === 0 && (
+            {!loading && displayUsers.length === 0 && (
               <div className="empty-state">
                 <UsersIcon className="w-16 h-16 empty-icon" />
                 <h3>暂无用户数据</h3>
@@ -467,6 +477,48 @@ export default function UsersPage() {
               </div>
             )}
           </div>
+
+          {/* 分页控件 */}
+          {pagination.totalPages > 1 && (
+            <div className="pagination-section">
+              <div className="pagination-info">
+                <span>共 {pagination.total} 条记录，第 {pagination.current} 页，共 {pagination.totalPages} 页</span>
+              </div>
+              <div className="pagination-controls">
+                <button 
+                  className="page-btn prev" 
+                  onClick={() => handlePageChange(pagination.current - 1)}
+                  disabled={pagination.current === 1}
+                >
+                  上一页
+                </button>
+                <div className="page-numbers">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum = pagination.current - 2 + i
+                    if (pageNum < 1) pageNum = i + 1
+                    if (pageNum > pagination.totalPages) return null
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`page-btn ${pageNum === pagination.current ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button 
+                  className="page-btn next" 
+                  onClick={() => handlePageChange(pagination.current + 1)}
+                  disabled={pagination.current === pagination.totalPages}
+                >
+                  下一页
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 用户详情模态框 */}
@@ -482,7 +534,7 @@ export default function UsersPage() {
               <div className="modal-body">
                 <div className="user-detail-card">
                   <div className="user-avatar-large">
-                    {selectedUser.realName.charAt(0)}
+                    {selectedUser.realName?.charAt(0)}
                   </div>
                   <div className="user-info-grid">
                     <div className="info-item">
@@ -1340,6 +1392,66 @@ export default function UsersPage() {
             width: 100%;
             justify-content: center;
           }
+        }
+
+        /* 分页组件样式 */
+        .pagination-section {
+          padding: 20px 24px;
+          border-top: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+
+        .pagination-info {
+          color: #64748b;
+          font-size: 14px;
+        }
+
+        .pagination-controls {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .page-numbers {
+          display: flex;
+          gap: 4px;
+        }
+
+        .page-btn {
+          padding: 8px 12px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          color: #64748b;
+          border-radius: 6px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          min-width: 40px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .page-btn:hover:not(:disabled) {
+          border-color: #3b82f6;
+          color: #3b82f6;
+          background: #f8fafc;
+        }
+
+        .page-btn.active {
+          background: #3b82f6;
+          color: white;
+          border-color: #3b82f6;
+        }
+
+        .page-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       `}</style>
     </DashboardLayout>

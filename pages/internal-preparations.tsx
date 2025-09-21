@@ -748,6 +748,11 @@ export default function InternalPreparationsPage() {
     setEditFormErrors({})
   }
 
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false)
+    setSelectedProject(null)
+  }
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return '进行中'
@@ -1045,7 +1050,7 @@ export default function InternalPreparationsPage() {
                   />
                 </div>
               </div>
-              <div className="action-section">
+              <div className="action-section-2">
                 <button className="create-button" onClick={handleCreateProject}>
                   <PlusIcon className="w-4 h-4" />
                   新建项目
@@ -1526,6 +1531,139 @@ export default function InternalPreparationsPage() {
           </div>
         )}
 
+        {/* 查看项目详情模态框 */}
+        {showDetailModal && selectedProject && (
+          <div className="modal-overlay" onClick={handleCloseDetailModal}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>项目详情</h2>
+                <button
+                  onClick={handleCloseDetailModal}
+                  className="modal-close"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="detail-grid">
+                  <div className="detail-section">
+                    <h3 className="detail-section-title">基本信息</h3>
+                    <div className="detail-group">
+                      <div className="detail-item">
+                        <label className="detail-label">项目名称</label>
+                        <div className="detail-value">{selectedProject.name}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">来源科室</label>
+                        <div className="detail-value">{selectedProject.source}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">备案号</label>
+                        <div className="detail-value">{selectedProject.recordNumber || '-'}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">项目状态</label>
+                        <div className="detail-value">
+                          <span className={`status-badge ${selectedProject.status}`}>
+                            {getStatusText(selectedProject.status)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="detail-section">
+                    <h3 className="detail-section-title">制剂信息</h3>
+                    <div className="detail-group">
+                      <div className="detail-item full-width">
+                        <label className="detail-label">组方</label>
+                        <div className="detail-value detail-text">{selectedProject.composition}</div>
+                      </div>
+                      <div className="detail-item full-width">
+                        <label className="detail-label">功能</label>
+                        <div className="detail-value detail-text">{selectedProject.function}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">规格</label>
+                        <div className="detail-value">{selectedProject.specification}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">用量</label>
+                        <div className="detail-value">{selectedProject.dosage}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">有效期</label>
+                        <div className="detail-value">{selectedProject.duration} 年</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {(selectedProject.patent || selectedProject.remarks) && (
+                    <div className="detail-section">
+                      <h3 className="detail-section-title">其他信息</h3>
+                      <div className="detail-group">
+                        {selectedProject.patent && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">专利情况</label>
+                            <div className="detail-value detail-text">{selectedProject.patent}</div>
+                          </div>
+                        )}
+                        {selectedProject.remarks && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">备注</label>
+                            <div className="detail-value detail-text">{selectedProject.remarks}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="detail-section">
+                    <h3 className="detail-section-title">记录信息</h3>
+                    <div className="detail-group">
+                      <div className="detail-item">
+                        <label className="detail-label">创建时间</label>
+                        <div className="detail-value">{new Date(selectedProject.createTime).toLocaleString()}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">更新时间</label>
+                        <div className="detail-value">{new Date(selectedProject.updateTime).toLocaleString()}</div>
+                      </div>
+                      {selectedProject.createdBy && (
+                        <div className="detail-item">
+                          <label className="detail-label">创建人</label>
+                          <div className="detail-value">{selectedProject.createdBy}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  onClick={handleCloseDetailModal}
+                  className="btn-secondary"
+                >
+                  关闭
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCloseDetailModal()
+                    handleEditProject(selectedProject)
+                  }}
+                  className="btn-primary"
+                >
+                  编辑项目
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <style jsx>{`
           .preparations-page {
             padding: 24px;
@@ -1556,6 +1694,18 @@ export default function InternalPreparationsPage() {
             font-size: 16px;
             color: #64748b;
             margin: 0;
+          }
+
+          .action-section {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+          }
+
+          .action-section-2 {
+            display: flex;
+            gap: 12px;
+            margin-top: 0px;
           }
 
           .export-button {
@@ -1627,7 +1777,7 @@ export default function InternalPreparationsPage() {
             padding: 20px 24px;
             border-radius: 12px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
+            margin-bottom: 42px;
           }
 
           .filter-controls {
@@ -1937,20 +2087,19 @@ export default function InternalPreparationsPage() {
           }
 
           .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             position: relative;
           }
 
           .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
             color: #6b7280;
           }
 
           .search-input {
             width: 100%;
-            padding: 12px 12px 12px 44px;
+            padding: 12px 12px 12px 20px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 14px;
@@ -2374,10 +2523,6 @@ export default function InternalPreparationsPage() {
               padding: 20px 24px;
             }
             
-            .modal-header h2 {
-              font-size: 18px;
-            }
-            
             .modal-body {
               padding: 24px;
             }
@@ -2420,7 +2565,139 @@ export default function InternalPreparationsPage() {
             }
             
             .form-input, .form-textarea {
-              padding: 12px 14px;
+              padding: 10px 12px;
+            }
+          }
+
+          /* 查看详情模态框样式 */
+          .detail-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+          }
+
+          .detail-section {
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            padding: 24px;
+            background: #fafbfc;
+          }
+
+          .detail-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+          }
+
+          .detail-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 24px;
+          }
+
+          .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .detail-item.full-width {
+            grid-column: 1 / -1;
+          }
+
+          .detail-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+          }
+
+          .detail-value {
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 500;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            min-height: 20px;
+          }
+
+          .detail-text {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+          }
+
+          .status-badge.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+          }
+
+          .status-badge.completed {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+          }
+
+          .status-badge.paused {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+          }
+
+          /* 响应式设计 - 查看详情 */
+          @media (max-width: 768px) {
+            .detail-group {
+              grid-template-columns: 1fr;
+              gap: 16px;
+            }
+            
+            .detail-item.full-width {
+              grid-column: 1;
+            }
+            
+            .detail-section {
+              padding: 20px;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .detail-grid {
+              gap: 24px;
+            }
+            
+            .detail-section {
+              padding: 16px;
+            }
+            
+            .detail-group {
+              gap: 12px;
+            }
+            
+            .detail-value {
+              padding: 10px 12px;
             }
           }
         `}</style>

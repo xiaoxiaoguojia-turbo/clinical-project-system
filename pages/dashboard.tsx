@@ -546,6 +546,7 @@ export default function Dashboard() {
         .action-section {
           display: flex;
           gap: 12px;
+          margin-top: 20px;
         }
 
         .export-button {

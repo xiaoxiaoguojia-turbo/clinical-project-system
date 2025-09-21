@@ -124,8 +124,8 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
               className="nav-button"
               title={isAdmin ? '人员管理' : '需要管理员权限'}
             >
-              <UsersIcon className="w-5 h-5" />
-              <span>人员管理</span>
+              <UsersIcon className="w-5 h-5 text-white" />
+              <span className="text-white font-semibold text-base">人员管理</span>
             </button>
           </li>
         </ul>
@@ -149,7 +149,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
 
         <div className="user-dropdown">
           <button className="dropdown-trigger">
-            <ChevronDownIcon className="w-4 h-4" />
+            <ChevronDownIcon className="w-4 h-4 text-white" />
           </button>
           
           <div className="dropdown-menu">
@@ -180,7 +180,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
           left: 0;
           right: 0;
           height: 64px;
-          background: white;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
           border-bottom: 1px solid #e5e7eb;
           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
           display: flex;
@@ -213,7 +213,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
         .system-title {
           font-size: 18px;
           font-weight: bold;
-          color: #1f2937;
+          color: white;
           margin: 0;
           white-space: nowrap;
         }
@@ -253,8 +253,8 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
         }
 
         .nav-button:hover {
-          background: #f3f4f6;
-          color: #1f2937;
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
         }
 
         .nav-button:focus {
@@ -272,7 +272,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
         .user-name {
           font-size: 14px;
           font-weight: 500;
-          color: #374151;
+          color: white;
           white-space: nowrap;
         }
 

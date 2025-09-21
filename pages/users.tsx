@@ -70,8 +70,10 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserDetail, setShowUserDetail] = useState(false)
   const [showNewUserModal, setShowNewUserModal] = useState(false)
+  const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 20,
@@ -86,6 +88,15 @@ export default function UsersPage() {
     department: '',
     password: ''
   })
+  const [editUser, setEditUser] = useState<Omit<NewUser, 'password'>>({
+    username: '',
+    email: '',
+    realName: '',
+    role: 'user',
+    department: ''
+  })
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -212,8 +223,16 @@ export default function UsersPage() {
   }
 
   const handleEditUser = (user: User) => {
-    console.log('编辑用户:', user.realName)
-    // TODO: 实现编辑用户功能
+    setUserToEdit(user)
+    setEditUser({
+      username: user.username,
+      email: user.email || '',
+      realName: user.realName || '',
+      role: user.role,
+      department: user.department || ''
+    })
+    setErrors({})
+    setShowEditUserModal(true)
   }
 
   const handleDeleteUser = (user: User) => {
@@ -246,10 +265,30 @@ export default function UsersPage() {
   }
 
   const handleCreateUser = async () => {
+    if (isSubmitting) return
+
     try {
-      // 简单的表单验证
-      if (!newUser.realName || !newUser.username || !newUser.email || !newUser.password || !newUser.department) {
-        alert('请填写所有必填字段')
+      setIsSubmitting(true)
+      setErrors({})
+
+      // 表单验证
+      const newErrors: {[key: string]: string} = {}
+      if (!newUser.realName.trim()) newErrors.realName = '请输入真实姓名'
+      if (!newUser.username.trim()) newErrors.username = '请输入用户名'
+      if (!newUser.email.trim()) newErrors.email = '请输入邮箱地址'
+      if (!newUser.password.trim()) newErrors.password = '请输入密码'
+      if (!newUser.department.trim()) newErrors.department = '请选择部门'
+      
+      if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(newUser.email)) {
+        newErrors.email = '请输入有效的邮箱地址'
+      }
+      
+      if (newUser.password.length < 6) {
+        newErrors.password = '密码长度不能少于6个字符'
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
         return
       }
 
@@ -269,6 +308,7 @@ export default function UsersPage() {
           department: '',
           password: ''
         })
+        setErrors({})
         alert('用户创建成功！')
       } else {
         console.error('创建用户失败:', response.error)
@@ -277,15 +317,99 @@ export default function UsersPage() {
     } catch (error) {
       console.error('创建用户失败:', error)
       alert('创建用户失败，请重试')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleUpdateUser = async () => {
+    if (isSubmitting || !userToEdit) return
+
+    try {
+      setIsSubmitting(true)
+      setErrors({})
+
+      // 表单验证
+      const newErrors: {[key: string]: string} = {}
+      if (!editUser.realName.trim()) newErrors.realName = '请输入真实姓名'
+      if (!editUser.username.trim()) newErrors.username = '请输入用户名'
+      if (!editUser.email.trim()) newErrors.email = '请输入邮箱地址'
+      if (!editUser.department.trim()) newErrors.department = '请选择部门'
+      
+      if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(editUser.email)) {
+        newErrors.email = '请输入有效的邮箱地址'
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
+        return
+      }
+
+      const { ApiClient } = await import('@/utils/auth')
+      
+      const response = await ApiClient.put<ApiResponse<UserResponse>>(`/users/${userToEdit._id}`, editUser)
+      
+      if (response.success) {
+        // 重新加载当前页数据
+        await loadUsers()
+        setShowEditUserModal(false)
+        setUserToEdit(null)
+        setEditUser({
+          username: '',
+          email: '',
+          realName: '',
+          role: 'user',
+          department: ''
+        })
+        setErrors({})
+        alert('用户更新成功！')
+      } else {
+        console.error('更新用户失败:', response.error)
+        alert(`更新用户失败：${response.error || '未知错误'}`)
+      }
+    } catch (error) {
+      console.error('更新用户失败:', error)
+      alert('更新用户失败，请重试')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const handleNewUserInputChange = (field: keyof NewUser, value: string) => {
     setNewUser({ ...newUser, [field]: value })
+    // 清除相应字段的错误
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' })
+    }
+  }
+
+  const handleEditUserInputChange = (field: keyof typeof editUser, value: string) => {
+    setEditUser({ ...editUser, [field]: value })
+    // 清除相应字段的错误
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' })
+    }
   }
 
   const handlePageChange = (page: number) => {
-    loadUsers(page)
+    if (page >= 1 && page <= pagination.totalPages && page !== pagination.current) {
+      loadUsers(page)
+    }
+  }
+
+  const handleCloseModals = () => {
+    setShowNewUserModal(false)
+    setShowEditUserModal(false)
+    setShowUserDetail(false)
+    setShowDeleteModal(false)
+    setUserToDelete(null)
+    setUserToEdit(null)
+    setErrors({})
+    setIsSubmitting(false)
+  }
+
+  const handleRefresh = () => {
+    loadUsers(pagination.current)
   }
   /* ------------------------------------------------------------------------------------------ */
 
@@ -487,34 +611,76 @@ export default function UsersPage() {
               <div className="pagination-controls">
                 <button 
                   className="page-btn prev" 
+                  onClick={() => handlePageChange(1)}
+                  disabled={pagination.current === 1}
+                  title="首页"
+                >
+                  首页
+                </button>
+                <button 
+                  className="page-btn prev" 
                   onClick={() => handlePageChange(pagination.current - 1)}
                   disabled={pagination.current === 1}
+                  title="上一页"
                 >
                   上一页
                 </button>
                 <div className="page-numbers">
-                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                    let pageNum = pagination.current - 2 + i
-                    if (pageNum < 1) pageNum = i + 1
-                    if (pageNum > pagination.totalPages) return null
+                  {(() => {
+                    const pages = []
+                    const totalPages = pagination.totalPages
+                    const current = pagination.current
                     
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`page-btn ${pageNum === pagination.current ? 'active' : ''}`}
-                        onClick={() => handlePageChange(pageNum)}
-                      >
-                        {pageNum}
-                      </button>
-                    )
-                  })}
+                    // 计算显示页码范围
+                    let startPage = Math.max(1, current - 2)
+                    let endPage = Math.min(totalPages, current + 2)
+                    
+                    // 确保显示5个页码（如果总页数足够）
+                    if (endPage - startPage < 4) {
+                      if (startPage === 1) {
+                        endPage = Math.min(totalPages, startPage + 4)
+                      } else {
+                        startPage = Math.max(1, endPage - 4)
+                      }
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          className={`page-btn ${i === current ? 'active' : ''}`}
+                          onClick={() => handlePageChange(i)}
+                        >
+                          {i}
+                        </button>
+                      )
+                    }
+                    
+                    return pages
+                  })()}
                 </div>
                 <button 
                   className="page-btn next" 
                   onClick={() => handlePageChange(pagination.current + 1)}
                   disabled={pagination.current === pagination.totalPages}
+                  title="下一页"
                 >
                   下一页
+                </button>
+                <button 
+                  className="page-btn next" 
+                  onClick={() => handlePageChange(pagination.totalPages)}
+                  disabled={pagination.current === pagination.totalPages}
+                  title="末页"
+                >
+                  末页
+                </button>
+                <button 
+                  className="page-btn refresh" 
+                  onClick={handleRefresh}
+                  title="刷新"
+                >
+                  刷新
                 </button>
               </div>
             </div>
@@ -580,13 +746,116 @@ export default function UsersPage() {
           </div>
         )}
 
+        {/* 编辑用户模态框 */}
+        {showEditUserModal && userToEdit && (
+          <div className="modal-overlay" onClick={handleCloseModals}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>编辑用户</h3>
+                <button className="close-btn" onClick={handleCloseModals}>
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="form-grid">
+                  <div className="form-item">
+                    <label>真实姓名 *</label>
+                    <input
+                      type="text"
+                      value={editUser.realName}
+                      onChange={(e) => handleEditUserInputChange('realName', e.target.value)}
+                      placeholder="请输入真实姓名"
+                      className={errors.realName ? 'error' : ''}
+                    />
+                    {errors.realName && <span className="error-text">{errors.realName}</span>}
+                  </div>
+                  <div className="form-item">
+                    <label>用户名 *</label>
+                    <input
+                      type="text"
+                      value={editUser.username}
+                      onChange={(e) => handleEditUserInputChange('username', e.target.value)}
+                      placeholder="请输入用户名"
+                      className={errors.username ? 'error' : ''}
+                    />
+                    {errors.username && <span className="error-text">{errors.username}</span>}
+                  </div>
+                  <div className="form-item">
+                    <label>邮箱地址 *</label>
+                    <input
+                      type="email"
+                      value={editUser.email}
+                      onChange={(e) => handleEditUserInputChange('email', e.target.value)}
+                      placeholder="请输入邮箱地址"
+                      className={errors.email ? 'error' : ''}
+                    />
+                    {errors.email && <span className="error-text">{errors.email}</span>}
+                  </div>
+                  <div className="form-item">
+                    <label>用户角色 *</label>
+                    <select
+                      value={editUser.role}
+                      onChange={(e) => handleEditUserInputChange('role', e.target.value as 'admin' | 'user')}
+                      className={errors.role ? 'error' : ''}
+                    >
+                      <option value="user">普通用户</option>
+                      <option value="admin">管理员</option>
+                    </select>
+                    {errors.role && <span className="error-text">{errors.role}</span>}
+                  </div>
+                  <div className="form-item">
+                    <label>所属部门 *</label>
+                    <select
+                      value={editUser.department}
+                      onChange={(e) => handleEditUserInputChange('department', e.target.value)}
+                      className={errors.department ? 'error' : ''}
+                    >
+                      <option value="">请选择部门</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                    {errors.department && <span className="error-text">{errors.department}</span>}
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  className="cancel-btn" 
+                  onClick={handleCloseModals}
+                  disabled={isSubmitting}
+                >
+                  取消
+                </button>
+                <button 
+                  className="confirm-btn" 
+                  onClick={handleUpdateUser}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="loading-spinner"></div>
+                      更新中...
+                    </>
+                  ) : (
+                    <>
+                      <CheckIcon className="w-4 h-4" />
+                      更新用户
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 新增用户模态框 */}
         {showNewUserModal && (
-          <div className="modal-overlay" onClick={() => setShowNewUserModal(false)}>
+          <div className="modal-overlay" onClick={handleCloseModals}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h3>新增用户</h3>
-                <button className="close-btn" onClick={() => setShowNewUserModal(false)}>
+                <button className="close-btn" onClick={handleCloseModals}>
                   <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
@@ -599,7 +868,9 @@ export default function UsersPage() {
                       value={newUser.realName}
                       onChange={(e) => handleNewUserInputChange('realName', e.target.value)}
                       placeholder="请输入真实姓名"
+                      className={errors.realName ? 'error' : ''}
                     />
+                    {errors.realName && <span className="error-text">{errors.realName}</span>}
                   </div>
                   <div className="form-item">
                     <label>用户名 *</label>
@@ -608,7 +879,9 @@ export default function UsersPage() {
                       value={newUser.username}
                       onChange={(e) => handleNewUserInputChange('username', e.target.value)}
                       placeholder="请输入用户名"
+                      className={errors.username ? 'error' : ''}
                     />
+                    {errors.username && <span className="error-text">{errors.username}</span>}
                   </div>
                   <div className="form-item">
                     <label>邮箱地址 *</label>
@@ -617,48 +890,73 @@ export default function UsersPage() {
                       value={newUser.email}
                       onChange={(e) => handleNewUserInputChange('email', e.target.value)}
                       placeholder="请输入邮箱地址"
+                      className={errors.email ? 'error' : ''}
                     />
+                    {errors.email && <span className="error-text">{errors.email}</span>}
                   </div>
                   <div className="form-item">
-                    <label>登录密码 *</label>
+                    <label>初始密码 *</label>
                     <input
                       type="password"
                       value={newUser.password}
                       onChange={(e) => handleNewUserInputChange('password', e.target.value)}
-                      placeholder="请输入登录密码"
+                      placeholder="请输入初始密码（至少6位）"
+                      className={errors.password ? 'error' : ''}
                     />
+                    {errors.password && <span className="error-text">{errors.password}</span>}
                   </div>
                   <div className="form-item">
                     <label>用户角色 *</label>
                     <select
                       value={newUser.role}
-                      onChange={(e) => handleNewUserInputChange('role', e.target.value)}
+                      onChange={(e) => handleNewUserInputChange('role', e.target.value as 'admin' | 'user')}
+                      className={errors.role ? 'error' : ''}
                     >
                       <option value="user">普通用户</option>
                       <option value="admin">管理员</option>
                     </select>
+                    {errors.role && <span className="error-text">{errors.role}</span>}
                   </div>
                   <div className="form-item">
                     <label>所属部门 *</label>
                     <select
                       value={newUser.department}
                       onChange={(e) => handleNewUserInputChange('department', e.target.value)}
+                      className={errors.department ? 'error' : ''}
                     >
                       <option value="">请选择部门</option>
                       {departments.map(dept => (
                         <option key={dept} value={dept}>{dept}</option>
                       ))}
                     </select>
+                    {errors.department && <span className="error-text">{errors.department}</span>}
                   </div>
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="cancel-btn" onClick={() => setShowNewUserModal(false)}>
+                <button 
+                  className="cancel-btn" 
+                  onClick={handleCloseModals}
+                  disabled={isSubmitting}
+                >
                   取消
                 </button>
-                <button className="confirm-btn" onClick={handleCreateUser}>
-                  <CheckIcon className="w-4 h-4" />
-                  创建用户
+                <button 
+                  className="confirm-btn" 
+                  onClick={handleCreateUser}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="loading-spinner"></div>
+                      创建中...
+                    </>
+                  ) : (
+                    <>
+                      <CheckIcon className="w-4 h-4" />
+                      创建用户
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -667,11 +965,11 @@ export default function UsersPage() {
 
         {/* 删除确认模态框 */}
         {showDeleteModal && userToDelete && (
-          <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-overlay" onClick={handleCloseModals}>
             <div className="modal-content small" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h3>确认删除</h3>
-                <button className="close-btn" onClick={() => setShowDeleteModal(false)}>
+                <button className="close-btn" onClick={handleCloseModals}>
                   <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
@@ -683,10 +981,18 @@ export default function UsersPage() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="cancel-btn" onClick={() => setShowDeleteModal(false)}>
+                <button 
+                  className="cancel-btn" 
+                  onClick={handleCloseModals}
+                  disabled={isSubmitting}
+                >
                   取消
                 </button>
-                <button className="danger-btn" onClick={confirmDeleteUser}>
+                <button 
+                  className="danger-btn" 
+                  onClick={confirmDeleteUser}
+                  disabled={isSubmitting}
+                >
                   <TrashIcon className="w-4 h-4" />
                   确认删除
                 </button>
@@ -1403,11 +1709,13 @@ export default function UsersPage() {
           align-items: center;
           flex-wrap: wrap;
           gap: 16px;
+          background: linear-gradient(to right, #fafbfc, #f8fafc);
         }
 
         .pagination-info {
           color: #64748b;
           font-size: 14px;
+          font-weight: 500;
         }
 
         .pagination-controls {
@@ -1419,6 +1727,7 @@ export default function UsersPage() {
         .page-numbers {
           display: flex;
           gap: 4px;
+          margin: 0 8px;
         }
 
         .page-btn {
@@ -1428,6 +1737,7 @@ export default function UsersPage() {
           color: #64748b;
           border-radius: 6px;
           font-size: 14px;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
           min-width: 40px;
@@ -1435,23 +1745,108 @@ export default function UsersPage() {
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .page-btn:hover:not(:disabled) {
           border-color: #3b82f6;
           color: #3b82f6;
           background: #f8fafc;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
         }
 
         .page-btn.active {
-          background: #3b82f6;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
           color: white;
           border-color: #3b82f6;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
         }
 
         .page-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-btn.refresh {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border-color: #10b981;
+          margin-left: 8px;
+        }
+
+        .page-btn.refresh:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        /* 响应式分页 */
+        @media (max-width: 768px) {
+          .pagination-section {
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .pagination-controls {
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+
+          .page-btn {
+            padding: 6px 10px;
+            font-size: 13px;
+            min-width: 36px;
+            height: 32px;
+          }
+
+          .page-numbers {
+            margin: 0 4px;
+          }
+        }
+
+        /* 优化按钮禁用状态 */
+        button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .confirm-btn:disabled,
+        .danger-btn:disabled {
+          opacity: 0.7;
+          transform: none;
+          box-shadow: none;
+        }
+
+        /* 表单错误样式 */
+        .form-item input.error,
+        .form-item select.error {
+          border-color: #ef4444;
+          background-color: #fef2f2;
+        }
+
+        .form-item input.error:focus,
+        .form-item select.error:focus {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .error-text {
+          font-size: 12px;
+          color: #ef4444;
+          margin-top: 4px;
+          display: block;
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: white;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
         }
       `}</style>
     </DashboardLayout>

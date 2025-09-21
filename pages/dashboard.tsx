@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { NextPage } from 'next'
-import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
-import { 
-  ChartBarIcon,
-  DocumentTextIcon,
-  UsersIcon,
-  FolderIcon,
-  CalendarIcon,
-  FunnelIcon
-} from '@heroicons/react/24/outline'
+import { CalendarIcon, FunnelIcon, ArrowDownTrayIcon, ChartBarIcon, UsersIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
 
-// 动态导入DashboardLayout，避免SSR问题
-const DashboardLayout = dynamic(() => import('@/layout/DashboardLayout'), {
+// 动态导入组件，禁用SSR
+const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
   ssr: false,
   loading: () => (
     <div style={{ 
@@ -32,171 +24,278 @@ const DashboardLayout = dynamic(() => import('@/layout/DashboardLayout'), {
           animation: 'spin 1s linear infinite',
           margin: '0 auto 16px'
         }}></div>
-        <p>正在加载系统...</p>
+        <p>加载中...</p>
       </div>
     </div>
   )
 })
 
-const DashboardPage: NextPage = () => {
-  /* ------------------------------------------------------------------------------------------ */
-  // 状态和路由管理
-  const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState('month')
-  const [projectType, setProjectType] = useState('all')
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  /* ------------------------------------------------------------------------------------------ */
+interface DashboardData {
+  totalProjects: number
+  activeProjects: number
+  totalBudget: number
+  departments: number
+  researchers: number
+}
 
+interface StatCard {
+  title: string
+  value: string | number
+  unit: string
+  icon: React.ComponentType<any>
+  color: string
+  trend: string
+  trendLabel: string
+}
+
+export default function Dashboard() {
   /* ------------------------------------------------------------------------------------------ */
-  // 数据状态管理
-  const [dashboardData, setDashboardData] = useState({
+  // 状态管理
+  const [mounted, setMounted] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState('本月')
+  const [projectType, setProjectType] = useState('全部项目')
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalProjects: 0,
     activeProjects: 0,
-    completedProjects: 0,
     totalBudget: 0,
     departments: 0,
     researchers: 0
   })
+  const [charts, setCharts] = useState<{[key: string]: any}>({})
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
-  // 生命周期函数 - 客户端认证检查
+  // 认证检查和数据加载
   useEffect(() => {
-    const initAuth = async () => {
-      setMounted(true)
-      
+    setMounted(true)
+    
+    const checkAuth = async () => {
       try {
-        // 动态导入TokenManager避免SSR问题
         const { TokenManager } = await import('@/utils/auth')
         
-        const authenticated = TokenManager.isAuthenticated()
-        const user = TokenManager.getUser()
-        
-        setIsAuthenticated(authenticated)
-        setCurrentUser(user)
-        
-        if (!authenticated) {
-          router.replace('/login')
+        if (!TokenManager.isAuthenticated()) {
+          window.location.href = '/login'
           return
         }
         
-        // 认证通过，加载数据
-        await loadDashboardData()
+        setIsAuthenticated(true)
+        
+        // 模拟数据加载延迟
+        setTimeout(() => {
+          setDashboardData({
+            totalProjects: 12,
+            activeProjects: 8,
+            totalBudget: 2800000,
+            departments: 3,
+            researchers: 15
+          })
+          setLoading(false)
+        }, 1000)
       } catch (error) {
-        console.error('认证初始化失败:', error)
-        router.replace('/login')
+        console.error('认证检查失败:', error)
+        window.location.href = '/login'
       }
     }
 
-    initAuth()
-  }, [router])
+    checkAuth()
+  }, [])
 
-  // 当筛选条件变化时重新加载数据
+  // 图表初始化
   useEffect(() => {
-    if (mounted && isAuthenticated) {
-      loadDashboardData()
+    if (!loading && typeof window !== 'undefined') {
+      initializeCharts()
     }
-  }, [timeRange, projectType, mounted, isAuthenticated])
+  }, [loading])
 
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true)
-      
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // 模拟数据 - 根据时间范围和项目类型调整数据
-      const baseData = {
-        totalProjects: 12,
-        activeProjects: 7,
-        completedProjects: 5,
-        totalBudget: 2850000,
-        departments: 3,
-        researchers: 15
-      }
-      
-      // 根据筛选条件调整数据
-      const multiplier = timeRange === 'year' ? 12 : timeRange === 'quarter' ? 3 : 1
-      const typeMultiplier = projectType === 'all' ? 1 : 0.6
-      
-      setDashboardData({
-        totalProjects: Math.round(baseData.totalProjects * multiplier * typeMultiplier),
-        activeProjects: Math.round(baseData.activeProjects * multiplier * typeMultiplier),
-        completedProjects: Math.round(baseData.completedProjects * multiplier * typeMultiplier),
-        totalBudget: Math.round(baseData.totalBudget * multiplier * typeMultiplier),
-        departments: baseData.departments,
-        researchers: Math.round(baseData.researchers * typeMultiplier)
+  // 清理图表
+  useEffect(() => {
+    return () => {
+      Object.values(charts).forEach((chart: any) => {
+        if (chart && typeof chart.destroy === 'function') {
+          chart.destroy()
+        }
       })
+    }
+  }, [charts])
+  /* ------------------------------------------------------------------------------------------ */
+
+  /* ------------------------------------------------------------------------------------------ */
+  // 图表初始化函数
+  const initializeCharts = async () => {
+    try {
+      // 动态导入 Chart.js
+      const Chart = (await import('chart.js/auto')).default
       
-      setLoading(false)
+      const chartConfigs = getChartConfigs()
+      const newCharts: {[key: string]: any} = {}
+
+      // 添加延迟确保DOM元素已渲染
+      setTimeout(() => {
+        Object.entries(chartConfigs).forEach(([key, config]) => {
+          const canvas = document.getElementById(key) as HTMLCanvasElement
+          if (canvas) {
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              newCharts[key] = new Chart(ctx, config as any)
+            }
+          }
+        })
+        setCharts(newCharts)
+      }, 100)
     } catch (error) {
-      console.error('加载Dashboard数据失败:', error)
-      setLoading(false)
+      console.error('图表初始化失败:', error)
+    }
+  }
+
+  const getChartConfigs = () => {
+    return {
+      projectStageChart: {
+        type: 'doughnut' as const,
+        data: {
+          labels: ['立项阶段', '执行中', '结题阶段', '已完成'],
+          datasets: [{
+            data: [2, 5, 3, 2],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'],
+            borderWidth: 0,
+            cutout: '60%'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom' as const,
+              labels: { padding: 20, usePointStyle: true }
+            }
+          }
+        }
+      },
+      completionTrendChart: {
+        type: 'line' as const,
+        data: {
+          labels: ['4月', '5月', '6月', '7月', '8月', '9月'],
+          datasets: [{
+            label: '完成率',
+            data: [65, 72, 68, 75, 82, 78],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { callback: (value: any) => value + '%' }
+            }
+          }
+        }
+      },
+      departmentProjectsChart: {
+        type: 'bar' as const,
+        data: {
+          labels: ['转移转化部', '临床研究部', '创新实验室'],
+          datasets: [{
+            label: '项目数量',
+            data: [6, 4, 2],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      },
+      preparationUsageChart: {
+        type: 'bar' as const,
+        data: {
+          labels: ['1-2年', '3-5年', '6-10年', '10年以上'],
+          datasets: [{
+            label: '制剂数量',
+            data: [3, 5, 2, 1],
+            backgroundColor: '#8b5cf6',
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      }
     }
   }
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
   // 事件处理函数
-  const handleTimeRangeChange = (value: string) => {
-    setTimeRange(value)
+  const handleExport = () => {
+    console.log('导出数据功能开发中...')
   }
 
-  const handleProjectTypeChange = (value: string) => {
-    setProjectType(value)
+  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTimeRange(e.target.value)
   }
 
-  const handleExportData = () => {
-    // TODO: 实现数据导出功能
-    console.log('导出数据功能待实现')
+  const handleProjectTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setProjectType(e.target.value)
+  }
+
+  const handleChartAction = (chartId: string) => {
+    console.log(`图表操作: ${chartId}`)
   }
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
-  // 数据定义
-  const timeRangeOptions = [
-    { value: 'week', label: '本周' },
-    { value: 'month', label: '本月' },
-    { value: 'quarter', label: '本季度' },
-    { value: 'year', label: '本年度' }
-  ]
-
-  const projectTypeOptions = [
-    { value: 'all', label: '全部项目' },
-    { value: 'hospital-preparation', label: '院内制剂' },
-    { value: 'clinical-trial', label: '临床试验' },
-    { value: 'research', label: '科研项目' }
-  ]
-
-  const statisticCards = [
+  // 数据处理
+  const statisticCards: StatCard[] = [
     {
       title: '总项目数',
       value: dashboardData.totalProjects,
       unit: '个',
-      icon: FolderIcon,
+      icon: ChartBarIcon,
       color: 'blue',
-      trend: '+12%',
+      trend: '+3',
       trendLabel: '较上月'
     },
     {
       title: '进行中项目',
       value: dashboardData.activeProjects,
-      unit: '个', 
-      icon: DocumentTextIcon,
-      color: 'green',
-      trend: '+8%',
-      trendLabel: '较上月'
-    },
-    {
-      title: '已完成项目',
-      value: dashboardData.completedProjects,
       unit: '个',
       icon: ChartBarIcon,
-      color: 'purple',
-      trend: '+5%',
+      color: 'green',
+      trend: '+2',
       trendLabel: '较上月'
     },
     {
@@ -278,69 +377,64 @@ const DashboardPage: NextPage = () => {
         {/* 页面标题和操作区域 */}
         <div className="page-header">
           <div className="title-section">
-            <h1 className="page-title">项目报表统计分析</h1>
-            <p className="page-subtitle">
-              欢迎回来，{currentUser?.realName || currentUser?.username || '用户'}！这里是您的项目概览和数据统计。
-            </p>
+            <h1>项目报表统计分析</h1>
+            <p>欢迎回来，系统管理员！这里是您的项目概况数据统计。</p>
           </div>
-          
           <div className="action-section">
-            <button onClick={handleExportData} className="export-button">
-              <DocumentTextIcon className="w-5 h-5" />
-              <span>导出数据</span>
+            <button className="export-button" onClick={handleExport}>
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              导出报告
             </button>
           </div>
         </div>
 
-        {/* 筛选器 */}
+        {/* 筛选区域 */}
         <div className="filter-section">
           <div className="filter-item">
             <CalendarIcon className="w-5 h-5 filter-icon" />
             <span className="filter-label">时间范围:</span>
             <select 
-              value={timeRange} 
-              onChange={(e) => handleTimeRangeChange(e.target.value)}
               className="filter-select"
+              value={timeRange}
+              onChange={handleTimeRangeChange}
             >
-              {timeRangeOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
+              <option value="本月">本月</option>
+              <option value="本季度">本季度</option>
+              <option value="本年">本年</option>
+              <option value="自定义">自定义</option>
             </select>
           </div>
-          
           <div className="filter-item">
             <FunnelIcon className="w-5 h-5 filter-icon" />
             <span className="filter-label">项目类型:</span>
             <select 
-              value={projectType} 
-              onChange={(e) => handleProjectTypeChange(e.target.value)}
               className="filter-select"
+              value={projectType}
+              onChange={handleProjectTypeChange}
             >
-              {projectTypeOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
+              <option value="全部项目">全部项目</option>
+              <option value="院内制剂">院内制剂</option>
+              <option value="临床试验">临床试验</option>
+              <option value="创新项目">创新项目</option>
             </select>
           </div>
         </div>
 
-        {/* 统计卡片 */}
-        <div className="statistics-grid">
+        {/* 统计卡片区域 */}
+        <div className="stats-grid">
           {statisticCards.map((card, index) => {
-            const colorClasses = getCardColorClasses(card.color)
+            const colors = getCardColorClasses(card.color)
+            const IconComponent = card.icon
+            
             return (
-              <div key={index} className={`statistic-card ${colorClasses.bg} ${colorClasses.border}`}>
+              <div key={index} className={`stat-card ${colors.bg} ${colors.border}`}>
                 <div className="card-header">
-                  <div className="card-icon-wrapper">
-                    <card.icon className={`w-8 h-8 ${colorClasses.icon}`} />
-                  </div>
-                  <div className="card-trend">
-                    <span className={`trend-value ${colorClasses.trend}`}>{card.trend}</span>
-                    <span className="trend-label">{card.trendLabel}</span>
+                  <div className="card-title">{card.title}</div>
+                  <div className={`card-icon ${colors.icon}`}>
+                    <IconComponent className="w-6 h-6" />
                   </div>
                 </div>
-                
-                <div className="card-content">
-                  <h3 className="card-title">{card.title}</h3>
+                <div className="card-body">
                   <div className="card-value">
                     {loading ? (
                       <div className="loading-placeholder">--</div>
@@ -357,12 +451,66 @@ const DashboardPage: NextPage = () => {
           })}
         </div>
 
-        {/* 图表占位区域 */}
+        {/* 图表展示区域 */}
         <div className="charts-section">
-          <div className="chart-placeholder">
-            <ChartBarIcon className="w-16 h-16 text-gray-400" />
-            <h3>图表数据展示</h3>
-            <p>项目进度统计、预算分析图表等将在此处显示</p>
+          {/* 第一行图表 */}
+          <div className="charts-container">
+            <div className="chart-box">
+              <div className="chart-header">
+                <h3>项目阶段分布</h3>
+                <div className="chart-actions">
+                  <button onClick={() => handleChartAction('projectStageChart')}>
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="chart-container">
+                <canvas id="projectStageChart"></canvas>
+              </div>
+            </div>
+            <div className="chart-box">
+              <div className="chart-header">
+                <h3>项目完成率趋势</h3>
+                <div className="chart-actions">
+                  <button onClick={() => handleChartAction('completionTrendChart')}>
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="chart-container">
+                <canvas id="completionTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          {/* 第二行图表 */}
+          <div className="charts-container">
+            <div className="chart-box">
+              <div className="chart-header">
+                <h3>各部门项目数量</h3>
+                <div className="chart-actions">
+                  <button onClick={() => handleChartAction('departmentProjectsChart')}>
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="chart-container">
+                <canvas id="departmentProjectsChart"></canvas>
+              </div>
+            </div>
+            <div className="chart-box">
+              <div className="chart-header">
+                <h3>院内制剂使用年限分布</h3>
+                <div className="chart-actions">
+                  <button onClick={() => handleChartAction('preparationUsageChart')}>
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="chart-container">
+                <canvas id="preparationUsageChart"></canvas>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -451,33 +599,32 @@ const DashboardPage: NextPage = () => {
           border: 1px solid #d1d5db;
           border-radius: 6px;
           font-size: 14px;
-          color: #374151;
           background: white;
           cursor: pointer;
+          min-width: 120px;
         }
 
         .filter-select:focus {
           outline: none;
           border-color: #3b82f6;
-          box-shadow: 0 0 0 1px #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .statistics-grid {
+        .stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 24px;
-          margin-bottom: 48px;
+          margin-bottom: 40px;
         }
 
-        .statistic-card {
+        .stat-card {
           padding: 24px;
-          border-radius: 16px;
-          border: 2px solid;
-          position: relative;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          border-radius: 12px;
+          border: 1px solid;
+          transition: all 0.2s ease;
         }
 
-        .statistic-card:hover {
+        .stat-card:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
@@ -489,34 +636,24 @@ const DashboardPage: NextPage = () => {
           margin-bottom: 16px;
         }
 
-        .card-icon-wrapper {
-          padding: 12px;
-          background: rgba(255, 255, 255, 0.8);
-          border-radius: 12px;
-        }
-
-        .card-trend {
-          text-align: right;
-        }
-
-        .trend-value {
-          display: block;
-          font-size: 16px;
-          font-weight: bold;
-          line-height: 1;
-        }
-
-        .trend-label {
-          font-size: 12px;
+        .card-title {
+          font-size: 14px;
+          font-weight: 500;
           color: #64748b;
-          line-height: 1;
+          line-height: 1.2;
         }
 
-        .card-content h3 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #374151;
-          margin: 0 0 12px 0;
+        .card-icon {
+          padding: 8px;
+          border-radius: 8px;
+          background: white;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-body {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
         }
 
         .card-value {
@@ -533,50 +670,92 @@ const DashboardPage: NextPage = () => {
         }
 
         .value-unit {
-          font-size: 16px;
+          font-size: 14px;
           color: #64748b;
+          font-weight: 500;
         }
 
         .loading-placeholder {
           font-size: 32px;
           font-weight: bold;
           color: #cbd5e1;
+          line-height: 1;
         }
 
         .charts-section {
-          margin-top: 48px;
+          margin-top: 40px;
         }
 
-        .chart-placeholder {
+        .charts-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 24px;
+          margin-bottom: 24px;
+        }
+
+        .chart-box {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          transition: all 0.2s ease;
+        }
+
+        .chart-box:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-header {
           display: flex;
-          flex-direction: column;
+          justify-content: space-between;
           align-items: center;
-          justify-content: center;
-          padding: 64px 32px;
-          background: #f8fafc;
-          border: 2px dashed #cbd5e1;
-          border-radius: 16px;
-          text-align: center;
+          padding: 20px 24px 16px;
+          border-bottom: 1px solid #f1f5f9;
         }
 
-        .chart-placeholder h3 {
-          font-size: 18px;
+        .chart-header h3 {
+          font-size: 16px;
           font-weight: 600;
-          color: #374151;
-          margin: 16px 0 8px 0;
-        }
-
-        .chart-placeholder p {
-          font-size: 14px;
-          color: #64748b;
+          color: #1a202c;
           margin: 0;
         }
 
-        /* 响应式设计 */
+        .chart-actions button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: transparent;
+          border-radius: 6px;
+          color: #64748b;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .chart-actions button:hover {
+          background: #f1f5f9;
+          color: #374151;
+        }
+
+        .chart-container {
+          padding: 16px 24px 24px;
+          height: 300px;
+          position: relative;
+        }
+
+        .chart-container canvas {
+          width: 100% !important;
+          height: 100% !important;
+        }
+
         @media (max-width: 768px) {
           .page-header {
             flex-direction: column;
             gap: 16px;
+            align-items: stretch;
           }
 
           .filter-section {
@@ -584,19 +763,25 @@ const DashboardPage: NextPage = () => {
             gap: 16px;
           }
 
-          .statistics-grid {
+          .stats-grid {
             grid-template-columns: 1fr;
-            gap: 16px;
+          }
+
+          .charts-container {
+            grid-template-columns: 1fr;
+          }
+
+          .chart-container {
+            height: 250px;
           }
         }
 
-        /* 加载动画 */
         @keyframes spin {
-          to { transform: rotate(360deg); }
+          to {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
     </DashboardLayout>
   )
 }
-
-export default DashboardPage

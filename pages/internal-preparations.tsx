@@ -195,14 +195,29 @@ export default function InternalPreparationsPage() {
       // 动态导入 Chart.js
       const Chart = (await import('chart.js/auto')).default
       
+      // 先清理所有现有的图表实例
+      const chartIds = ['statusChart', 'sourceDeptChart', 'monthlyTrendChart', 'durationChart']
+      chartIds.forEach(chartId => {
+        const existingChart = Chart.getChart(chartId)
+        if (existingChart) {
+          existingChart.destroy()
+        }
+      })
+      
       const chartConfigs = getChartConfigs()
       const newCharts: {[key: string]: any} = {}
 
-      // 添加延迟确保DOM元素已渲染
+      // 添加延迟确保DOM元素已渲染和旧图表已清理
       setTimeout(() => {
         Object.entries(chartConfigs).forEach(([key, config]) => {
           const canvas = document.getElementById(key) as HTMLCanvasElement
           if (canvas) {
+            // 再次检查是否有现有图表实例
+            const existingChart = Chart.getChart(canvas)
+            if (existingChart) {
+              existingChart.destroy()
+            }
+            
             const ctx = canvas.getContext('2d')
             if (ctx) {
               newCharts[key] = new Chart(ctx, config as any)
@@ -349,12 +364,24 @@ export default function InternalPreparationsPage() {
   const handleTabChange = (tab: 'statistics' | 'projects') => {
     setActiveTab(tab)
     
-    // 清理现有图表
-    Object.values(charts).forEach((chart: any) => {
-      if (chart && typeof chart.destroy === 'function') {
-        chart.destroy()
+    // 清理现有图表 - 使用Chart.js的标准方法
+    const destroyCharts = async () => {
+      try {
+        const Chart = (await import('chart.js/auto')).default
+        const chartIds = ['statusChart', 'sourceDeptChart', 'monthlyTrendChart', 'durationChart']
+        
+        chartIds.forEach(chartId => {
+          const existingChart = Chart.getChart(chartId)
+          if (existingChart) {
+            existingChart.destroy()
+          }
+        })
+      } catch (error) {
+        console.error('清理图表失败:', error)
       }
-    })
+    }
+    
+    destroyCharts()
     setCharts({})
   }
 

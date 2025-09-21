@@ -86,10 +86,10 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
           level: 2,
           children: [
             {
-              id: 'hospital-preparations',
+              id: 'internal-preparations',
               label: '院内制剂',
               icon: BeakerIcon,
-              route: '/hospital-preparations',
+              route: '/internal-preparations',
               level: 3
             }
           ]

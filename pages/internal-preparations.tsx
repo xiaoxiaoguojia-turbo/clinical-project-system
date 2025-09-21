@@ -16,9 +16,10 @@ import {
   PlusIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  XMarkIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline'
-import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
 import { ApiResponse, PaginatedResponse } from '@/types'
 
 // 动态导入组件，禁用SSR
@@ -123,6 +124,22 @@ export default function InternalPreparationsPage() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState<InternalPreparationProject | null>(null)
   const [sourceDepartments, setSourceDepartments] = useState<string[]>([])
+
+  // 创建项目表单状态
+  const [createFormData, setCreateFormData] = useState({
+    source: '',
+    name: '',
+    composition: '',
+    function: '',
+    specification: '',
+    duration: '',
+    dosage: '',
+    recordNumber: '',
+    patent: '',
+    remarks: ''
+  })
+  const [createFormErrors, setCreateFormErrors] = useState<{[key: string]: string}>({})
+  const [createFormLoading, setCreateFormLoading] = useState(false)
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -332,7 +349,7 @@ export default function InternalPreparationsPage() {
           labels: ['4月', '5月', '6月', '7月', '8月', '9月'],
           datasets: [{
             label: '新增制剂',
-            data: [2, 3, 1, 4, 2, 3],
+            data: [2, 3, 1, 4, 2, 4],
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             borderWidth: 3,
@@ -486,7 +503,99 @@ export default function InternalPreparationsPage() {
 
   const handleCreateProject = () => {
     setSelectedProject(null)
+    setCreateFormData({
+      source: '',
+      name: '',
+      composition: '',
+      function: '',
+      specification: '',
+      duration: '',
+      dosage: '',
+      recordNumber: '',
+      patent: '',
+      remarks: ''
+    })
+    setCreateFormErrors({})
     setShowCreateModal(true)
+  }
+
+  const handleCreateFormChange = (field: string, value: string) => {
+    setCreateFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+    
+    // 清除当前字段的错误
+    if (createFormErrors[field]) {
+      setCreateFormErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }))
+    }
+  }
+
+  const validateCreateForm = () => {
+    const errors: {[key: string]: string} = {}
+    
+    if (!createFormData.source.trim()) errors.source = '来源科室为必填项'
+    if (!createFormData.name.trim()) errors.name = '项目名称为必填项'
+    if (!createFormData.composition.trim()) errors.composition = '组方为必填项'
+    if (!createFormData.function.trim()) errors.function = '功能为必填项'
+    if (!createFormData.specification.trim()) errors.specification = '规格为必填项'
+    if (!createFormData.duration.trim()) errors.duration = '年限为必填项'
+    if (!createFormData.dosage.trim()) errors.dosage = '用量为必填项'
+    if (!createFormData.recordNumber.trim()) errors.recordNumber = '备案号为必填项'
+    
+    // 验证年限是否为数字
+    if (createFormData.duration && isNaN(Number(createFormData.duration))) {
+      errors.duration = '年限必须为数字'
+    }
+    
+    setCreateFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleCreateSubmit = async () => {
+    if (!validateCreateForm()) {
+      return
+    }
+
+    try {
+      setCreateFormLoading(true)
+      const { ApiClient } = await import('@/utils/auth')
+      
+      const response = await ApiClient.post('/internal-preparation-projects', createFormData) as unknown as ApiResponse<InternalPreparationProject>
+      
+      if (response.success) {
+        setShowCreateModal(false)
+        await loadProjectsList() // 重新加载列表
+        alert('项目创建成功！')
+      } else {
+        alert('创建失败：' + (response.error || '未知错误'))
+      }
+    } catch (error) {
+      console.error('创建项目失败:', error)
+      alert('创建失败，请稍后重试')
+    } finally {
+      setCreateFormLoading(false)
+    }
+  }
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false)
+    setCreateFormData({
+      source: '',
+      name: '',
+      composition: '',
+      function: '',
+      specification: '',
+      duration: '',
+      dosage: '',
+      recordNumber: '',
+      patent: '',
+      remarks: ''
+    })
+    setCreateFormErrors({})
   }
 
   const getStatusText = (status: string) => {
@@ -961,6 +1070,156 @@ export default function InternalPreparationsPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* 创建项目模态框 */}
+        {showCreateModal && (
+          <div className="modal-overlay" onClick={handleCloseCreateModal}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>新建院内制剂项目</h2>
+                <button className="modal-close" onClick={handleCloseCreateModal}>
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>来源科室 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.source}
+                      onChange={(e) => handleCreateFormChange('source', e.target.value)}
+                      className={`form-input ${createFormErrors.source ? 'error' : ''}`}
+                      placeholder="请输入来源科室"
+                    />
+                    {createFormErrors.source && <span className="error-text">{createFormErrors.source}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>项目名称 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.name}
+                      onChange={(e) => handleCreateFormChange('name', e.target.value)}
+                      className={`form-input ${createFormErrors.name ? 'error' : ''}`}
+                      placeholder="请输入项目名称"
+                    />
+                    {createFormErrors.name && <span className="error-text">{createFormErrors.name}</span>}
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>组方 *</label>
+                    <textarea
+                      value={createFormData.composition}
+                      onChange={(e) => handleCreateFormChange('composition', e.target.value)}
+                      className={`form-textarea ${createFormErrors.composition ? 'error' : ''}`}
+                      placeholder="请输入组方"
+                      rows={3}
+                    />
+                    {createFormErrors.composition && <span className="error-text">{createFormErrors.composition}</span>}
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>功能 *</label>
+                    <textarea
+                      value={createFormData.function}
+                      onChange={(e) => handleCreateFormChange('function', e.target.value)}
+                      className={`form-textarea ${createFormErrors.function ? 'error' : ''}`}
+                      placeholder="请输入功能"
+                      rows={3}
+                    />
+                    {createFormErrors.function && <span className="error-text">{createFormErrors.function}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>规格 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.specification}
+                      onChange={(e) => handleCreateFormChange('specification', e.target.value)}
+                      className={`form-input ${createFormErrors.specification ? 'error' : ''}`}
+                      placeholder="请输入规格"
+                    />
+                    {createFormErrors.specification && <span className="error-text">{createFormErrors.specification}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>有效期（年） *</label>
+                    <input
+                      type="number"
+                      value={createFormData.duration}
+                      onChange={(e) => handleCreateFormChange('duration', e.target.value)}
+                      className={`form-input ${createFormErrors.duration ? 'error' : ''}`}
+                      placeholder="请输入有效期"
+                      min="1"
+                    />
+                    {createFormErrors.duration && <span className="error-text">{createFormErrors.duration}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>用量 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.dosage}
+                      onChange={(e) => handleCreateFormChange('dosage', e.target.value)}
+                      className={`form-input ${createFormErrors.dosage ? 'error' : ''}`}
+                      placeholder="请输入用量"
+                    />
+                    {createFormErrors.dosage && <span className="error-text">{createFormErrors.dosage}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>备案号 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.recordNumber}
+                      onChange={(e) => handleCreateFormChange('recordNumber', e.target.value)}
+                      className={`form-input ${createFormErrors.recordNumber ? 'error' : ''}`}
+                      placeholder="请输入备案号"
+                    />
+                    {createFormErrors.recordNumber && <span className="error-text">{createFormErrors.recordNumber}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>专利情况</label>
+                    <input
+                      type="text"
+                      value={createFormData.patent}
+                      onChange={(e) => handleCreateFormChange('patent', e.target.value)}
+                      className="form-input"
+                      placeholder="请输入专利情况（可选）"
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>备注</label>
+                    <textarea
+                      value={createFormData.remarks}
+                      onChange={(e) => handleCreateFormChange('remarks', e.target.value)}
+                      className="form-textarea"
+                      placeholder="请输入备注（可选）"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={handleCloseCreateModal}>
+                  取消
+                </button>
+                <button 
+                  className="btn-primary" 
+                  onClick={handleCreateSubmit}
+                  disabled={createFormLoading}
+                >
+                  {createFormLoading ? '创建中...' : '创建项目'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1619,6 +1878,247 @@ export default function InternalPreparationsPage() {
           .page-number:not(.active):hover {
             background: #f8fafc;
             border-color: #cbd5e1;
+          }
+
+          /* 模态框样式 */
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+          }
+
+          .modal-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafbfc;
+          }
+
+          .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+          }
+
+          .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f8fafc;
+            color: #64748b;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .modal-close:hover {
+            background: #f1f5f9;
+            color: #475569;
+          }
+
+          .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+          }
+
+          .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px 28px;
+          }
+
+          .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .form-group.full-width {
+            grid-column: 1 / -1;
+          }
+
+          .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 2px;
+          }
+
+          .form-input, .form-textarea {
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: #374151;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+          }
+
+          .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+
+          .form-input.error, .form-textarea.error {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+          }
+
+          .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+          }
+
+          .error-text {
+            font-size: 12px;
+            color: #dc2626;
+            margin-top: 4px;
+            font-weight: 500;
+          }
+
+          .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            padding: 24px 32px;
+            border-top: 1px solid #f1f5f9;
+            background: #fafbfc;
+          }
+
+          .btn-secondary {
+            padding: 14px 28px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+          }
+
+          .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #475569;
+          }
+
+          .btn-primary {
+            padding: 14px 28px;
+            border: none;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            min-width: 120px;
+          }
+
+          .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 10px -1px rgba(59, 130, 246, 0.4);
+          }
+
+          .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+          }
+
+          /* 响应式设计 */
+          @media (max-width: 768px) {
+            .modal-container {
+              max-width: 95vw;
+              margin: 10px;
+            }
+            
+            .modal-header {
+              padding: 20px 24px;
+            }
+            
+            .modal-header h2 {
+              font-size: 18px;
+            }
+            
+            .modal-body {
+              padding: 24px;
+            }
+            
+            .form-grid {
+              grid-template-columns: 1fr;
+              gap: 20px;
+            }
+            
+            .form-group.full-width {
+              grid-column: 1;
+            }
+            
+            .modal-footer {
+              padding: 20px 24px;
+              flex-direction: column;
+            }
+            
+            .btn-secondary, .btn-primary {
+              width: 100%;
+              justify-content: center;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .modal-overlay {
+              padding: 10px;
+            }
+            
+            .modal-container {
+              max-height: 95vh;
+            }
+            
+            .modal-body {
+              padding: 20px;
+            }
+            
+            .form-grid {
+              gap: 16px;
+            }
+            
+            .form-input, .form-textarea {
+              padding: 12px 14px;
+            }
           }
         `}</style>
       </div>

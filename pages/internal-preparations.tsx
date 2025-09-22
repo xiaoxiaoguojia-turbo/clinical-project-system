@@ -785,15 +785,33 @@ export default function InternalPreparationsPage() {
   }
 
   const handleAttachmentManagement = (project: InternalPreparationProject) => {
+    console.log('=== 附件管理按钮点击调试信息 ===')
+    console.log('点击的项目:', project)
+    console.log('项目ID:', project._id)
+    console.log('项目名称:', project.name)
+    
+    // 构建跳转参数
+    const targetPath = '/internal-preparation-attachments'
+    const queryParams = {
+      projectId: project._id,
+      projectName: project.name,
+      projectType: 'internal-preparation'
+    }
+    
+    console.log('跳转路径:', targetPath)
+    console.log('查询参数:', queryParams)
+    
     // 跳转到附件管理页面，传递项目ID和相关信息
-    router.push({
-      pathname: '/internal-preparation-attachments',
-      query: {
-        projectId: project._id,
-        projectName: project.name,
-        projectType: 'internal-preparation'
-      }
-    })
+    try {
+      router.push({
+        pathname: targetPath,
+        query: queryParams
+      })
+      console.log('✅ 路由跳转已执行')
+    } catch (error) {
+      console.error('❌ 路由跳转失败:', error)
+      alert('页面跳转失败，请重试')
+    }
   }
 
   const handleGenerateAIReport = async (project: InternalPreparationProject) => {

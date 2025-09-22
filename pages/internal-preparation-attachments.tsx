@@ -56,10 +56,11 @@ interface ProjectInfo {
   type: string
 }
 
-/* ------------------------------------------------------------------------------------------ */
-
 export default function InternalPreparationAttachments() {
+  /* ------------------------------------------------------------------------------------------ */
   const router = useRouter()
+
+  // 获取路由参数
   const { projectId, projectName, projectType } = router.query
 
   // 项目信息状态
@@ -86,50 +87,114 @@ export default function InternalPreparationAttachments() {
   
   // 删除状态
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
-
   /* ------------------------------------------------------------------------------------------ */
 
+  /* ------------------------------------------------------------------------------------------ */
   // 初始化页面参数
   useEffect(() => {
+    console.log('=== 附件管理页面初始化调试信息 ===')
+    console.log('router.isReady:', router.isReady)
+    console.log('router.asPath:', router.asPath)
+    console.log('router.pathname:', router.pathname)
+    console.log('完整的router.query:', router.query)
+    console.log('解构出的参数:')
+    console.log('- projectId:', projectId)
+    console.log('- projectName:', projectName) 
+    console.log('- projectType:', projectType)
+    
     // 等待路由器完全加载
-    if (!router.isReady) return
+    if (!router.isReady) {
+      console.log('⏳ 路由器未就绪，等待中...')
+      return
+    }
+
+    console.log('✅ 路由器已就绪，开始参数验证')
 
     // 权限检查
     const token = localStorage.getItem('authToken')
+    console.log('🔐 权限检查:')
+    console.log('- authToken存在:', !!token)
+    console.log('- token长度:', token ? token.length : 0)
+    
     if (!token) {
-      router.push('/login')
+      console.log('❌ 无权限令牌，跳转到登录页')
+      router.replace('/login')
       return
     }
 
-    // 参数验证
-    if (!projectId || !projectName || !projectType) {
-      alert('缺少必要的项目参数，将返回项目列表')
-      router.push('/internal-preparations')
+    // 参数验证 - 使用更宽松的检查
+    console.log('📋 参数验证详情:')
+    console.log('- projectId类型:', typeof projectId, '值:', projectId)
+    console.log('- projectName类型:', typeof projectName, '值:', projectName)
+    console.log('- projectType类型:', typeof projectType, '值:', projectType)
+    
+    // 检查必要参数是否存在
+    const hasProjectId = projectId && String(projectId).trim() !== ''
+    const hasProjectName = projectName && String(projectName).trim() !== ''
+    const hasProjectType = projectType && String(projectType).trim() !== ''
+    
+    console.log('参数存在性检查:')
+    console.log('- hasProjectId:', hasProjectId)
+    console.log('- hasProjectName:', hasProjectName) 
+    console.log('- hasProjectType:', hasProjectType)
+    
+    if (!hasProjectId || !hasProjectName || !hasProjectType) {
+      console.log('❌ 缺少必要的项目参数')
+      console.log('缺少的参数详情:', {
+        projectId: hasProjectId ? '✓' : '❌ 缺少或为空',
+        projectName: hasProjectName ? '✓' : '❌ 缺少或为空', 
+        projectType: hasProjectType ? '✓' : '❌ 缺少或为空'
+      })
+      
+      // 延迟跳转，确保用户能看到错误信息
+      setTimeout(() => {
+        alert('缺少必要的项目参数，将返回项目列表')
+        router.replace('/internal-preparations')
+      }, 100)
       return
     }
 
+    console.log('✅ 所有参数验证通过')
+    
     // 设置项目信息
-    setProjectInfo({
-      id: projectId as string,
-      name: projectName as string,
-      type: projectType as string
-    })
+    const info = {
+      id: String(projectId),
+      name: String(projectName),
+      type: String(projectType)
+    }
+    console.log('📝 设置项目信息:', info)
+    setProjectInfo(info)
 
+    console.log('🎯 页面初始化完成，设置pageReady = true')
     setPageReady(true)
-  }, [router.isReady, router, projectId, projectName, projectType])
+    
+  }, [router.isReady, router.asPath, projectId, projectName, projectType])
 
   // 页面就绪后加载数据
   useEffect(() => {
+    console.log('=== 数据加载检查 ===')
+    console.log('pageReady:', pageReady)
+    console.log('projectInfo:', projectInfo)
+    
     if (pageReady && projectInfo) {
+      console.log('🚀 开始加载附件数据')
       loadAttachments()
+    } else {
+      console.log('⏳ 等待页面就绪或项目信息设置完成')
     }
   }, [pageReady, projectInfo])
 
   // 加载附件列表
   const loadAttachments = async (page = 1, search = '', fileType = '') => {
-    if (!projectInfo) return
+    if (!projectInfo) {
+      console.log('❌ 项目信息不存在，无法加载附件')
+      return
+    }
 
     try {
+      console.log('=== 开始加载附件列表 ===')
+      console.log('加载参数:', { page, search, fileType, projectInfo })
+      
       setLoading(true)
       
       const params = new URLSearchParams({
@@ -147,17 +212,25 @@ export default function InternalPreparationAttachments() {
         params.append('fileType', fileType)
       }
 
-      const response = await ApiClient.get(`/attachments?${params.toString()}`)
+      const apiUrl = `/attachments?${params.toString()}`
+      console.log('API调用URL:', apiUrl)
+
+      const response = await ApiClient.get(apiUrl)
+      console.log('API响应:', response)
+      
       const result = response as { success: boolean; data: PaginatedResponse<IAttachment> }
       
       if (result.success) {
+        console.log('✅ 附件列表加载成功:', result.data)
         setAttachments(result.data.data)
         setTotalAttachments(result.data.total)
         setCurrentPage(result.data.page)
         setTotalPages(result.data.totalPages)
+      } else {
+        console.log('❌ 加载附件列表失败:', result)
       }
     } catch (error) {
-      console.error('加载附件列表失败:', error)
+      console.error('❌ 加载附件列表异常:', error)
       alert('加载附件列表失败，请重试')
     } finally {
       setLoading(false)
@@ -313,14 +386,12 @@ export default function InternalPreparationAttachments() {
     return date.toLocaleString('zh-CN')
   }
 
-  /* ------------------------------------------------------------------------------------------ */
-
   // 如果页面未就绪，显示加载状态
   if (!pageReady || !projectInfo) {
     return (
       <>
         <Head>
-          <title>附件管理 - 院内制剂项目</title>
+          <title>附件管理 - 院内制剂</title>
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
@@ -331,13 +402,12 @@ export default function InternalPreparationAttachments() {
       </>
     )
   }
-
   /* ------------------------------------------------------------------------------------------ */
 
   return (
     <>
       <Head>
-        <title>附件管理 - {projectInfo.name}</title>
+        <title>附件管理 - {projectInfo.name} - 院内制剂</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50">

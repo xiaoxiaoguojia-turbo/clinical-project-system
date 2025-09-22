@@ -1,16 +1,16 @@
 /**
  * Coze工作流服务类
- * 用于调用Coze API生成AI报告
+ * 使用@coze/api官方SDK调用Coze工作流生成AI报告
  */
 
+import { CozeAPI, COZE_CN_BASE_URL } from '@coze/api'
 import { InternalPreparationProject } from '@/types'
 
 // Coze工作流配置
 const COZE_CONFIG = {
-  baseURL: 'https://api.coze.cn',
   token: 'sat_wdiLBGPfC1CJJ6k9vuNRabHI4XQg5zO4aPr1XI7q489pVuVKUV1BjJmWSfdNjgII',
   workflowId: '7547613197532938275',
-  timeout: 10 * 60 * 1000 // 10分钟超时
+  baseURL: COZE_CN_BASE_URL
 }
 
 // Coze工作流参数接口
@@ -27,19 +27,6 @@ interface CozeWorkflowParameters {
   zhuanli?: string   // 专利（可选）
 }
 
-// API响应接口
-interface CozeApiResponse {
-  code: number
-  msg: string
-  data: string
-  debug_url?: string
-  usage?: {
-    input_count: number
-    output_count: number
-    token_count: number
-  }
-}
-
 // 报告生成结果接口
 export interface ReportGenerationResult {
   success: boolean
@@ -54,6 +41,18 @@ export interface ReportGenerationResult {
 }
 
 export class CozeService {
+  private cozeClient: CozeAPI
+
+  constructor() {
+    // 初始化Coze API客户端
+    this.cozeClient = new CozeAPI({
+      token: COZE_CONFIG.token,
+      baseURL: COZE_CONFIG.baseURL
+    })
+    
+    console.log('CozeService初始化完成，使用官方SDK')
+  }
+
   /**
    * 将数据库项目数据映射为Coze工作流参数
    */
@@ -95,7 +94,7 @@ export class CozeService {
   }
 
   /**
-   * 调用Coze工作流生成AI报告
+   * 调用Coze工作流生成AI报告（使用官方SDK）
    */
   async generateReport(project: InternalPreparationProject): Promise<ReportGenerationResult> {
     try {
@@ -114,60 +113,33 @@ export class CozeService {
       const parameters = this.mapProjectToCozeParameters(project)
       console.log('Coze工作流参数:', parameters)
 
-      // 3. 构建请求体
-      const requestBody = {
+      // 3. 使用官方SDK调用工作流
+      console.log('使用Coze SDK调用工作流...')
+      const response = await this.cozeClient.workflows.runs.create({
         workflow_id: COZE_CONFIG.workflowId,
         parameters,
         is_async: false
-      }
-
-      console.log('调用Coze API，请求体:', JSON.stringify(requestBody, null, 2))
-
-      // 4. 调用Coze API
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), COZE_CONFIG.timeout)
-
-      const response = await fetch(`${COZE_CONFIG.baseURL}/v1/workflow/run`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${COZE_CONFIG.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
       })
 
-      clearTimeout(timeoutId)
+      console.log('Coze SDK响应:', response)
 
-      // 5. 处理HTTP响应
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Coze API HTTP错误:', response.status, response.statusText, errorText)
+      // 4. 检查响应状态
+      if (!response || response.code !== 0) {
+        console.error('Coze工作流执行失败:', response?.msg || '未知错误')
         return {
           success: false,
-          error: `API调用失败 (HTTP ${response.status}): ${response.statusText}`
+          error: `工作流执行失败: ${response?.msg || '未知错误'}`
         }
       }
 
-      // 6. 解析响应数据
-      const apiResponse: CozeApiResponse = await response.json()
-      console.log('Coze API响应:', apiResponse)
-
-      // 7. 检查业务状态码
-      if (apiResponse.code !== 0) {
-        console.error('Coze工作流执行失败:', apiResponse.msg)
-        return {
-          success: false,
-          error: `工作流执行失败: ${apiResponse.msg}`
-        }
-      }
-
-      // 8. 解析报告URL
+      // 5. 解析报告数据
       let reportData: { output: string }
       try {
-        reportData = JSON.parse(apiResponse.data)
+        // SDK返回的data可能是字符串或对象
+        const dataString = typeof response.data === 'string' ? response.data : JSON.stringify(response.data)
+        reportData = JSON.parse(dataString)
       } catch (parseError) {
-        console.error('解析报告数据失败:', parseError)
+        console.error('解析报告数据失败:', parseError, '原始数据:', response.data)
         return {
           success: false,
           error: '解析报告数据失败'
@@ -175,7 +147,7 @@ export class CozeService {
       }
 
       if (!reportData.output) {
-        console.error('报告URL为空')
+        console.error('报告URL为空，数据:', reportData)
         return {
           success: false,
           error: '未获得报告链接'
@@ -187,21 +159,22 @@ export class CozeService {
       return {
         success: true,
         reportUrl: reportData.output,
-        debugUrl: apiResponse.debug_url,
-        usage: apiResponse.usage
+        debugUrl: response.debug_url,
+        usage: response.usage
       }
 
     } catch (error) {
       console.error('生成AI报告时发生错误:', error)
       
-      // 处理不同类型的错误
-      if (error.name === 'AbortError') {
+      // 处理SDK特定错误
+      if (error.name === 'CozeError') {
         return {
           success: false,
-          error: '请求超时，请重试'
+          error: `Coze API错误: ${error.message}`
         }
       }
       
+      // 处理网络错误
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return {
           success: false,
@@ -217,11 +190,62 @@ export class CozeService {
   }
 
   /**
-   * 获取工作流调试信息（用于开发调试）
+   * 测试Coze连接和配置
+   */
+  async testConnection(): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('测试Coze连接...')
+      
+      // 使用一个简单的测试参数
+      const testParams = {
+        bumen: '测试部门',
+        laiyuan: '测试来源',
+        yaofang: '测试药方',
+        zufang: '测试组方',
+        function: '测试功能',
+        guige: '测试规格',
+        nianxian: '测试年限',
+        yongliang: '测试用量',
+        beianhao: 'TEST001',
+        zhuanli: '测试专利'
+      }
+
+      const response = await this.cozeClient.workflows.runs.create({
+        workflow_id: COZE_CONFIG.workflowId,
+        parameters: testParams,
+        is_async: false
+      })
+
+      if (response && response.code === 0) {
+        console.log('Coze连接测试成功')
+        return { success: true }
+      } else {
+        return { 
+          success: false, 
+          error: `测试失败: ${response?.msg || '未知错误'}` 
+        }
+      }
+
+    } catch (error) {
+      console.error('Coze连接测试失败:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : '连接测试失败' 
+      }
+    }
+  }
+
+  /**
+   * 获取工作流调试信息
    */
   getDebugInfo() {
     return {
-      config: COZE_CONFIG,
+      config: {
+        workflowId: COZE_CONFIG.workflowId,
+        baseURL: COZE_CONFIG.baseURL,
+        // 不暴露token
+        hasToken: !!COZE_CONFIG.token
+      },
       mappingInfo: {
         department: 'bumen',
         source: 'laiyuan',
@@ -233,6 +257,10 @@ export class CozeService {
         dosage: 'yongliang',
         recordNumber: 'beianhao',
         patent: 'zhuanli'
+      },
+      sdkInfo: {
+        using: '@coze/api',
+        version: 'latest'
       }
     }
   }

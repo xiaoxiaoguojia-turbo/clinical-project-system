@@ -22,7 +22,8 @@ import {
   EllipsisVerticalIcon,
   PaperClipIcon,
   SparklesIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { 
   ApiResponse, 
@@ -165,9 +166,9 @@ export default function InternalPreparationsPage() {
   const [editFormLoading, setEditFormLoading] = useState(false)
 
   // AI报告相关状态
-  const [aiReportStatus, setAiReportStatus] = useState<{[key: string]: 'idle' | 'generating' | 'completed' | 'error'}>({})
-  const [aiReportUrls, setAiReportUrls] = useState<{[key: string]: string}>({})
-  const [currentGeneratingProject, setCurrentGeneratingProject] = useState<string | null>(null)
+  const [aiReportStatus, setAiReportStatus] = useState<{[projectId: string]: 'idle' | 'generating' | 'completed' | 'error'}>({})
+  const [aiReportUrls, setAiReportUrls] = useState<{[projectId: string]: string}>({})
+  const [aiReportErrors, setAiReportErrors] = useState<{[projectId: string]: string}>({})
 
   const router = useRouter()
   /* ------------------------------------------------------------------------------------------ */
@@ -815,128 +816,104 @@ export default function InternalPreparationsPage() {
   }
 
   const handleGenerateAIReport = async (project: InternalPreparationProject) => {
-    // 检查是否已经在生成中
-    if (aiReportStatus[project._id] === 'generating') {
-      alert('该项目的AI报告正在生成中，请耐心等待...')
-      return
-    }
-
-    // 检查是否已经生成完成
-    if (aiReportStatus[project._id] === 'completed') {
-      const confirmed = confirm('该项目已有AI报告，是否重新生成？重新生成将覆盖原有报告。')
-      if (!confirmed) return
-    }
-
-    // 确认生成AI报告
-    const confirmed = confirm(
-      `确定要为项目"${project.name}"生成AI报告吗？\n\n将会发送以下数据：\n` +
-      `• 项目名称: ${project.name}\n` +
-      `• 来源科室: ${project.source}\n` +
-      `• 组方: ${project.composition}\n` +
-      `• 功能: ${project.function}\n` +
-      `• 规格: ${project.specification}\n` +
-      `• 用量: ${project.dosage}\n` +
-      `• 有效期: ${project.duration}年\n` +
-      `• 备案号: ${project.recordNumber || '无'}\n\n` +
-      `生成过程大约需要60秒，请耐心等待...`
-    )
-    
-    if (!confirmed) return
-
     try {
+      console.log('开始生成AI报告，项目:', project.name)
+      
       // 设置生成状态
       setAiReportStatus(prev => ({
         ...prev,
         [project._id]: 'generating'
       }))
-      setCurrentGeneratingProject(project._id)
+      
+      // 清除之前的错误
+      setAiReportErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[project._id]
+        return newErrors
+      })
 
-      console.log('开始生成AI报告:', {
-        projectId: project._id,
-        projectName: project.name,
-        projectData: {
-          source: project.source,
-          name: project.name,
-          composition: project.composition,
-          function: project.function,
-          specification: project.specification,
-          duration: project.duration,
-          dosage: project.dosage,
-          recordNumber: project.recordNumber,
-          patent: project.patent,
-          remarks: project.remarks
+      // 调用后端API
+      const response = await fetch(`/api/internal-preparations/${project._id}/generate-report`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
         }
       })
 
-      // 模拟API调用 - 60秒延迟
-      await new Promise(resolve => setTimeout(resolve, 60000))
+      const result = await response.json()
 
-      // 模拟成功生成报告，返回外部链接
-      const mockReportUrl = 'https://jd4omasmev.feishu.cn/docx/UtnMdLqkVo0dNyxPgt9cVTbTnMg'
-      
-      setAiReportStatus(prev => ({
-        ...prev,
-        [project._id]: 'completed'
-      }))
-      setAiReportUrls(prev => ({
-        ...prev,
-        [project._id]: mockReportUrl
-      }))
-      setCurrentGeneratingProject(null)
+      if (result.success) {
+        console.log('AI报告生成成功:', result.data.reportUrl)
+        
+        // 更新状态为完成
+        setAiReportStatus(prev => ({
+          ...prev,
+          [project._id]: 'completed'
+        }))
+        
+        // 保存报告URL
+        setAiReportUrls(prev => ({
+          ...prev,
+          [project._id]: result.data.reportUrl
+        }))
 
-      alert(`AI报告生成成功！\n项目"${project.name}"的智能分析报告已完成。\n\n您可以点击"查看AI报告"按钮查看详细内容。`)
+        // 显示成功消息
+        alert(`AI报告生成成功！\n\n项目: ${project.name}\n报告已生成，点击"查看AI报告"按钮可以查看。`)
+        
+      } else {
+        console.error('AI报告生成失败:', result.error)
+        
+        // 设置错误状态
+        setAiReportStatus(prev => ({
+          ...prev,
+          [project._id]: 'error'
+        }))
+        
+        setAiReportErrors(prev => ({
+          ...prev,
+          [project._id]: result.error || 'AI报告生成失败'
+        }))
+
+        alert(`AI报告生成失败：${result.error || '未知错误'}`)
+      }
 
     } catch (error) {
-      console.error('AI报告生成失败:', error)
+      console.error('生成AI报告时发生错误:', error)
+      
+      // 设置错误状态
       setAiReportStatus(prev => ({
         ...prev,
         [project._id]: 'error'
       }))
-      setCurrentGeneratingProject(null)
-      alert('AI报告生成失败，请稍后重试。')
+      
+      setAiReportErrors(prev => ({
+        ...prev,
+        [project._id]: error instanceof Error ? error.message : '网络错误'
+      }))
+
+      alert('网络错误，请检查网络连接后重试')
     }
   }
 
   const handleViewAIReport = (project: InternalPreparationProject) => {
-    const reportStatus = aiReportStatus[project._id]
     const reportUrl = aiReportUrls[project._id]
-
-    // 检查报告状态
-    if (reportStatus === 'generating') {
-      const progress = currentGeneratingProject === project._id ? '生成中...' : '排队中...'
-      alert(`项目"${project.name}"的AI报告正在${progress}\n\n请耐心等待生成完成后再查看。`)
+    
+    if (!reportUrl) {
+      alert('该项目还没有生成AI报告，请先点击"生成AI报告"按钮')
       return
     }
 
-    if (reportStatus !== 'completed' || !reportUrl) {
-      const shouldGenerate = confirm(
-        `项目"${project.name}"尚未生成AI报告。\n\n是否现在开始生成？`
-      )
-      if (shouldGenerate) {
-        handleGenerateAIReport(project)
-      }
-      return
-    }
-
-    // 确认跳转到外部链接
-    const confirmed = confirm(
-      `即将跳转到外部链接查看AI报告：\n\n` +
-      `项目名称: ${project.name}\n` +
-      `报告链接: ${reportUrl}\n\n` +
-      `确定要在新窗口中打开该报告吗？`
-    )
-
-    if (confirmed) {
-      console.log('跳转到AI报告:', {
-        projectId: project._id,
-        projectName: project.name,
-        reportUrl: reportUrl
-      })
-      
-      // 在新窗口中打开外部链接
-      window.open(reportUrl, '_blank')
+    try {
+      // 在新窗口打开报告链接
+      console.log('打开AI报告:', reportUrl)
+      window.open(reportUrl, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      console.error('打开AI报告失败:', error)
+      alert('无法打开报告链接，请手动复制以下链接到浏览器中查看：\n\n' + reportUrl)
     }
   }
+
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -1336,19 +1313,32 @@ export default function InternalPreparationsPage() {
                                 onClick={() => handleGenerateAIReport(project)}
                                 className={`action-btn ai-generate-btn ${
                                   aiReportStatus[project._id] === 'generating' ? 'loading' : ''
+                                } ${
+                                  aiReportStatus[project._id] === 'error' ? 'error' : ''
                                 }`}
                                 title={
                                   aiReportStatus[project._id] === 'generating' 
-                                    ? '正在生成AI报告...' 
+                                    ? '正在生成AI报告，请耐心等待...' 
                                     : aiReportStatus[project._id] === 'completed'
                                     ? '重新生成AI报告'
+                                    : aiReportStatus[project._id] === 'error'
+                                    ? `生成失败：${aiReportErrors[project._id] || '未知错误'} - 点击重试`
                                     : '生成AI报告'
                                 }
                                 disabled={aiReportStatus[project._id] === 'generating'}
                               >
-                                <SparklesIcon className="w-4 h-4" />
-                                {aiReportStatus[project._id] === 'generating' && (
-                                  <div className="loading-spinner"></div>
+                                {aiReportStatus[project._id] === 'generating' ? (
+                                  <>
+                                    <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"></div>
+                                    <span className="ml-1 text-xs">生成中</span>
+                                  </>
+                                ) : aiReportStatus[project._id] === 'error' ? (
+                                  <>
+                                    <ExclamationTriangleIcon className="w-4 h-4" />
+                                    <span className="ml-1 text-xs">重试</span>
+                                  </>
+                                ) : (
+                                  <SparklesIcon className="w-4 h-4" />
                                 )}
                               </button>
                               <button
@@ -1359,14 +1349,13 @@ export default function InternalPreparationsPage() {
                                 title={
                                   aiReportStatus[project._id] === 'completed'
                                     ? '查看AI报告'
-                                    : aiReportStatus[project._id] === 'generating'
-                                    ? '报告生成中...'
-                                    : '尚未生成报告'
+                                    : '该项目还没有生成AI报告'
                                 }
+                                disabled={aiReportStatus[project._id] !== 'completed'}
                               >
                                 <DocumentTextIcon className="w-4 h-4" />
                                 {aiReportStatus[project._id] === 'completed' && (
-                                  <div className="report-indicator"></div>
+                                  <span className="ml-1 text-xs">查看</span>
                                 )}
                               </button>
                             </div>
@@ -3058,6 +3047,64 @@ export default function InternalPreparationsPage() {
             to {
               transform: rotate(360deg);
             }
+          }
+
+          /* AI报告按钮样式 */
+          .ai-generate-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            transition: all 0.2s ease;
+            position: relative;
+            min-width: 60px;
+          }
+
+          .ai-generate-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+          }
+
+          .ai-generate-btn.loading {
+            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+            cursor: not-allowed;
+          }
+
+          .ai-generate-btn.error {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          }
+
+          .ai-generate-btn.error:hover:not(:disabled) {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+          }
+
+          .ai-view-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            transition: all 0.2s ease;
+          }
+
+          .ai-view-btn:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+          }
+
+          .ai-view-btn.has-report {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-color: #059669;
+          }
+
+          .ai-view-btn.has-report:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+          }
+
+          .ai-view-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
           }
         `}</style>
       </div>

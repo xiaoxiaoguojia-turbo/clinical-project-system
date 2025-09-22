@@ -29,6 +29,7 @@ import {
   ApiResponse, 
   PaginatedResponse 
 } from '@/types'
+import { TokenManager } from '@/utils/auth'  // 添加TokenManager导入
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -180,8 +181,6 @@ export default function InternalPreparationsPage() {
     
     const checkAuth = async () => {
       try {
-        const { TokenManager } = await import('@/utils/auth')
-        
         if (!TokenManager.isAuthenticated()) {
           window.location.href = '/login'
           return
@@ -227,13 +226,18 @@ export default function InternalPreparationsPage() {
     try {
       setLoading(true)
       
-      const { ApiClient } = await import('@/utils/auth')
-      
       // 获取所有院内制剂项目数据用于统计
-      const response = await ApiClient.get<ApiResponse<PaginatedResponse<InternalPreparationProject>>>(`/internal-preparation-projects?pageSize=100`)
+      const response = await fetch('/api/internal-preparation-projects?pageSize=100', {
+        headers: {
+          'Authorization': `Bearer ${TokenManager.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      })
       
-      if (response.success && response.data) {
-        const projectsData = response.data.data || []
+      const data = await response.json() as ApiResponse<PaginatedResponse<InternalPreparationProject>>
+      
+      if (data.success && data.data) {
+        const projectsData = data.data.data || []
         setPreparations(projectsData)
         
         // 计算统计数据
@@ -532,13 +536,20 @@ export default function InternalPreparationsPage() {
     }
 
     try {
-      const { ApiClient } = await import('@/utils/auth')
-      const response = await ApiClient.delete(`/internal-preparation-projects/${project._id}`) as unknown as ApiResponse<any>
+      const response = await fetch(`/api/internal-preparation-projects/${project._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${TokenManager.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      })
       
-      if (response.success) {
+      const data = await response.json() as ApiResponse<any>
+      
+      if (data.success) {
         await loadProjectsList() // 重新加载列表
       } else {
-        alert('删除失败：' + (response.error || '未知错误'))
+        alert('删除失败：' + (data.error || '未知错误'))
       }
     } catch (error) {
       console.error('删除项目失败:', error)
@@ -607,16 +618,24 @@ export default function InternalPreparationsPage() {
 
     try {
       setCreateFormLoading(true)
-      const { ApiClient } = await import('@/utils/auth')
       
-      const response = await ApiClient.post('/internal-preparation-projects', createFormData) as unknown as ApiResponse<InternalPreparationProject>
+      const response = await fetch('/api/internal-preparation-projects', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${TokenManager.getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(createFormData)
+      })
       
-      if (response.success) {
+      const data = await response.json() as ApiResponse<InternalPreparationProject>
+      
+      if (data.success) {
         setShowCreateModal(false)
         await loadProjectsList() // 重新加载列表
         alert('项目创建成功！')
       } else {
-        alert('创建失败：' + (response.error || '未知错误'))
+        alert('创建失败：' + (data.error || '未知错误'))
       }
     } catch (error) {
       console.error('创建项目失败:', error)
@@ -700,8 +719,6 @@ export default function InternalPreparationsPage() {
     setEditFormLoading(true)
     
     try {
-      const { ApiClient } = await import('@/utils/auth')
-      
       const updateData = {
         source: editFormData.source.trim(),
         name: editFormData.name.trim(),
@@ -715,9 +732,18 @@ export default function InternalPreparationsPage() {
         remarks: editFormData.remarks.trim()
       }
 
-      const response = await ApiClient.put(`/internal-preparation-projects/${selectedProject._id}`, updateData) as ApiResponse<InternalPreparationProject>
+      const response = await fetch(`/api/internal-preparation-projects/${selectedProject._id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${TokenManager.getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
       
-      if (response.success) {
+      const data = await response.json() as ApiResponse<InternalPreparationProject>
+      
+      if (data.success) {
         setShowEditModal(false)
         setSelectedProject(null)
         setEditFormData({
@@ -734,7 +760,7 @@ export default function InternalPreparationsPage() {
         })
         await loadProjectsList()
       } else {
-        alert('更新失败：' + (response.error || '未知错误'))
+        alert('更新失败：' + (data.error || '未知错误'))
       }
     } catch (error) {
       console.error('更新项目失败:', error)
@@ -832,17 +858,23 @@ export default function InternalPreparationsPage() {
         return newErrors
       })
 
+      // 获取认证令牌
+      const token = TokenManager.getToken()
+      if (!token) {
+        throw new Error('未找到认证令牌，请重新登录')
+      }
+
       // 调用后端API
       const response = await fetch(`/api/internal-preparations/${project._id}/generate-report`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
-
+      
       const result = await response.json()
-
+      
       if (result.success) {
         console.log('AI报告生成成功:', result.data.reportUrl)
         
@@ -979,8 +1011,6 @@ export default function InternalPreparationsPage() {
     try {
       setProjectsLoading(true)
       
-      const { ApiClient } = await import('@/utils/auth')
-      
       // 构建查询参数
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -991,15 +1021,22 @@ export default function InternalPreparationsPage() {
       if (projectStatusFilter) params.append('status', projectStatusFilter)
       if (sourceFilter) params.append('source', sourceFilter)
       
-      const response = await ApiClient.get<ApiResponse<PaginatedResponse<InternalPreparationProject>>>(`/internal-preparation-projects?${params}`)
+      const response = await fetch(`/api/internal-preparation-projects?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${TokenManager.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      })
       
-      if (response.success && response.data) {
-        setProjects(response.data.data || [])
-        setTotalProjects(response.data.pagination.total)
-        setTotalPages(response.data.pagination.totalPages)
+      const data = await response.json() as ApiResponse<PaginatedResponse<InternalPreparationProject>>
+      
+      if (data.success && data.data) {
+        setProjects(data.data.data || [])
+        setTotalProjects(data.data.pagination.total)
+        setTotalPages(data.data.pagination.totalPages)
         
         // 提取科室列表
-        const departments = new Set(response.data.data.map(p => p.source))
+        const departments = new Set(data.data.data.map(p => p.source))
         setSourceDepartments(Array.from(departments))
       }
     } catch (error) {
@@ -2313,6 +2350,8 @@ export default function InternalPreparationsPage() {
             border-radius: 8px;
             font-size: 14px;
             background: white;
+            color: #374151;
+            cursor: pointer;
             transition: border-color 0.2s ease;
           }
 

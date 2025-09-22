@@ -202,11 +202,15 @@ async function handler(
       message: 'AI报告生成成功'
     })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('生成AI报告API错误:', error)
 
+    // 类型安全的错误处理
+    const errorMessage = error instanceof Error ? error.message : '未知错误'
+    const errorName = error instanceof Error ? error.name : ''
+
     // 处理MongoDB连接错误
-    if (error.name === 'MongooseError') {
+    if (errorName === 'MongooseError') {
       return res.status(500).json({
         success: false,
         error: '数据库连接错误'
@@ -216,7 +220,7 @@ async function handler(
     // 处理其他错误
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : '服务器内部错误'
+      error: errorMessage
     })
   }
 }

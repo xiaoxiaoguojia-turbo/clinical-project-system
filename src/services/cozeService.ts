@@ -13,8 +13,9 @@ const COZE_CONFIG = {
   baseURL: COZE_CN_BASE_URL
 }
 
-// Coze工作流参数接口
+// Coze工作流参数接口 - 添加索引签名以兼容API
 interface CozeWorkflowParameters {
+  [key: string]: unknown // 添加索引签名
   bumen: string      // 部门
   laiyuan: string    // 来源
   yaofang: string    // 药方名称
@@ -38,6 +39,19 @@ export interface ReportGenerationResult {
     token_count: number
   }
   error?: string
+}
+
+// Coze API响应接口
+interface CozeApiResponse {
+  code?: number
+  msg?: string
+  data?: string | any
+  debug_url?: string
+  usage?: {
+    input_count: number
+    output_count: number
+    token_count: number
+  }
 }
 
 export class CozeService {
@@ -117,18 +131,21 @@ export class CozeService {
       console.log('使用Coze SDK调用工作流...')
       const response = await this.cozeClient.workflows.runs.create({
         workflow_id: COZE_CONFIG.workflowId,
-        parameters,
+        parameters: parameters as Record<string, unknown>,
         is_async: false
       })
 
       console.log('Coze SDK响应:', response)
 
-      // 4. 检查响应状态
-      if (!response || response.code !== 0) {
-        console.error('Coze工作流执行失败:', response?.msg || '未知错误')
+      // 4. 处理SDK响应（类型断言为我们的接口）
+      const apiResponse = response as unknown as CozeApiResponse
+
+      // 检查响应状态
+      if (!apiResponse || (apiResponse.code !== undefined && apiResponse.code !== 0)) {
+        console.error('Coze工作流执行失败:', apiResponse?.msg || '未知错误')
         return {
           success: false,
-          error: `工作流执行失败: ${response?.msg || '未知错误'}`
+          error: `工作流执行失败: ${apiResponse?.msg || '未知错误'}`
         }
       }
 
@@ -136,10 +153,10 @@ export class CozeService {
       let reportData: { output: string }
       try {
         // SDK返回的data可能是字符串或对象
-        const dataString = typeof response.data === 'string' ? response.data : JSON.stringify(response.data)
+        const dataString = typeof apiResponse.data === 'string' ? apiResponse.data : JSON.stringify(apiResponse.data)
         reportData = JSON.parse(dataString)
       } catch (parseError) {
-        console.error('解析报告数据失败:', parseError, '原始数据:', response.data)
+        console.error('解析报告数据失败:', parseError, '原始数据:', apiResponse.data)
         return {
           success: false,
           error: '解析报告数据失败'
@@ -159,23 +176,26 @@ export class CozeService {
       return {
         success: true,
         reportUrl: reportData.output,
-        debugUrl: response.debug_url,
-        usage: response.usage
+        debugUrl: apiResponse.debug_url,
+        usage: apiResponse.usage
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('生成AI报告时发生错误:', error)
       
+      // 类型安全的错误处理
+      const errorMessage = error instanceof Error ? error.message : '未知错误'
+      
       // 处理SDK特定错误
-      if (error.name === 'CozeError') {
+      if (error instanceof Error && error.name === 'CozeError') {
         return {
           success: false,
-          error: `Coze API错误: ${error.message}`
+          error: `Coze API错误: ${errorMessage}`
         }
       }
       
       // 处理网络错误
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if (error instanceof TypeError && errorMessage.includes('fetch')) {
         return {
           success: false,
           error: '网络连接错误，请检查网络设置'
@@ -184,7 +204,7 @@ export class CozeService {
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : '未知错误'
+        error: errorMessage
       }
     }
   }
@@ -197,7 +217,7 @@ export class CozeService {
       console.log('测试Coze连接...')
       
       // 使用一个简单的测试参数
-      const testParams = {
+      const testParams: CozeWorkflowParameters = {
         bumen: '测试部门',
         laiyuan: '测试来源',
         yaofang: '测试药方',
@@ -212,25 +232,29 @@ export class CozeService {
 
       const response = await this.cozeClient.workflows.runs.create({
         workflow_id: COZE_CONFIG.workflowId,
-        parameters: testParams,
+        parameters: testParams as Record<string, unknown>,
         is_async: false
       })
 
-      if (response && response.code === 0) {
+      // 类型断言
+      const apiResponse = response as unknown as CozeApiResponse
+
+      if (apiResponse && (apiResponse.code === undefined || apiResponse.code === 0)) {
         console.log('Coze连接测试成功')
         return { success: true }
       } else {
         return { 
           success: false, 
-          error: `测试失败: ${response?.msg || '未知错误'}` 
+          error: `测试失败: ${apiResponse?.msg || '未知错误'}` 
         }
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Coze连接测试失败:', error)
+      const errorMessage = error instanceof Error ? error.message : '连接测试失败'
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : '连接测试失败' 
+        error: errorMessage 
       }
     }
   }

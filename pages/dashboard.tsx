@@ -372,12 +372,12 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout title="项目报表统计分析 - 临床创新项目管理系统">
+    <DashboardLayout title="总项目报表统计 - 临床创新项目管理系统">
       <div className="dashboard-page">
         {/* 页面标题和操作区域 */}
         <div className="page-header">
           <div className="title-section">
-            <h1>项目报表统计分析</h1>
+            <h1>总项目报表统计</h1>
             <p>欢迎回来，系统管理员！这里是您的项目概况数据统计。</p>
           </div>
           <div className="action-section">

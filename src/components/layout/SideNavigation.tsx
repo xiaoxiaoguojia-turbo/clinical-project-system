@@ -74,7 +74,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
       children: [
         {
           id: 'project-reports',
-          label: '项目报表统计分析',
+          label: '总项目报表统计',
           icon: ChartBarIcon,
           route: '/dashboard',
           level: 2
@@ -90,6 +90,13 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
               label: '院内制剂',
               icon: BeakerIcon,
               route: '/internal-preparations',
+              level: 3
+            },
+            {
+              id: 'internal-preparations',
+              label: '类型2-除院内制剂（示例）',
+              icon: ChartBarIcon,
+              route: '/unauthorized',
               level: 3
             }
           ]

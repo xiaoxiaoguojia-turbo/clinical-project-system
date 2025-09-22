@@ -170,7 +170,6 @@ export default function InternalPreparationsPage() {
   const [currentGeneratingProject, setCurrentGeneratingProject] = useState<string | null>(null)
 
   const router = useRouter()
-
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -920,7 +919,6 @@ export default function InternalPreparationsPage() {
       window.open(reportUrl, '_blank')
     }
   }
-
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -981,8 +979,7 @@ export default function InternalPreparationsPage() {
       trendLabel: '较上月'
     }
   ]
-  /* ------------------------------------------------------------------------------------------ */
-
+  
   const loadProjectsList = async () => {
     try {
       setProjectsLoading(true)
@@ -1022,7 +1019,7 @@ export default function InternalPreparationsPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="院内制剂 - 临床创新项目管理系统">
       <div className="preparations-page">
         {/* 页面头部 */}
         <div className="page-header">

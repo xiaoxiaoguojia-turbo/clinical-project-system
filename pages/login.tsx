@@ -140,7 +140,7 @@ const LoginPage: NextPage = () => {
   return (
     <div className="login-page">
       <Head>
-        <title>临床创新项目管理系统 - 登录</title>
+        <title>登录 - 临床创新项目管理系统</title>
         <meta name="description" content="上海临床创新转化研究院项目管理系统" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

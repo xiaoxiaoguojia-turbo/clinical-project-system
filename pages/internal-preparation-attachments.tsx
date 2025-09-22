@@ -4,7 +4,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import TopNavigation from '@/components/layout/TopNavigation'
 import SideNavigation from '@/components/layout/SideNavigation'
-import { ApiClient } from '@/utils/auth'
+import { ApiClient, TokenManager } from '@/utils/auth'
 import { 
   PaperClipIcon, 
   CloudArrowUpIcon, 
@@ -110,17 +110,24 @@ export default function InternalPreparationAttachments() {
 
     console.log('✅ 路由器已就绪，开始参数验证')
 
-    // 权限检查
-    const token = localStorage.getItem('authToken')
-    console.log('🔐 权限检查:')
-    console.log('- authToken存在:', !!token)
-    console.log('- token长度:', token ? token.length : 0)
+    // 权限检查 - 使用TokenManager
+    const isAuthenticated = TokenManager.isAuthenticated()
+    const token = TokenManager.getToken()
+    const user = TokenManager.getUser()
     
-    if (!token) {
-      console.log('❌ 无权限令牌，跳转到登录页')
+    console.log('🔐 权限检查:')
+    console.log('- TokenManager.isAuthenticated():', isAuthenticated)
+    console.log('- token存在:', !!token)
+    console.log('- token长度:', token ? token.length : 0)
+    console.log('- 用户信息:', user)
+    
+    if (!isAuthenticated) {
+      console.log('❌ 用户未认证，跳转到登录页')
       router.replace('/login')
       return
     }
+
+    console.log('✅ 权限验证通过')
 
     // 参数验证 - 使用更宽松的检查
     console.log('📋 参数验证详情:')
@@ -215,10 +222,13 @@ export default function InternalPreparationAttachments() {
       const apiUrl = `/attachments?${params.toString()}`
       console.log('API调用URL:', apiUrl)
 
-      const response = await ApiClient.get(apiUrl)
-      console.log('API响应:', response)
-      
-      const result = response as { success: boolean; data: PaginatedResponse<IAttachment> }
+      const token = TokenManager.getToken()
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const result = await response.json()
       
       if (result.success) {
         console.log('✅ 附件列表加载成功:', result.data)
@@ -256,10 +266,11 @@ export default function InternalPreparationAttachments() {
         formData.append('description', uploadDescription.trim())
       }
 
+      const token = TokenManager.getToken()
       const response = await fetch('/api/attachments/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       })
@@ -287,9 +298,10 @@ export default function InternalPreparationAttachments() {
   // 处理文件下载
   const handleFileDownload = async (attachment: IAttachment) => {
     try {
+      const token = TokenManager.getToken()
       const response = await fetch(`/api/attachments/${attachment._id}/download`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${token}`
         }
       })
 
@@ -321,8 +333,14 @@ export default function InternalPreparationAttachments() {
     try {
       setDeleteLoading(attachmentId)
       
-      const response = await ApiClient.delete(`/attachments/${attachmentId}`)
-      const result = response as { success: boolean }
+      const token = TokenManager.getToken()
+      const response = await fetch(`/api/attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const result = await response.json()
       
       if (result.success) {
         alert('附件删除成功')

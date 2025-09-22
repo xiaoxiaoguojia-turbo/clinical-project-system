@@ -310,7 +310,7 @@ export default function Dashboard() {
     {
       title: '项目类型数量',
       value: dashboardData.projectTypeCount,
-      unit: '个',
+      unit: '类',
       icon: UsersIcon,
       color: 'cyan',
       trend: '+0',

@@ -9,9 +9,9 @@
  *       上传附件文件到服务器，支持多种文件类型。
  *       
  *       **支持的文件类型：**
- *       - 文档：pdf, doc, docx, xls, xlsx, ppt, pptx, txt
+ *       - 文档：pdf, doc, docx, xls, xlsx, ppt, pptx, txt, md
  *       - 图片：jpg, jpeg, png, gif, bmp, webp
- *       - 其他：zip, rar, 7z
+ *       - 压缩包：zip, rar, 7z
  *       
  *       **文件大小限制：** 10MB
  *       
@@ -102,12 +102,12 @@
  *                 summary: 文件类型不支持
  *                 value:
  *                   success: false
- *                   error: "不支持的文件类型"
+ *                   error: "不支持的文件类型，请上传支持的文件格式：PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、TXT、MD、JPG、PNG、GIF、BMP、WebP、ZIP、RAR、7Z"
  *               file_too_large:
  *                 summary: 文件过大
  *                 value:
  *                   success: false
- *                   error: "文件大小超过限制（10MB）"
+ *                   error: "文件大小超过限制（最大10MB）"
  *               missing_params:
  *                 summary: 缺少必需参数
  *                 value:
@@ -175,19 +175,34 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 默认10MB
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 默认10MB (1024*1024)
   },
   fileFilter: (req, file, cb) => {
     // 允许的文件类型
     const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-      'text/markdown',
-      'image/jpeg',
-      'image/png',
-      'image/gif'
+      // 文档类型
+      'application/pdf',                                                    // PDF文档
+      'application/msword',                                                 // DOC文档 (Word 97-2003)
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX文档 (Word 2007+)
+      'application/vnd.ms-excel',                                          // XLS表格 (Excel 97-2003)
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX表格 (Excel 2007+)
+      'application/vnd.ms-powerpoint',                                     // PPT演示 (PowerPoint 97-2003)
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX演示 (PowerPoint 2007+)
+      'text/plain',                                                        // TXT纯文本
+      'text/markdown',                                                     // MD Markdown文档
+      
+      // 图片类型
+      'image/jpeg',                                                        // JPG/JPEG图片
+      'image/png',                                                         // PNG图片
+      'image/gif',                                                         // GIF图片
+      'image/bmp',                                                         // BMP位图
+      'image/webp',                                                        // WebP图片
+      
+      // 压缩包类型
+      'application/zip',                                                   // ZIP压缩包
+      'application/x-rar-compressed',                                      // RAR压缩包
+      'application/vnd.rar',                                              // RAR压缩包 (备用MIME类型)
+      'application/x-7z-compressed'                                       // 7Z压缩包
     ]
     
     if (allowedTypes.includes(file.mimetype)) {
@@ -306,7 +321,7 @@ async function handler(
       if (error.message === '不支持的文件类型') {
         return res.status(400).json({
           success: false,
-          error: '不支持的文件类型，请上传PDF、DOC、DOCX、TXT、MD或图片文件'
+          error: '不支持的文件类型，请上传支持的文件格式：PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、TXT、MD、JPG、PNG、GIF、BMP、WebP、ZIP、RAR、7Z'
         })
       }
 
@@ -316,7 +331,7 @@ async function handler(
           case 'LIMIT_FILE_SIZE':
             return res.status(400).json({
               success: false,
-              error: '文件大小超出限制'
+              error: '文件大小超出限制（最大10MB）'
             })
           case 'LIMIT_FILE_COUNT':
             return res.status(400).json({
@@ -352,7 +367,7 @@ async function handler(
 export const config = {
   api: {
     bodyParser: false,
-    sizeLimit: '10mb', // 设置请求体大小限制
+    sizeLimit: '10mb', // 设置请求体大小限制为10MB
   },
 }
 

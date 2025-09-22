@@ -218,24 +218,67 @@ const uploadSingle = promisify(upload.single('file'))
 // 修复文件名编码问题的辅助函数
 function fixFileNameEncoding(filename: string): string {
   try {
-    // 如果文件名已经是正确的UTF-8编码，直接返回
-    if (filename === decodeURIComponent(encodeURIComponent(filename))) {
-      return filename
+    console.log('开始修复文件名编码:', filename)
+    
+    // 检测是否包含疑似乱码字符（常见的UTF-8被当作Latin1解析的模式）
+    const hasGarbledChars = /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/i.test(filename)
+    
+    if (hasGarbledChars) {
+      console.log('检测到疑似乱码字符，尝试修复...')
+      
+      // 方法1: 直接从Latin1转UTF-8
+      try {
+        const buffer = Buffer.from(filename, 'latin1')
+        const utf8String = buffer.toString('utf8')
+        console.log('方法1修复结果:', utf8String)
+        
+        // 检查修复后是否包含合理的中文字符
+        if (/[\u4e00-\u9fff]/.test(utf8String)) {
+          console.log('方法1成功，检测到中文字符')
+          return utf8String
+        }
+      } catch (e) {
+        console.log('方法1失败:', e)
+      }
+      
+      // 方法2: 尝试URL解码
+      try {
+        const decoded = decodeURIComponent(escape(filename))
+        console.log('方法2修复结果:', decoded)
+        
+        if (/[\u4e00-\u9fff]/.test(decoded) && decoded !== filename) {
+          console.log('方法2成功')
+          return decoded
+        }
+      } catch (e) {
+        console.log('方法2失败:', e)
+      }
+      
+      // 方法3: 手动字节转换
+      try {
+        // 将字符串转为字节数组，然后重新解释为UTF-8
+        const bytes = []
+        for (let i = 0; i < filename.length; i++) {
+          bytes.push(filename.charCodeAt(i) & 0xFF)
+        }
+        const buffer = Buffer.from(bytes)
+        const utf8String = buffer.toString('utf8')
+        console.log('方法3修复结果:', utf8String)
+        
+        if (/[\u4e00-\u9fff]/.test(utf8String)) {
+          console.log('方法3成功')
+          return utf8String
+        }
+      } catch (e) {
+        console.log('方法3失败:', e)
+      }
     }
     
-    // 尝试从Latin1转换为UTF-8（这是multipart/form-data的默认编码）
-    const buffer = Buffer.from(filename, 'latin1')
-    const utf8String = buffer.toString('utf8')
-    
-    // 验证转换后的字符串是否有效
-    if (utf8String && utf8String !== filename) {
-      console.log('文件名编码修复:', filename, '->', utf8String)
-      return utf8String
-    }
-    
+    console.log('无需修复或修复失败，返回原始文件名')
     return filename
+    
   } catch (error) {
-    console.warn('文件名编码修复失败，使用原始文件名:', error)
+    console.error('文件名编码修复出错:', error)
     return filename
   }
 }

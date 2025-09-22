@@ -219,7 +219,7 @@ export default function InternalPreparationAttachments() {
         params.append('fileType', fileType)
       }
 
-      const apiUrl = `/attachments?${params.toString()}`
+      const apiUrl = `/api/attachments?${params.toString()}`
       console.log('API调用URL:', apiUrl)
 
       const token = TokenManager.getToken()

@@ -93,8 +93,15 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
               level: 3
             },
             {
-              id: 'internal-preparations',
-              label: '类型2-除院内制剂（示例）',
+              id: 'type2',
+              label: '类型2-除院内制剂',
+              icon: ChartBarIcon,
+              route: '/unauthorized',
+              level: 3
+            },
+            {
+              id: 'type3',
+              label: '类型3（示例）',
               icon: ChartBarIcon,
               route: '/unauthorized',
               level: 3

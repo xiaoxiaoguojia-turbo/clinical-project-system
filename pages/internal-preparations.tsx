@@ -379,7 +379,7 @@ export default function InternalPreparationsPage() {
           labels: ['4月', '5月', '6月', '7月', '8月', '9月'],
           datasets: [{
             label: '新增制剂',
-            data: [2, 3, 1, 4, 2, 4],
+            data: [2, 3, 1, 4, 2, 12],
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             borderWidth: 3,

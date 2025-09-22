@@ -33,9 +33,9 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
 interface DashboardData {
   totalProjects: number
   activeProjects: number
-  totalBudget: number
-  departments: number
-  researchers: number
+  completedProjects: number
+  projectTypeCount: number
+  chargePersonCount: number
 }
 
 interface StatCard {
@@ -59,9 +59,9 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalProjects: 0,
     activeProjects: 0,
-    totalBudget: 0,
-    departments: 0,
-    researchers: 0
+    completedProjects: 0,
+    projectTypeCount: 0,
+    chargePersonCount: 0
   })
   const [charts, setCharts] = useState<{[key: string]: any}>({})
   /* ------------------------------------------------------------------------------------------ */
@@ -86,10 +86,10 @@ export default function Dashboard() {
         setTimeout(() => {
           setDashboardData({
             totalProjects: 12,
-            activeProjects: 8,
-            totalBudget: 2800000,
-            departments: 3,
-            researchers: 15
+            activeProjects: 5,
+            completedProjects: 4,
+            projectTypeCount: 3,
+            chargePersonCount: 15
           })
           setLoading(false)
         }, 1000)
@@ -151,13 +151,13 @@ export default function Dashboard() {
 
   const getChartConfigs = () => {
     return {
-      projectStageChart: {
+      projectStatusChart: {
         type: 'doughnut' as const,
         data: {
-          labels: ['立项阶段', '执行中', '结题阶段', '已完成'],
+          labels: ['进行中', '已完成', '已暂停'],
           datasets: [{
-            data: [2, 5, 3, 2],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'],
+            data: [5, 4, 3],
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
             borderWidth: 0,
             cutout: '60%'
           }]
@@ -179,7 +179,7 @@ export default function Dashboard() {
           labels: ['4月', '5月', '6月', '7月', '8月', '9月'],
           datasets: [{
             label: '完成率',
-            data: [65, 72, 68, 75, 82, 78],
+            data: [65, 72, 68, 96, 82, 78],
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             borderWidth: 3,
@@ -202,10 +202,10 @@ export default function Dashboard() {
           }
         }
       },
-      departmentProjectsChart: {
+      typeProjectsChart: {
         type: 'bar' as const,
         data: {
-          labels: ['转移转化部', '临床研究部', '创新实验室'],
+          labels: ['院内制剂', '类型2-除院内制剂', '类型3（示例）'],
           datasets: [{
             label: '项目数量',
             data: [6, 4, 2],
@@ -228,13 +228,13 @@ export default function Dashboard() {
           }
         }
       },
-      preparationUsageChart: {
+      sourceProjectsChart: {
         type: 'bar' as const,
         data: {
-          labels: ['1-2年', '3-5年', '6-10年', '10年以上'],
+          labels: ['上海市皮肤病医院', '仁济医院', '岳阳医院', '曙光医院'],
           datasets: [{
-            label: '制剂数量',
-            data: [3, 5, 2, 1],
+            label: '项目数量',
+            data: [5, 1, 4, 2],
             backgroundColor: '#8b5cf6',
             borderRadius: 6,
             borderSkipped: false
@@ -299,31 +299,31 @@ export default function Dashboard() {
       trendLabel: '较上月'
     },
     {
-      title: '总预算金额',
-      value: (dashboardData.totalBudget / 10000).toFixed(1),
-      unit: '万元',
+      title: '已完成项目',
+      value: dashboardData.completedProjects,
+      unit: '个',
       icon: CalendarIcon,
       color: 'orange',
-      trend: '+15%',
+      trend: '+2',
       trendLabel: '较上月'
     },
     {
-      title: '参与部门',
-      value: dashboardData.departments,
+      title: '项目类型数量',
+      value: dashboardData.projectTypeCount,
       unit: '个',
       icon: UsersIcon,
       color: 'cyan',
-      trend: '+2',
-      trendLabel: '新增部门'
+      trend: '+0',
+      trendLabel: '较上月'
     },
     {
-      title: '研究人员',
-      value: dashboardData.researchers,
+      title: '负责人员',
+      value: dashboardData.chargePersonCount,
       unit: '人',
       icon: UsersIcon,
       color: 'pink',
-      trend: '+23',
-      trendLabel: '新增人员'
+      trend: '+3',
+      trendLabel: '较上月'
     }
   ]
 
@@ -457,15 +457,15 @@ export default function Dashboard() {
           <div className="charts-container">
             <div className="chart-box">
               <div className="chart-header">
-                <h3>项目阶段分布</h3>
+                <h3>项目状态分布</h3>
                 <div className="chart-actions">
-                  <button onClick={() => handleChartAction('projectStageChart')}>
+                  <button onClick={() => handleChartAction('projectStatusChart')}>
                     <EllipsisVerticalIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
               <div className="chart-container">
-                <canvas id="projectStageChart"></canvas>
+                <canvas id="projectStatusChart"></canvas>
               </div>
             </div>
             <div className="chart-box">
@@ -487,28 +487,28 @@ export default function Dashboard() {
           <div className="charts-container">
             <div className="chart-box">
               <div className="chart-header">
-                <h3>各部门项目数量</h3>
+                <h3>各分类型项目数量</h3>
                 <div className="chart-actions">
-                  <button onClick={() => handleChartAction('departmentProjectsChart')}>
+                  <button onClick={() => handleChartAction('typeProjectsChart')}>
                     <EllipsisVerticalIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
               <div className="chart-container">
-                <canvas id="departmentProjectsChart"></canvas>
+                <canvas id="typeProjectsChart"></canvas>
               </div>
             </div>
             <div className="chart-box">
               <div className="chart-header">
-                <h3>院内制剂使用年限分布</h3>
+                <h3>项目来源分布</h3>
                 <div className="chart-actions">
-                  <button onClick={() => handleChartAction('preparationUsageChart')}>
+                  <button onClick={() => handleChartAction('sourceProjectsChart')}>
                     <EllipsisVerticalIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
               <div className="chart-container">
-                <canvas id="preparationUsageChart"></canvas>
+                <canvas id="sourceProjectsChart"></canvas>
               </div>
             </div>
           </div>

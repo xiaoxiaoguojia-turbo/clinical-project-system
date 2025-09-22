@@ -215,6 +215,31 @@ const upload = multer({
 
 const uploadSingle = promisify(upload.single('file'))
 
+// 修复文件名编码问题的辅助函数
+function fixFileNameEncoding(filename: string): string {
+  try {
+    // 如果文件名已经是正确的UTF-8编码，直接返回
+    if (filename === decodeURIComponent(encodeURIComponent(filename))) {
+      return filename
+    }
+    
+    // 尝试从Latin1转换为UTF-8（这是multipart/form-data的默认编码）
+    const buffer = Buffer.from(filename, 'latin1')
+    const utf8String = buffer.toString('utf8')
+    
+    // 验证转换后的字符串是否有效
+    if (utf8String && utf8String !== filename) {
+      console.log('文件名编码修复:', filename, '->', utf8String)
+      return utf8String
+    }
+    
+    return filename
+  } catch (error) {
+    console.warn('文件名编码修复失败，使用原始文件名:', error)
+    return filename
+  }
+}
+
 async function handler(
   req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse<IAttachment>>
@@ -245,6 +270,10 @@ async function handler(
       })
     }
 
+    // 修复文件名编码问题
+    const originalName = fixFileNameEncoding(file.originalname)
+    console.log('原始文件名:', file.originalname, '修复后:', originalName)
+
     const { projectType, projectId, description } = req.body
 
     // 验证必填字段
@@ -272,8 +301,8 @@ async function handler(
 
     // 创建附件记录
     const attachment = new Attachment({
-      filename: file.originalname,
-      originalName: file.originalname,
+      filename: originalName,
+      originalName: originalName,
       mimeType: file.mimetype,
       size: file.size,
       storageType: 'filesystem', // 使用文件系统存储

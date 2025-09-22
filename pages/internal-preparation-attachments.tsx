@@ -198,6 +198,7 @@ export default function InternalPreparationAttachments() {
       return
     }
 
+    // 构建API调用URL
     try {
       console.log('=== 开始加载附件列表 ===')
       console.log('加载参数:', { page, search, fileType, projectInfo })
@@ -219,6 +220,7 @@ export default function InternalPreparationAttachments() {
         params.append('fileType', fileType)
       }
 
+      // 构建API调用URL
       const apiUrl = `/api/attachments?${params.toString()}`
       console.log('API调用URL:', apiUrl)
 
@@ -334,11 +336,13 @@ export default function InternalPreparationAttachments() {
       setDeleteLoading(attachmentId)
       
       const token = TokenManager.getToken()
-      const response = await fetch(`/api/attachments/${attachmentId}`, {
+      const response = await fetch('/api/attachments', {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids: [attachmentId] })
       })
       const result = await response.json()
       
@@ -473,43 +477,56 @@ export default function InternalPreparationAttachments() {
             </div>
 
             {/* 搜索和筛选区域 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="搜索文件名或描述..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
+            <div className="project-header">
+              <div className="search-section">
+                <div className="search-input-wrapper">
+                  <MagnifyingGlassIcon className="w-5 h-5 search-icon" />
+                  <input
+                    type="search"
+                    placeholder="搜索文件名或描述..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    className="search-input"
+                  />
                 </div>
-                
-                <div className="flex gap-2">
+              </div>
+              
+              <div className="action-section-2">
+                <button
+                  onClick={() => setUploadModalOpen(true)}
+                  className="create-button"
+                >
+                  <CloudArrowUpIcon className="w-4 h-4" />
+                  上传附件
+                </button>
+              </div>
+            </div>
+
+            {/* 筛选控制栏 */}
+            <div className="filter-bar">
+              <div className="filter-controls">
+                <div className="filter-item">
+                  <FunnelIcon className="w-4 h-4 filter-icon" />
                   <select
                     value={fileTypeFilter}
                     onChange={(e) => handleFilterChange(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="filter-select"
                   >
                     <option value="">所有类型</option>
                     <option value="image">图片</option>
                     <option value="document">文档</option>
                     <option value="archive">压缩包</option>
                   </select>
-                  
-                  <button
-                    onClick={handleSearch}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <FunnelIcon className="h-4 w-4 mr-2" />
-                    搜索
-                  </button>
                 </div>
               </div>
+              
+              <button 
+                onClick={handleSearch}
+                className="refresh-button"
+              >
+                搜索筛选
+              </button>
             </div>
 
             {/* 附件列表 */}
@@ -706,7 +723,7 @@ export default function InternalPreparationAttachments() {
                   setUploadDescription('')
                 }}
                 disabled={uploadLoading}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 取消
               </button>
@@ -767,6 +784,135 @@ export default function InternalPreparationAttachments() {
           to {
             transform: rotate(360deg);
           }
+        }
+
+        /* 统一的项目管理界面样式 */
+        .project-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: white;
+          padding: 20px 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          margin-bottom: 24px;
+        }
+
+        .search-section {
+          flex: 1;
+          max-width: 400px;
+        }
+
+        .search-input-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          position: relative;
+        }
+
+        .search-icon {
+          color: #6b7280;
+        }
+
+        .search-input {
+          width: 100%;
+          padding: 12px 12px 12px 20px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .action-section-2 {
+          display: flex;
+          gap: 12px;
+        }
+
+        .create-button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        .create-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        /* 筛选控制栏 */
+        .filter-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: white;
+          padding: 20px 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          margin-bottom: 24px;
+        }
+
+        .filter-controls {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+        }
+
+        .filter-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .filter-icon {
+          color: #6b7280;
+        }
+
+        .filter-select {
+          padding: 8px 12px;
+          border: 2px solid #e5e7eb;
+          border-radius: 6px;
+          font-size: 14px;
+          background: white;
+          color: #374151;
+          cursor: pointer;
+          transition: border-color 0.2s ease;
+        }
+
+        .filter-select:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .refresh-button {
+          padding: 8px 16px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          color: #64748b;
+          border-radius: 6px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .refresh-button:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
         }
       `}</style>
     </>

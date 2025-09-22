@@ -19,6 +19,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface IAttachment {
   _id: string
@@ -427,330 +428,327 @@ export default function InternalPreparationAttachments() {
   /* ------------------------------------------------------------------------------------------ */
 
   return (
-    <>
-      <Head>
-        <title>附件管理 - {projectInfo.name} - 院内制剂</title>
-      </Head>
-
-      <div className="min-h-screen bg-gray-50">
-        <TopNavigation />
-        <div className="flex">
-          <SideNavigation />
-          <main className="flex-1 ml-64 p-8">
-            {/* 页面标题和面包屑 */}
-            <div className="mb-8">
-              <div className="flex items-center text-sm text-gray-500 mb-4">
-                <Link href="/dashboard" className="hover:text-blue-600">首页</Link>
-                <span className="mx-2">/</span>
-                <Link href="/internal-preparations" className="hover:text-blue-600">院内制剂</Link>
-                <span className="mx-2">/</span>
-                <span className="text-gray-900">附件管理</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">附件管理</h1>
-                  <div className="flex items-center text-gray-600">
-                    <InformationCircleIcon className="h-5 w-5 mr-2" />
-                    <span>项目：{projectInfo.name}</span>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => router.push('/internal-preparations')}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                    返回院内制剂
-                  </button>
-                  
-                  <button
-                    onClick={() => setUploadModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    <CloudArrowUpIcon className="h-4 w-4 mr-2" />
-                    上传附件
-                  </button>
-                </div>
+    <DashboardLayout title={`附件管理 - ${projectInfo.name} - 院内制剂`}>
+      <div className="internal-preparation-attachments-page">
+        {/* 页面标题和面包屑 */}
+        <div className="page-header">
+            <div className="p-0">
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">附件管理</h1>
+              <div className="flex items-center text-gray-600">
+                <InformationCircleIcon className="h-5 w-5 mr-2" />
+                <span>项目：{projectInfo.name}</span>
               </div>
             </div>
+            
+            <div className="flex space-x-4 mt-8">
+              <button
+                onClick={() => router.push('/internal-preparations')}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                返回院内制剂
+              </button>
+                  
+              <button
+                onClick={() => setUploadModalOpen(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                上传附件
+              </button>
+            </div>
+        </div>
 
-            {/* 搜索和筛选区域 */}
-            <div className="project-header">
-              <div className="search-section">
-                <div className="search-input-wrapper">
-                  <MagnifyingGlassIcon className="w-5 h-5 search-icon" />
+        {/* 筛选控制栏 */}
+        <div className="filter-bar">
+          <div className="filter-controls">
+            <div className="search-section">
+              <div className="search-input-wrapper">
+                <MagnifyingGlassIcon className="w-5 h-5 search-icon" />
+                <input
+                  type="search"
+                  placeholder="搜索文件名或描述..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="search-input"
+                />
+              </div>
+            </div>
+          
+            <div className="filter-item">
+              <FunnelIcon className="w-4 h-4 filter-icon" />
+              <select
+                value={fileTypeFilter}
+                onChange={(e) => handleFilterChange(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">所有类型</option>
+                <option value="image">图片</option>
+                <option value="document">文档</option>
+                <option value="archive">压缩包</option>
+              </select>
+            </div>
+          </div>
+          
+          <button 
+            onClick={handleSearch}
+            className="refresh-button"
+          >
+            搜索筛选
+          </button>
+        </div>
+
+        {/* 附件列表 */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-4 text-gray-500">加载中...</p>
+            </div>
+          ) : attachments.length === 0 ? (
+            <div className="p-12 text-center">
+              <PaperClipIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">暂无附件</h3>
+              <p className="text-gray-500 mb-6">
+                项目"{projectInfo.name}"还没有上传任何附件，点击上传按钮开始添加。
+              </p>
+              <button
+                onClick={() => setUploadModalOpen(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                上传第一个附件
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* 表格头部 */}
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    附件列表 ({totalAttachments} 个文件)
+                  </h3>
+                </div>
+              </div>
+
+              {/* 附件列表 */}
+              <div className="divide-y divide-gray-200">
+                {attachments.map((attachment) => (
+                  <div key={attachment._id} className="p-6 hover:bg-gray-50 file-list-item">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center flex-1 min-w-0">
+                        <div className="flex-shrink-0 mr-4">
+                          {getFileIcon(attachment.mimeType)}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 truncate">
+                            {attachment.originalName}
+                          </h4>
+                          <div className="mt-1 text-sm text-gray-500">
+                            <span>{formatFileSize(attachment.size)}</span>
+                            <span className="mx-2">•</span>
+                            <span>{formatDate(attachment.uploadTime)}</span>
+                          </div>
+                          {attachment.description && (
+                            <p className="mt-1 text-sm text-gray-600 truncate">
+                              {attachment.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 ml-4">
+                        <button
+                          onClick={() => handleFileDownload(attachment)}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <CloudArrowDownIcon className="h-4 w-4 mr-1" />
+                          下载
+                        </button>
+                        
+                        <button
+                          onClick={() => handleFileDelete(attachment._id)}
+                          disabled={deleteLoading === attachment._id}
+                          className="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {deleteLoading === attachment._id ? (
+                            <div className="h-4 w-4 mr-1 animate-spin rounded-full border-b-2 border-red-600"></div>
+                          ) : (
+                            <TrashIcon className="h-4 w-4 mr-1" />
+                          )}
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 分页 */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      显示第 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalAttachments)} 条，
+                      共 {totalAttachments} 条记录
+                    </div>
+                        
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        上一页
+                      </button>
+                          
+                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                        const page = i + Math.max(1, currentPage - 2)
+                        if (page > totalPages) return null
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1 border rounded-md text-sm ${
+                              page === currentPage
+                                ? 'border-blue-500 bg-blue-500 text-white'
+                                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      })}
+                          
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        下一页
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* 上传附件模态框 */}
+        {uploadModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 upload-modal">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">上传附件</h3>
+                  
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    项目名称
+                  </label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                    {projectInfo.name}
+                  </div>
+                </div>
+                    
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    选择文件
+                  </label>
                   <input
-                    type="search"
-                    placeholder="搜索文件名或描述..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    className="search-input"
+                    type="file"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.zip,.rar,.7z"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    支持：文档、图片、压缩包等格式，最大10MB
+                  </p>
+                </div>
+                    
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    文件描述（可选）
+                  </label>
+                  <textarea
+                    value={uploadDescription}
+                    onChange={(e) => setUploadDescription(e.target.value)}
+                    placeholder="请输入文件描述..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
-              
-              <div className="action-section-2">
+            
+              <div className="flex justify-end space-x-3 mt-6">
                 <button
-                  onClick={() => setUploadModalOpen(true)}
-                  className="create-button"
+                  onClick={() => {
+                    setUploadModalOpen(false)
+                    setSelectedFile(null)
+                    setUploadDescription('')
+                  }}
+                  disabled={uploadLoading}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <CloudArrowUpIcon className="w-4 h-4" />
-                  上传附件
+                  取消
+                </button>
+              
+                <button
+                  onClick={handleFileUpload}
+                  disabled={uploadLoading || !selectedFile}
+                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {uploadLoading ? (
+                    <>
+                      <div className="inline-block h-4 w-4 mr-2 animate-spin rounded-full border-b-2 border-white"></div>
+                      上传中...
+                    </>
+                  ) : (
+                    <>
+                      <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                      上传
+                    </>
+                  )}
                 </button>
               </div>
             </div>
-
-            {/* 筛选控制栏 */}
-            <div className="filter-bar">
-              <div className="filter-controls">
-                <div className="filter-item">
-                  <FunnelIcon className="w-4 h-4 filter-icon" />
-                  <select
-                    value={fileTypeFilter}
-                    onChange={(e) => handleFilterChange(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="">所有类型</option>
-                    <option value="image">图片</option>
-                    <option value="document">文档</option>
-                    <option value="archive">压缩包</option>
-                  </select>
-                </div>
-              </div>
-              
-              <button 
-                onClick={handleSearch}
-                className="refresh-button"
-              >
-                搜索筛选
-              </button>
-            </div>
-
-            {/* 附件列表 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              {loading ? (
-                <div className="p-12 text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="mt-4 text-gray-500">加载中...</p>
-                </div>
-              ) : attachments.length === 0 ? (
-                <div className="p-12 text-center">
-                  <PaperClipIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">暂无附件</h3>
-                  <p className="text-gray-500 mb-6">
-                    项目"{projectInfo.name}"还没有上传任何附件，点击上传按钮开始添加。
-                  </p>
-                  <button
-                    onClick={() => setUploadModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    <CloudArrowUpIcon className="h-4 w-4 mr-2" />
-                    上传第一个附件
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* 表格头部 */}
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        附件列表 ({totalAttachments} 个文件)
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* 附件列表 */}
-                  <div className="divide-y divide-gray-200">
-                    {attachments.map((attachment) => (
-                      <div key={attachment._id} className="p-6 hover:bg-gray-50 file-list-item">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center flex-1 min-w-0">
-                            <div className="flex-shrink-0 mr-4">
-                              {getFileIcon(attachment.mimeType)}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium text-gray-900 truncate">
-                                {attachment.originalName}
-                              </h4>
-                              <div className="mt-1 text-sm text-gray-500">
-                                <span>{formatFileSize(attachment.size)}</span>
-                                <span className="mx-2">•</span>
-                                <span>{formatDate(attachment.uploadTime)}</span>
-                              </div>
-                              {attachment.description && (
-                                <p className="mt-1 text-sm text-gray-600 truncate">
-                                  {attachment.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2 ml-4">
-                            <button
-                              onClick={() => handleFileDownload(attachment)}
-                              className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                              <CloudArrowDownIcon className="h-4 w-4 mr-1" />
-                              下载
-                            </button>
-                            
-                            <button
-                              onClick={() => handleFileDelete(attachment._id)}
-                              disabled={deleteLoading === attachment._id}
-                              className="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
-                            >
-                              {deleteLoading === attachment._id ? (
-                                <div className="h-4 w-4 mr-1 animate-spin rounded-full border-b-2 border-red-600"></div>
-                              ) : (
-                                <TrashIcon className="h-4 w-4 mr-1" />
-                              )}
-                              删除
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 分页 */}
-                  {totalPages > 1 && (
-                    <div className="px-6 py-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-700">
-                          显示第 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalAttachments)} 条，
-                          共 {totalAttachments} 条记录
-                        </div>
-                        
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            上一页
-                          </button>
-                          
-                          {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                            const page = i + Math.max(1, currentPage - 2)
-                            if (page > totalPages) return null
-                            return (
-                              <button
-                                key={page}
-                                onClick={() => handlePageChange(page)}
-                                className={`px-3 py-1 border rounded-md text-sm ${
-                                  page === currentPage
-                                    ? 'border-blue-500 bg-blue-500 text-white'
-                                    : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                                }`}
-                              >
-                                {page}
-                              </button>
-                            )
-                          })}
-                          
-                          <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            下一页
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </main>
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* 上传附件模态框 */}
-      {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 upload-modal">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">上传附件</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  项目名称
-                </label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
-                  {projectInfo.name}
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  选择文件
-                </label>
-                <input
-                  type="file"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.zip,.rar,.7z"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  支持：文档、图片、压缩包等格式，最大10MB
-                </p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  文件描述（可选）
-                </label>
-                <textarea
-                  value={uploadDescription}
-                  onChange={(e) => setUploadDescription(e.target.value)}
-                  placeholder="请输入文件描述..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => {
-                  setUploadModalOpen(false)
-                  setSelectedFile(null)
-                  setUploadDescription('')
-                }}
-                disabled={uploadLoading}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                取消
-              </button>
-              
-              <button
-                onClick={handleFileUpload}
-                disabled={uploadLoading || !selectedFile}
-                className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-              >
-                {uploadLoading ? (
-                  <>
-                    <div className="inline-block h-4 w-4 mr-2 animate-spin rounded-full border-b-2 border-white"></div>
-                    上传中...
-                  </>
-                ) : (
-                  <>
-                    <CloudArrowUpIcon className="h-4 w-4 mr-2" />
-                    上传
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <style jsx>{`
+        .internal-preparation-attachments-page {
+          padding: 24px;
+          background: #f8fafc;
+          min-height: 100vh;
+        }
+
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 32px;
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .title-section h1 {
+          font-size: 28px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0 0 8px 0;
+        }
+
+        .title-section p {
+          font-size: 16px;
+          color: #64748b;
+          margin: 0;
+        }
+
         .file-list-item {
           transition: all 0.2s ease-in-out;
         }
@@ -915,6 +913,6 @@ export default function InternalPreparationAttachments() {
           border-color: #cbd5e1;
         }
       `}</style>
-    </>
+    </DashboardLayout>
   )
 }

@@ -85,11 +85,11 @@ export default function Dashboard() {
         // 模拟数据加载延迟
         setTimeout(() => {
           setDashboardData({
-            totalProjects: 12,
-            activeProjects: 5,
-            completedProjects: 4,
+            totalProjects: 6,
+            activeProjects: 3,
+            completedProjects: 1,
             projectTypeCount: 3,
-            chargePersonCount: 15
+            chargePersonCount: 4
           })
           setLoading(false)
         }, 1000)
@@ -156,7 +156,7 @@ export default function Dashboard() {
         data: {
           labels: ['进行中', '已完成', '已暂停'],
           datasets: [{
-            data: [5, 4, 3],
+            data: [3, 1, 2],
             backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
             borderWidth: 0,
             cutout: '60%'
@@ -205,10 +205,10 @@ export default function Dashboard() {
       typeProjectsChart: {
         type: 'bar' as const,
         data: {
-          labels: ['院内制剂', '类型2-除院内制剂', '类型3（示例）'],
+          labels: ['院内制剂', '类型2（示例）', '类型3（示例）'],
           datasets: [{
             label: '项目数量',
-            data: [6, 4, 2],
+            data: [6, 0, 0],
             backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
             borderRadius: 6,
             borderSkipped: false
@@ -231,10 +231,10 @@ export default function Dashboard() {
       sourceProjectsChart: {
         type: 'bar' as const,
         data: {
-          labels: ['上海市皮肤病医院', '仁济医院', '岳阳医院', '曙光医院'],
+          labels: ['123', '岳阳医院', '中医科', '曙光医院', '上海皮肤病医院'],
           datasets: [{
             label: '项目数量',
-            data: [5, 1, 4, 2],
+            data: [1, 2, 1, 1, 1],
             backgroundColor: '#8b5cf6',
             borderRadius: 6,
             borderSkipped: false
@@ -378,7 +378,7 @@ export default function Dashboard() {
         <div className="page-header">
           <div className="title-section">
             <h1>总项目报表统计</h1>
-            <p>欢迎回来，系统管理员！这里是您的项目概况数据统计。</p>
+            <p>欢迎回来，系统管理员！这里是您的总体项目数据统计。</p>
           </div>
           <div className="action-section">
             <button className="export-button" onClick={handleExport}>
@@ -517,16 +517,20 @@ export default function Dashboard() {
 
       <style jsx>{`
         .dashboard-page {
-          padding: 0;
+          padding: 24px;
+          background: #f8fafc;
+          min-height: 100vh;
         }
 
         .page-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 32px;
-          padding-bottom: 24px;
-          border-bottom: 1px solid #e2e8f0;
+          margin-bottom: 24px;
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
         .title-section h1 {
@@ -553,29 +557,31 @@ export default function Dashboard() {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 10px 16px;
-          background: #3b82f6;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
           color: white;
           border: none;
+          padding: 12px 24px;
           border-radius: 8px;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
-          transition: background 0.2s ease;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
         }
 
         .export-button:hover {
-          background: #2563eb;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
         }
 
         .filter-section {
           display: flex;
           gap: 24px;
-          margin-bottom: 32px;
-          padding: 20px;
-          background: #f8fafc;
+          background: white;
+          padding: 20px 24px;
           border-radius: 12px;
-          border: 1px solid #e2e8f0;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          margin-bottom: 42px;
         }
 
         .filter-item {
@@ -615,7 +621,7 @@ export default function Dashboard() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 24px;
-          margin-bottom: 40px;
+          margin-bottom: 32px;
         }
 
         .stat-card {
@@ -697,7 +703,6 @@ export default function Dashboard() {
         .chart-box {
           background: white;
           border-radius: 12px;
-          border: 1px solid #e2e8f0;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           overflow: hidden;
           transition: all 0.2s ease;
@@ -762,6 +767,7 @@ export default function Dashboard() {
           .filter-section {
             flex-direction: column;
             gap: 16px;
+            align-items: stretch;
           }
 
           .stats-grid {

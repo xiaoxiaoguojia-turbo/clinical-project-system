@@ -94,7 +94,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
             },
             {
               id: 'type2',
-              label: '类型2-除院内制剂',
+              label: '类型2（示例）',
               icon: ChartBarIcon,
               route: '/unauthorized',
               level: 3

@@ -241,9 +241,9 @@ export default function InternalPreparationAttachments() {
       if (result.success) {
         console.log('✅ 附件列表加载成功:', result.data)
         setAttachments(result.data.data)
-        setTotalAttachments(result.data.total)
-        setCurrentPage(result.data.page)
-        setTotalPages(result.data.totalPages)
+        setTotalAttachments(result.data.pagination.total)
+        setCurrentPage(result.data.pagination.current)
+        setTotalPages(result.data.pagination.totalPages)
       } else {
         console.log('❌ 加载附件列表失败:', result)
       }
@@ -444,7 +444,7 @@ export default function InternalPreparationAttachments() {
             <h1 className="page-title">附件管理</h1>
             <div className="project-info">
               <InformationCircleIcon className="w-5 h-5 text-blue-500" />
-              <span>项目：{projectInfo.name}</span>
+              <span>制剂：{projectInfo.name}</span>
             </div>
           </div>
           
@@ -648,7 +648,7 @@ export default function InternalPreparationAttachments() {
               <div className="modal-content">
                 <div className="form-group">
                   <label className="form-label">
-                    院内制剂名称
+                    制剂名称
                   </label>
                   <div className="project-display">
                     {projectInfo.name}
@@ -657,7 +657,7 @@ export default function InternalPreparationAttachments() {
                     
                 <div className="form-group">
                   <label className="form-label">
-                    选择上传文件
+                    上传文件
                   </label>
                   <input
                     type="file"
@@ -1221,6 +1221,7 @@ export default function InternalPreparationAttachments() {
         }
 
         .project-display {
+          width: 92%;
           padding: 12px 16px;
           background: #f9fafb;
           border: 1px solid #e5e7eb;
@@ -1230,7 +1231,7 @@ export default function InternalPreparationAttachments() {
         }
 
         .file-input {
-          width: 100%;
+          width: 92%;
           padding: 12px 16px;
           border: 2px solid #e5e7eb;
           border-radius: 8px;
@@ -1250,7 +1251,7 @@ export default function InternalPreparationAttachments() {
         }
 
         .description-textarea {
-          width: 100%;
+          width: 92%;
           padding: 12px 16px;
           border: 2px solid #e5e7eb;
           border-radius: 8px;

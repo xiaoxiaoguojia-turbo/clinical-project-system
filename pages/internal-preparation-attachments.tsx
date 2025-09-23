@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import TopNavigation from '@/components/layout/TopNavigation'
-import SideNavigation from '@/components/layout/SideNavigation'
-import { ApiClient, TokenManager } from '@/utils/auth'
 import { 
   PaperClipIcon, 
   CloudArrowUpIcon, 
@@ -19,7 +16,12 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline'
+import TopNavigation from '@/components/layout/TopNavigation'
+import SideNavigation from '@/components/layout/SideNavigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { ApiClient, TokenManager } from '@/utils/auth'
+
+/* ------------------------------------------------------------------------------------------ */
 
 interface IAttachment {
   _id: string
@@ -57,8 +59,9 @@ interface ProjectInfo {
   type: string
 }
 
+/* ------------------------------------------------------------------------------------------ */
+
 export default function InternalPreparationAttachments() {
-  /* ------------------------------------------------------------------------------------------ */
   const router = useRouter()
 
   // 获取路由参数
@@ -88,9 +91,9 @@ export default function InternalPreparationAttachments() {
   
   // 删除状态
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
-  /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
+
   // 初始化页面参数
   useEffect(() => {
     console.log('=== 附件管理页面初始化调试信息 ===')
@@ -192,6 +195,10 @@ export default function InternalPreparationAttachments() {
     }
   }, [pageReady, projectInfo])
 
+  /* ------------------------------------------------------------------------------------------ */
+
+    /* ------------------------------------------------------------------------------------------ */
+
   // 加载附件列表
   const loadAttachments = async (page = 1, search = '', fileType = '') => {
     if (!projectInfo) {
@@ -199,7 +206,6 @@ export default function InternalPreparationAttachments() {
       return
     }
 
-    // 构建API调用URL
     try {
       console.log('=== 开始加载附件列表 ===')
       console.log('加载参数:', { page, search, fileType, projectInfo })
@@ -221,7 +227,6 @@ export default function InternalPreparationAttachments() {
         params.append('fileType', fileType)
       }
 
-      // 构建API调用URL
       const apiUrl = `/api/attachments?${params.toString()}`
       console.log('API调用URL:', apiUrl)
 
@@ -285,7 +290,6 @@ export default function InternalPreparationAttachments() {
         setUploadModalOpen(false)
         setSelectedFile(null)
         setUploadDescription('')
-        // 刷新列表
         loadAttachments(currentPage, searchTerm, fileTypeFilter)
       } else {
         alert(result.error || '文件上传失败')
@@ -349,7 +353,6 @@ export default function InternalPreparationAttachments() {
       
       if (result.success) {
         alert('附件删除成功')
-        // 刷新列表
         loadAttachments(currentPage, searchTerm, fileTypeFilter)
       } else {
         alert('附件删除失败')
@@ -381,16 +384,18 @@ export default function InternalPreparationAttachments() {
     loadAttachments(newPage, searchTerm, fileTypeFilter)
   }
 
+  /* ------------------------------------------------------------------------------------------ */
+
   // 获取文件图标
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith('image/')) {
-      return <PhotoIcon className="h-8 w-8 text-green-500" />
+      return <PhotoIcon className="w-8 h-8 text-green-500" />
     } else if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.includes('text')) {
-      return <DocumentIcon className="h-8 w-8 text-red-500" />
+      return <DocumentIcon className="w-8 h-8 text-red-500" />
     } else if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) {
-      return <ArchiveBoxIcon className="h-8 w-8 text-yellow-500" />
+      return <ArchiveBoxIcon className="w-8 h-8 text-yellow-500" />
     } else {
-      return <PaperClipIcon className="h-8 w-8 text-gray-500" />
+      return <PaperClipIcon className="w-8 h-8 text-gray-500" />
     }
   }
 
@@ -409,6 +414,8 @@ export default function InternalPreparationAttachments() {
     return date.toLocaleString('zh-CN')
   }
 
+  /* ------------------------------------------------------------------------------------------ */
+
   // 如果页面未就绪，显示加载状态
   if (!pageReady || !projectInfo) {
     return (
@@ -416,55 +423,56 @@ export default function InternalPreparationAttachments() {
         <Head>
           <title>附件管理 - 院内制剂</title>
         </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-500">正在加载...</p>
+        <div className="loading-container">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">正在加载...</p>
           </div>
         </div>
       </>
     )
   }
+
   /* ------------------------------------------------------------------------------------------ */
 
   return (
     <DashboardLayout title={`附件管理 - ${projectInfo.name} - 院内制剂`}>
-      <div className="internal-preparation-attachments-page">
-        {/* 页面标题和面包屑 */}
+      <div className="attachment-page">
+        {/* 页面标题和操作按钮 */}
         <div className="page-header">
-            <div className="p-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">附件管理</h1>
-              <div className="flex items-center text-gray-600">
-                <InformationCircleIcon className="h-5 w-5 mr-2" />
-                <span>项目：{projectInfo.name}</span>
-              </div>
+          <div className="header-info">
+            <h1 className="page-title">附件管理</h1>
+            <div className="project-info">
+              <InformationCircleIcon className="w-5 h-5 text-blue-500" />
+              <span>项目：{projectInfo.name}</span>
             </div>
-            
-            <div className="flex space-x-4 mt-8">
-              <button
-                onClick={() => router.push('/internal-preparations')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                返回院内制剂
-              </button>
-                  
-              <button
-                onClick={() => setUploadModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <CloudArrowUpIcon className="h-4 w-4 mr-2" />
-                上传附件
-              </button>
-            </div>
+          </div>
+          
+          <div className="header-actions">
+            <button
+              onClick={() => router.push('/internal-preparations')}
+              className="back-button"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              返回院内制剂
+            </button>
+                
+            <button
+              onClick={() => setUploadModalOpen(true)}
+              className="upload-button"
+            >
+              <CloudArrowUpIcon className="w-4 h-4" />
+              上传附件
+            </button>
+          </div>
         </div>
 
         {/* 筛选控制栏 */}
         <div className="filter-bar">
           <div className="filter-controls">
             <div className="search-section">
-              <div className="search-input-wrapper">
-                <MagnifyingGlassIcon className="w-5 h-5 search-icon" />
+              <div className="search-wrapper">
+                <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
                 <input
                   type="search"
                   placeholder="搜索文件名或描述..."
@@ -477,7 +485,7 @@ export default function InternalPreparationAttachments() {
             </div>
           
             <div className="filter-item">
-              <FunnelIcon className="w-4 h-4 filter-icon" />
+              <FunnelIcon className="w-4 h-4 text-gray-400" />
               <select
                 value={fileTypeFilter}
                 onChange={(e) => handleFilterChange(e.target.value)}
@@ -493,90 +501,90 @@ export default function InternalPreparationAttachments() {
           
           <button 
             onClick={handleSearch}
-            className="refresh-button"
+            className="search-button"
           >
             搜索筛选
           </button>
         </div>
 
-        {/* 附件列表 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {/* 附件列表容器 */}
+        <div className="attachment-list-container">
           {loading ? (
-            <div className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-500">加载中...</p>
+            <div className="empty-state">
+              <div className="loading-spinner"></div>
+              <p className="empty-text">加载中...</p>
             </div>
           ) : attachments.length === 0 ? (
-            <div className="p-12 text-center">
-              <PaperClipIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">暂无附件</h3>
-              <p className="text-gray-500 mb-6">
+            <div className="empty-state">
+              <PaperClipIcon className="w-12 h-12 text-gray-400" />
+              <h3 className="empty-title">暂无附件</h3>
+              <p className="empty-description">
                 项目"{projectInfo.name}"还没有上传任何附件，点击上传按钮开始添加。
               </p>
               <button
                 onClick={() => setUploadModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                className="upload-first-button"
               >
-                <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                <CloudArrowUpIcon className="w-4 h-4" />
                 上传第一个附件
               </button>
             </div>
           ) : (
             <>
-              {/* 表格头部 */}
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-900">
+              {/* 列表标题 */}
+              <div className="list-header">
+                <div className="list-title-section">
+                  <h3 className="list-title">
                     附件列表 ({totalAttachments} 个文件)
                   </h3>
                 </div>
               </div>
 
               {/* 附件列表 */}
-              <div className="divide-y divide-gray-200">
+              <div className="attachment-list">
                 {attachments.map((attachment) => (
-                  <div key={attachment._id} className="p-6 hover:bg-gray-50 file-list-item">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center flex-1 min-w-0">
-                        <div className="flex-shrink-0 mr-4">
+                  <div key={attachment._id} className="attachment-item">
+                    <div className="item-content">
+                      <div className="file-info">
+                        <div className="file-icon">
                           {getFileIcon(attachment.mimeType)}
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">
+                        <div className="file-details">
+                          <h4 className="file-name">
                             {attachment.originalName}
                           </h4>
-                          <div className="mt-1 text-sm text-gray-500">
+                          <div className="file-meta">
                             <span>{formatFileSize(attachment.size)}</span>
-                            <span className="mx-2">•</span>
+                            <span className="meta-separator">•</span>
                             <span>{formatDate(attachment.uploadTime)}</span>
                           </div>
                           {attachment.description && (
-                            <p className="mt-1 text-sm text-gray-600 truncate">
+                            <p className="file-description">
                               {attachment.description}
                             </p>
                           )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2 ml-4">
+                      <div className="item-actions">
                         <button
                           onClick={() => handleFileDownload(attachment)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                          className="download-button"
                         >
-                          <CloudArrowDownIcon className="h-4 w-4 mr-1" />
+                          <CloudArrowDownIcon className="w-4 h-4" />
                           下载
                         </button>
                         
                         <button
                           onClick={() => handleFileDelete(attachment._id)}
                           disabled={deleteLoading === attachment._id}
-                          className="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
+                          className="delete-button"
                         >
                           {deleteLoading === attachment._id ? (
-                            <div className="h-4 w-4 mr-1 animate-spin rounded-full border-b-2 border-red-600"></div>
+                            <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-red-600"></div>
                           ) : (
-                            <TrashIcon className="h-4 w-4 mr-1" />
+                            <TrashIcon className="w-4 h-4" />
                           )}
                           删除
                         </button>
@@ -586,50 +594,44 @@ export default function InternalPreparationAttachments() {
                 ))}
               </div>
 
-              {/* 分页 */}
+              {/* 分页控件 */}
               {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-700">
-                      显示第 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalAttachments)} 条，
-                      共 {totalAttachments} 条记录
-                    </div>
+                <div className="pagination-container">
+                  <div className="pagination-info">
+                    显示第 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalAttachments)} 条，
+                    共 {totalAttachments} 条记录
+                  </div>
+                      
+                  <div className="pagination-controls">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="pagination-button"
+                    >
+                      上一页
+                    </button>
                         
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        上一页
-                      </button>
-                          
-                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                        const page = i + Math.max(1, currentPage - 2)
-                        if (page > totalPages) return null
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-3 py-1 border rounded-md text-sm ${
-                              page === currentPage
-                                ? 'border-blue-500 bg-blue-500 text-white'
-                                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        )
-                      })}
-                          
-                      <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        下一页
-                      </button>
-                    </div>
+                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                      const page = i + Math.max(1, currentPage - 2)
+                      if (page > totalPages) return null
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`pagination-button ${page === currentPage ? 'active' : ''}`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    })}
+                        
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="pagination-button"
+                    >
+                      下一页
+                    </button>
                   </div>
                 </div>
               )}
@@ -639,37 +641,37 @@ export default function InternalPreparationAttachments() {
 
         {/* 上传附件模态框 */}
         {uploadModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 upload-modal">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">上传附件</h3>
+          <div className="modal-overlay">
+            <div className="upload-modal">
+              <h3 className="modal-title">上传附件</h3>
                   
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    项目名称
+              <div className="modal-content">
+                <div className="form-group">
+                  <label className="form-label">
+                    院内制剂名称
                   </label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                  <div className="project-display">
                     {projectInfo.name}
                   </div>
                 </div>
                     
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    选择文件
+                <div className="form-group">
+                  <label className="form-label">
+                    选择上传文件
                   </label>
                   <input
                     type="file"
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.zip,.rar,.7z"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="file-input"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="input-hint">
                     支持：文档、图片、压缩包等格式，最大10MB
                   </p>
                 </div>
                     
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="form-group">
+                  <label className="form-label">
                     文件描述（可选）
                   </label>
                   <textarea
@@ -677,12 +679,12 @@ export default function InternalPreparationAttachments() {
                     onChange={(e) => setUploadDescription(e.target.value)}
                     placeholder="请输入文件描述..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="description-textarea"
                   />
                 </div>
               </div>
             
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="modal-actions">
                 <button
                   onClick={() => {
                     setUploadModalOpen(false)
@@ -690,7 +692,7 @@ export default function InternalPreparationAttachments() {
                     setUploadDescription('')
                   }}
                   disabled={uploadLoading}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="cancel-button"
                 >
                   取消
                 </button>
@@ -698,16 +700,16 @@ export default function InternalPreparationAttachments() {
                 <button
                   onClick={handleFileUpload}
                   disabled={uploadLoading || !selectedFile}
-                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                  className="confirm-button"
                 >
                   {uploadLoading ? (
                     <>
-                      <div className="inline-block h-4 w-4 mr-2 animate-spin rounded-full border-b-2 border-white"></div>
+                      <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-white"></div>
                       上传中...
                     </>
                   ) : (
                     <>
-                      <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                      <CloudArrowUpIcon className="w-4 h-4" />
                       上传
                     </>
                   )}
@@ -719,128 +721,108 @@ export default function InternalPreparationAttachments() {
       </div>
 
       <style jsx>{`
-        .internal-preparation-attachments-page {
+        .attachment-page {
           padding: 24px;
           background: #f8fafc;
           min-height: 100vh;
         }
 
+        /* 加载状态样式 */
+        .loading-container {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8fafc;
+        }
+
+        .loading-content {
+          text-align: center;
+        }
+
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 4px solid #e5e7eb;
+          border-top: 4px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 16px;
+        }
+
+        .loading-text {
+          color: #6b7280;
+          font-size: 14px;
+          margin: 0;
+        }
+
+        /* 页面头部样式 */
         .page-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 32px;
           background: white;
           padding: 24px;
           border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          margin-bottom: 24px;
         }
 
-        .title-section h1 {
+        .header-info {
+          flex: 1;
+        }
+
+        .page-title {
           font-size: 28px;
           font-weight: 700;
           color: #1e293b;
           margin: 0 0 8px 0;
         }
 
-        .title-section p {
-          font-size: 16px;
-          color: #64748b;
-          margin: 0;
-        }
-
-        .file-list-item {
-          transition: all 0.2s ease-in-out;
-        }
-        
-        .file-list-item:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .upload-modal {
-          animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .loading-spinner {
-          border-top-color: transparent;
-          animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        /* 统一的项目管理界面样式 */
-        .project-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: white;
-          padding: 20px 24px;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          margin-bottom: 24px;
-        }
-
-        .search-section {
-          flex: 1;
-          max-width: 400px;
-        }
-
-        .search-input-wrapper {
+        .project-info {
           display: flex;
           align-items: center;
           gap: 8px;
-          position: relative;
+          color: #64748b;
+          font-size: 16px;
         }
 
-        .search-icon {
-          color: #6b7280;
-        }
-
-        .search-input {
-          width: 100%;
-          padding: 12px 12px 12px 20px;
-          border: 2px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 14px;
-          background: white;
-          transition: border-color 0.2s ease;
-        }
-
-        .search-input:focus {
-          outline: none;
-          border-color: #3b82f6;
-        }
-
-        .action-section-2 {
+        .header-actions {
           display: flex;
           gap: 12px;
+          margin-top: 20px;
         }
 
-        .create-button {
-          display: flex;
+        .back-button {
+          display: inline-flex;
           align-items: center;
           gap: 8px;
+          padding: 10px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          background: white;
+          color: #374151;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+          border-color: #d1d5db;
+          background: #f9fafb;
+          transform: translateY(-1px);
+        }
+
+        .upload-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px;
+          border: none;
+          border-radius: 8px;
           background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
           color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
@@ -848,12 +830,12 @@ export default function InternalPreparationAttachments() {
           box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
         }
 
-        .create-button:hover {
+        .upload-button:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
         }
 
-        /* 筛选控制栏 */
+        /* 筛选控制栏样式 */
         .filter-bar {
           display: flex;
           justify-content: space-between;
@@ -861,7 +843,7 @@ export default function InternalPreparationAttachments() {
           background: white;
           padding: 20px 24px;
           border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           margin-bottom: 24px;
         }
 
@@ -871,14 +853,46 @@ export default function InternalPreparationAttachments() {
           align-items: center;
         }
 
+        .search-section {
+          flex: 1;
+          max-width: 400px;
+        }
+
+        .search-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          position: relative;
+        }
+
+        .search-input {
+          flex: 1;
+          width: 100%;
+          padding: 12px 12px 12px 20px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          color: #374151;
+          cursor: pointer;
+          transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .search-wrapper svg {
+          position: absolute;
+          left: 12px;
+          z-index: 10;
+        }
+
         .filter-item {
           display: flex;
           align-items: center;
           gap: 8px;
-        }
-
-        .filter-icon {
-          color: #6b7280;
         }
 
         .filter-select {
@@ -897,7 +911,7 @@ export default function InternalPreparationAttachments() {
           border-color: #3b82f6;
         }
 
-        .refresh-button {
+        .search-button {
           padding: 8px 16px;
           background: #f8fafc;
           border: 1px solid #e2e8f0;
@@ -908,9 +922,492 @@ export default function InternalPreparationAttachments() {
           transition: all 0.2s ease;
         }
 
-        .refresh-button:hover {
+        .search-button:hover {
           background: #f1f5f9;
           border-color: #cbd5e1;
+        }
+
+        /* 附件列表容器样式 */
+        .attachment-list-container {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+          padding: 48px 24px;
+          text-align: center;
+        }
+
+        .empty-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #111827;
+          margin: 16px 0 8px 0;
+        }
+
+        .empty-description {
+          color: #6b7280;
+          margin: 0 0 24px 0;
+          line-height: 1.5;
+        }
+
+        .empty-text {
+          color: #6b7280;
+          margin: 16px 0 0 0;
+          font-size: 14px;
+        }
+
+        .upload-first-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 24px;
+          border: none;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        .upload-first-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        /* 列表标题样式 */
+        .list-header {
+          padding: 20px 24px;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .list-title-section {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .list-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #111827;
+          margin: 0;
+        }
+
+        /* 附件列表样式 */
+        .attachment-list {
+          divide-y: 1px solid #e5e7eb;
+        }
+
+        .attachment-item {
+          padding: 24px;
+          transition: all 0.2s ease;
+        }
+
+        .attachment-item:hover {
+          background: #f9fafb;
+          transform: translateY(-1px);
+        }
+
+        .item-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .file-info {
+          display: flex;
+          align-items: center;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .file-icon {
+          flex-shrink: 0;
+          margin-right: 16px;
+        }
+
+        .file-details {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .file-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #111827;
+          margin: 0 0 4px 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .file-meta {
+          font-size: 14px;
+          color: #6b7280;
+          margin: 0 0 4px 0;
+        }
+
+        .meta-separator {
+          margin: 0 8px;
+        }
+
+        .file-description {
+          font-size: 14px;
+          color: #4b5563;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .item-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-left: 16px;
+          flex-shrink: 0;
+        }
+
+        .download-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          background: white;
+          color: #374151;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .download-button:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+        }
+
+        .delete-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 12px;
+          border: 1px solid #fecaca;
+          border-radius: 6px;
+          background: white;
+          color: #dc2626;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .delete-button:hover {
+          background: #fef2f2;
+          border-color: #f87171;
+        }
+
+        .delete-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        /* 分页样式 */
+        .pagination-container {
+          padding: 20px 24px;
+          border-top: 1px solid #e5e7eb;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .pagination-info {
+          font-size: 14px;
+          color: #6b7280;
+        }
+
+        .pagination-controls {
+          display: flex;
+          gap: 8px;
+        }
+
+        .pagination-button {
+          padding: 8px 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          background: white;
+          color: #374151;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .pagination-button:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+        }
+
+        .pagination-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: #f9fafb;
+        }
+
+        .pagination-button.active {
+          background: #3b82f6;
+          border-color: #3b82f6;
+          color: white;
+        }
+
+        .pagination-button.active:hover {
+          background: #2563eb;
+          border-color: #2563eb;
+        }
+
+        /* 模态框样式 */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .upload-modal {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          width: 100%;
+          max-width: 480px;
+          margin: 16px;
+          animation: slideIn 0.3s ease-out;
+        }
+
+        .modal-title {
+          font-size: 20px;
+          font-weight: 600;
+          color: #111827;
+          margin: 0 0 20px 0;
+        }
+
+        .modal-content {
+          space-y: 16px;
+        }
+
+        .form-group {
+          margin-bottom: 16px;
+        }
+
+        .form-label {
+          display: block;
+          font-size: 14px;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 8px;
+        }
+
+        .project-display {
+          padding: 12px 16px;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #4b5563;
+        }
+
+        .file-input {
+          width: 100%;
+          padding: 12px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          transition: border-color 0.2s ease;
+        }
+
+        .file-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .input-hint {
+          margin-top: 4px;
+          font-size: 12px;
+          color: #6b7280;
+        }
+
+        .description-textarea {
+          width: 100%;
+          padding: 12px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          resize: vertical;
+          transition: border-color 0.2s ease;
+        }
+
+        .description-textarea:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          margin-top: 24px;
+        }
+
+        .cancel-button {
+          padding: 10px 20px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          background: white;
+          color: #374151;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .cancel-button:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+        }
+
+        .cancel-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .confirm-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        .confirm-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .confirm-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        /* 动画效果 */
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+          .attachment-page {
+            padding: 16px;
+          }
+
+          .page-header {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+          }
+
+          .header-actions {
+            margin-top: 0;
+            justify-content: stretch;
+          }
+
+          .back-button,
+          .upload-button {
+            flex: 1;
+            justify-content: center;
+          }
+
+          .filter-bar {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+          }
+
+          .filter-controls {
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+          }
+
+          .search-section {
+            max-width: none;
+          }
+
+          .attachment-item {
+            padding: 16px;
+          }
+
+          .item-content {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+          }
+
+          .item-actions {
+            margin-left: 0;
+            justify-content: stretch;
+          }
+
+          .download-button,
+          .delete-button {
+            flex: 1;
+            justify-content: center;
+          }
+
+          .pagination-container {
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            text-align: center;
+          }
+
+          .upload-modal {
+            margin: 8px;
+          }
         }
       `}</style>
     </DashboardLayout>

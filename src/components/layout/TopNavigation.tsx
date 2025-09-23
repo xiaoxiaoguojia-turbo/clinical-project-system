@@ -73,7 +73,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
 
   const handleSettings = () => {
     if (isAdmin) {
-      router.push('/settings')
+      router.push('/underconstruction')
     } else {
       router.push('/unauthorized')
     }
@@ -145,15 +145,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
         <span className="user-name">{displayName}</span>
         
         <div className="user-avatar">
-          <img 
-            src="/images/avatar.png" 
-            alt="用户头像" 
-            className="avatar-image"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3b82f6&color=fff&size=40`
-            }}
-          />
+          {displayName.charAt(0)}
         </div>
 
         <div className="user-dropdown">
@@ -291,6 +283,13 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
           border-radius: 50%;
           overflow: hidden;
           border: 2px solid #e5e7eb;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 16px;
         }
 
         .avatar-image {

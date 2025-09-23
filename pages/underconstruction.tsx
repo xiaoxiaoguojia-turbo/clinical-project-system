@@ -300,7 +300,8 @@ const UnderConstructionPage: NextPage = () => {
         .construction-content {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0;
+          padding: 24px;
+          background: #f8fafc;
           min-height: calc(100vh - 112px);
         }
 
@@ -714,7 +715,7 @@ const UnderConstructionPage: NextPage = () => {
 
         @media (max-width: 768px) {
           .construction-content {
-            padding: 0 16px;
+            padding: 16px;
           }
 
           .page-header {

@@ -91,6 +91,28 @@ const InternalPreparationProjectSchema: Schema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: [true, '创建者为必填项']
+  },
+  // AI报告相关信息
+  aiReport: {
+    reportUrl: {
+      type: String,
+      default: null,
+      maxlength: [2000, 'AI报告URL不能超过2000个字符']
+    },
+    status: {
+      type: String,
+      enum: ['idle', 'generating', 'completed', 'error'],
+      default: 'idle',
+      required: true
+    },
+    firstGeneratedAt: {
+      type: Date,
+      default: null
+    },
+    lastGeneratedAt: {
+      type: Date,
+      default: null
+    }
   }
 })
 

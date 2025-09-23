@@ -73,6 +73,13 @@ export interface InternalPreparationProject {
   createTime: Date
   updateTime: Date
   createdBy: string
+  // AI报告相关信息
+  aiReport: {
+    reportUrl?: string | null
+    status: 'idle' | 'generating' | 'completed' | 'error'
+    firstGeneratedAt?: Date | null
+    lastGeneratedAt?: Date | null
+  }
 }
 
 // 附件类型

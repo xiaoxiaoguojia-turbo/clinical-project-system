@@ -8,7 +8,7 @@ const mongoose = require('mongoose')
 
 /* ------------------------------------------------------------------------------------------ */
 // 数据库连接配置
-const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinical-project-system'
+const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinical_project_system'
 
 /* ------------------------------------------------------------------------------------------ */
 

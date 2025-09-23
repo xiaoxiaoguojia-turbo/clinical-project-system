@@ -96,7 +96,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
               id: 'type2',
               label: '类型2（示例）',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/type2',
               level: 3
             },
             {
@@ -263,7 +263,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
         }
 
         .navigation-content {
-          padding: 8px 0;
+          padding: 0;
         }
 
         .menu-list {
@@ -303,7 +303,6 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
           font-weight: 600;
           color: #1e293b;
           border-left: 4px solid transparent;
-          margin-bottom: 2px;
         }
 
         .level-1 .menu-button:hover {

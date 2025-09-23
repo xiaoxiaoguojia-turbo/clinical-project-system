@@ -3051,7 +3051,7 @@ export default function InternalPreparationsPage() {
           }
 
           .action-btn.ai-view-btn.has-report {
-            color: #10b981;
+            color: #f59e0b;
           }
 
           .action-btn.ai-view-btn.has-report:hover {

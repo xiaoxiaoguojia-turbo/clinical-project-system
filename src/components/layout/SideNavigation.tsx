@@ -96,14 +96,14 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
               id: 'type2',
               label: '类型2（示例）',
               icon: ChartBarIcon,
-              route: '/unauthorized',
+              route: '/underconstruction',
               level: 3
             },
             {
               id: 'type3',
               label: '类型3（示例）',
               icon: ChartBarIcon,
-              route: '/unauthorized',
+              route: '/underconstruction',
               level: 3
             }
           ]

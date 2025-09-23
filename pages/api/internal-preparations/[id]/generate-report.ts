@@ -167,12 +167,25 @@ async function handler(
     // 检查用户权限（可选：根据需要添加权限控制）
     // 这里可以添加逻辑检查用户是否有权为此项目生成报告
     
+    // 1. 设置AI报告状态为生成中
+    project.aiReport = project.aiReport || {}
+    project.aiReport.status = 'generating'
+    project.aiReport.lastGeneratedAt = new Date()
+    await project.save()
+    
+    console.log('已更新项目状态为生成中')
+    
     // 调用CozeService生成报告
     console.log('调用CozeService生成AI报告...')
     const result: ReportGenerationResult = await cozeService.generateReport(project.toObject())
 
     if (!result.success) {
       console.error('AI报告生成失败:', result.error)
+      
+      // 2. 生成失败时更新状态
+      project.aiReport.status = 'error'
+      await project.save()
+      
       return res.status(500).json({
         success: false,
         error: result.error || 'AI报告生成失败'
@@ -181,15 +194,18 @@ async function handler(
 
     console.log('AI报告生成成功:', result.reportUrl)
 
-    // 可选：将报告信息保存到项目中
-    // 这里可以扩展项目模型来保存报告历史
-    // project.aiReports = project.aiReports || []
-    // project.aiReports.push({
-    //   reportUrl: result.reportUrl,
-    //   generateTime: new Date(),
-    //   generatedBy: req.user.userId
-    // })
-    // await project.save()
+    // 3. 生成成功时更新项目信息
+    project.aiReport.status = 'completed'
+    project.aiReport.reportUrl = result.reportUrl || null
+    project.aiReport.lastGeneratedAt = new Date()
+    
+    // 如果是首次生成，设置首次生成时间
+    if (!project.aiReport.firstGeneratedAt) {
+      project.aiReport.firstGeneratedAt = new Date()
+    }
+    
+    await project.save()
+    console.log('已保存AI报告信息到数据库')
 
     // 返回成功结果
     res.status(200).json({

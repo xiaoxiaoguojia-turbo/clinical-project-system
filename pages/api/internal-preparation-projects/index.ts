@@ -321,7 +321,14 @@ async function handler(
         status: project.status,
         createTime: project.createTime,
         updateTime: project.updateTime,
-        createdBy: project.createdBy?.toString()
+        createdBy: project.createdBy?.toString(),
+        // AI报告相关信息
+        aiReport: {
+          reportUrl: project.aiReport?.reportUrl || null,
+          status: project.aiReport?.status || 'idle',
+          firstGeneratedAt: project.aiReport?.firstGeneratedAt || null,
+          lastGeneratedAt: project.aiReport?.lastGeneratedAt || null
+        }
       }))
 
       res.status(200).json({

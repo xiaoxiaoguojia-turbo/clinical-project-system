@@ -51,6 +51,11 @@
  *                     createTime: "2024-01-15T08:30:00.000Z"
  *                     updateTime: "2024-01-15T08:30:00.000Z"
  *                     createdBy: "64f123456789abcd12345677"
+ *                     aiReport:
+ *                       reportUrl: "https://example.com/report.pdf"
+ *                       status: "generated"
+ *                       firstGeneratedAt: "2024-01-15T08:30:00.000Z"
+ *                       lastGeneratedAt: "2024-01-15T08:30:00.000Z"
  *                   message: "获取院内制剂项目详情成功"
  *       400:
  *         description: 项目ID格式无效
@@ -196,6 +201,11 @@
  *                     createTime: "2024-01-15T08:30:00.000Z"
  *                     updateTime: "2024-01-20T14:25:00.000Z"
  *                     createdBy: "64f123456789abcd12345677"
+ *                     aiReport:
+ *                       reportUrl: "https://example.com/report.pdf"
+ *                       status: "generated"
+ *                       firstGeneratedAt: "2024-01-15T08:30:00.000Z"
+ *                       lastGeneratedAt: "2024-01-15T08:30:00.000Z"
  *                   message: "更新院内制剂项目成功"
  *       400:
  *         description: 请求参数错误或备案号重复
@@ -334,7 +344,13 @@ async function handler(
           status: project.status,
           createTime: project.createTime,
           updateTime: project.updateTime,
-          createdBy: project.createdBy?.toString()
+          createdBy: project.createdBy?.toString(),
+          aiReport: {
+            reportUrl: project.aiReport?.reportUrl || null,
+            status: project.aiReport?.status || 'idle',
+            firstGeneratedAt: project.aiReport?.firstGeneratedAt || null,
+            lastGeneratedAt: project.aiReport?.lastGeneratedAt || null
+          }
         } as any,
         message: '获取项目详情成功'
       })
@@ -426,7 +442,13 @@ async function handler(
           status: updatedProject.status,
           createTime: updatedProject.createTime,
           updateTime: updatedProject.updateTime,
-          createdBy: updatedProject.createdBy.toString()
+          createdBy: updatedProject.createdBy.toString(),
+          aiReport: {
+            reportUrl: updatedProject.aiReport?.reportUrl || null,
+            status: updatedProject.aiReport?.status || 'idle',
+            firstGeneratedAt: updatedProject.aiReport?.firstGeneratedAt || null,
+            lastGeneratedAt: updatedProject.aiReport?.lastGeneratedAt || null
+          }
         } as any,
         message: '更新项目成功'
       })

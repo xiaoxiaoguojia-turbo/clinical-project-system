@@ -75,6 +75,10 @@ interface InternalPreparationProject {
   createTime: string
   updateTime: string
   createdBy?: string
+  aiReport?: {
+    status: 'idle' | 'generating' | 'completed' | 'error'
+    reportUrl?: string
+  }
 }
 
 interface PreparationStats {
@@ -165,11 +169,6 @@ export default function InternalPreparationsPage() {
   })
   const [editFormErrors, setEditFormErrors] = useState<{[key: string]: string}>({})
   const [editFormLoading, setEditFormLoading] = useState(false)
-
-  // AI报告相关状态
-  const [aiReportStatus, setAiReportStatus] = useState<{[projectId: string]: 'idle' | 'generating' | 'completed' | 'error'}>({})
-  const [aiReportUrls, setAiReportUrls] = useState<{[projectId: string]: string}>({})
-  const [aiReportErrors, setAiReportErrors] = useState<{[projectId: string]: string}>({})
 
   const router = useRouter()
   /* ------------------------------------------------------------------------------------------ */
@@ -845,26 +844,13 @@ export default function InternalPreparationsPage() {
     try {
       console.log('开始生成AI报告，项目:', project.name)
       
-      // 设置生成状态
-      setAiReportStatus(prev => ({
-        ...prev,
-        [project._id]: 'generating'
-      }))
-      
-      // 清除之前的错误
-      setAiReportErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[project._id]
-        return newErrors
-      })
-
       // 获取认证令牌
       const token = TokenManager.getToken()
       if (!token) {
         throw new Error('未找到认证令牌，请重新登录')
       }
 
-      // 调用后端API
+      // 调用后端API生成报告
       const response = await fetch(`/api/internal-preparations/${project._id}/generate-report`, {
         method: 'POST',
         headers: {
@@ -878,60 +864,34 @@ export default function InternalPreparationsPage() {
       if (result.success) {
         console.log('AI报告生成成功:', result.data.reportUrl)
         
-        // 更新状态为完成
-        setAiReportStatus(prev => ({
-          ...prev,
-          [project._id]: 'completed'
-        }))
-        
-        // 保存报告URL
-        setAiReportUrls(prev => ({
-          ...prev,
-          [project._id]: result.data.reportUrl
-        }))
-
         // 显示成功消息
         alert(`AI报告生成成功！\n\n项目: ${project.name}\n报告已生成，点击"查看AI报告"按钮可以查看。`)
         
+        // 重新加载项目列表以获取最新状态
+        await loadProjectsList()
+        
       } else {
         console.error('AI报告生成失败:', result.error)
-        
-        // 设置错误状态
-        setAiReportStatus(prev => ({
-          ...prev,
-          [project._id]: 'error'
-        }))
-        
-        setAiReportErrors(prev => ({
-          ...prev,
-          [project._id]: result.error || 'AI报告生成失败'
-        }))
-
         alert(`AI报告生成失败：${result.error || '未知错误'}`)
+        
+        // 重新加载项目列表以获取最新状态
+        await loadProjectsList()
       }
 
     } catch (error) {
       console.error('生成AI报告时发生错误:', error)
-      
-      // 设置错误状态
-      setAiReportStatus(prev => ({
-        ...prev,
-        [project._id]: 'error'
-      }))
-      
-      setAiReportErrors(prev => ({
-        ...prev,
-        [project._id]: error instanceof Error ? error.message : '网络错误'
-      }))
-
       alert('网络错误，请检查网络连接后重试')
+      
+      // 重新加载项目列表以获取最新状态
+      await loadProjectsList()
     }
   }
 
   const handleViewAIReport = (project: InternalPreparationProject) => {
-    const reportUrl = aiReportUrls[project._id]
+    // 直接使用项目的aiReport字段
+    const reportUrl = project.aiReport?.reportUrl
     
-    if (!reportUrl) {
+    if (!reportUrl || project.aiReport?.status !== 'completed') {
       alert('该项目还没有生成AI报告，请先点击"生成AI报告"按钮')
       return
     }
@@ -1349,27 +1309,27 @@ export default function InternalPreparationsPage() {
                               <button
                                 onClick={() => handleGenerateAIReport(project)}
                                 className={`action-btn ai-generate-btn ${
-                                  aiReportStatus[project._id] === 'generating' ? 'loading' : ''
+                                  project.aiReport?.status === 'generating' ? 'loading' : ''
                                 } ${
-                                  aiReportStatus[project._id] === 'error' ? 'error' : ''
+                                  project.aiReport?.status === 'error' ? 'error' : ''
                                 }`}
                                 title={
-                                  aiReportStatus[project._id] === 'generating' 
+                                  project.aiReport?.status === 'generating' 
                                     ? '正在生成AI报告，请耐心等待...' 
-                                    : aiReportStatus[project._id] === 'completed'
+                                    : project.aiReport?.status === 'completed'
                                     ? '重新生成AI报告'
-                                    : aiReportStatus[project._id] === 'error'
-                                    ? `生成失败：${aiReportErrors[project._id] || '未知错误'} - 点击重试`
+                                    : project.aiReport?.status === 'error'
+                                    ? `生成失败：${project.aiReport?.status || '未知错误'} - 点击重试`
                                     : '生成AI报告'
                                 }
-                                disabled={aiReportStatus[project._id] === 'generating'}
+                                disabled={project.aiReport?.status === 'generating'}
                               >
-                                {aiReportStatus[project._id] === 'generating' ? (
+                                {project.aiReport?.status === 'generating' ? (
                                   <>
                                     <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"></div>
                                     <span className="ml-1 text-xs">生成中</span>
                                   </>
-                                ) : aiReportStatus[project._id] === 'error' ? (
+                                ) : project.aiReport?.status === 'error' ? (
                                   <>
                                     <ExclamationTriangleIcon className="w-4 h-4" />
                                     <span className="ml-1 text-xs">重试</span>
@@ -1381,17 +1341,17 @@ export default function InternalPreparationsPage() {
                               <button
                                 onClick={() => handleViewAIReport(project)}
                                 className={`action-btn ai-view-btn ${
-                                  aiReportStatus[project._id] === 'completed' ? 'has-report' : ''
+                                  project.aiReport?.status === 'completed' ? 'has-report' : ''
                                 }`}
                                 title={
-                                  aiReportStatus[project._id] === 'completed'
+                                  project.aiReport?.status === 'completed'
                                     ? '查看AI报告'
                                     : '该项目还没有生成AI报告'
                                 }
-                                disabled={aiReportStatus[project._id] !== 'completed'}
+                                disabled={project.aiReport?.status !== 'completed'}
                               >
                                 <DocumentTextIcon className="w-4 h-4" />
-                                {aiReportStatus[project._id] === 'completed' && (
+                                {project.aiReport?.status === 'completed' && (
                                   <span className="ml-1 text-xs">查看</span>
                                 )}
                               </button>

@@ -123,17 +123,17 @@ const LoginPage: NextPage = () => {
   // 功能特色数据
   const features = [
     {
+      icon: ChartPieIcon,
+      title: '数据报表统计与分析'
+    },
+    {
       icon: ChartBarIcon,
       title: '项目进度实时监控'
     },
     {
       icon: DocumentTextIcon,
-      title: '院内制剂数据管理'
+      title: 'AI智能体报告生成与专利评估'
     },
-    {
-      icon: ChartPieIcon,
-      title: '数据统计与分析'
-    }
   ]
   /* ------------------------------------------------------------------------------------------ */
 
@@ -163,16 +163,16 @@ const LoginPage: NextPage = () => {
             {/* 功能特色展示 */}
             <div className="space-y-6 mb-6">
               <div className="flex items-center space-x-4">
+                <ChartPieIcon className="w-8 h-8" />
+                <span className="text-lg">数据报表统计与分析</span>
+              </div>
+              <div className="flex items-center space-x-4">
                 <ChartBarIcon className="w-8 h-8" />
                 <span className="text-lg">项目进度实时监控</span>
               </div>
               <div className="flex items-center space-x-4">
                 <DocumentTextIcon className="w-8 h-8" />
-                <span className="text-lg">院内制剂数据管理</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <ChartPieIcon className="w-8 h-8" />
-                <span className="text-lg">数据统计与分析</span>
+                <span className="text-lg">AI智能体报告生成与专利评估</span>
               </div>
             </div>
           </div>

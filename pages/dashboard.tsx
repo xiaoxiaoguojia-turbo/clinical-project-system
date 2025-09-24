@@ -85,8 +85,8 @@ export default function Dashboard() {
         // 模拟数据加载延迟
         setTimeout(() => {
           setDashboardData({
-            totalProjects: 6,
-            activeProjects: 3,
+            totalProjects: 8,
+            activeProjects: 5,
             completedProjects: 1,
             projectTypeCount: 3,
             chargePersonCount: 4
@@ -156,7 +156,7 @@ export default function Dashboard() {
         data: {
           labels: ['进行中', '已完成', '已暂停'],
           datasets: [{
-            data: [3, 1, 2],
+            data: [5, 1, 2],
             backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
             borderWidth: 0,
             cutout: '60%'
@@ -208,7 +208,7 @@ export default function Dashboard() {
           labels: ['院内制剂', '类型2（示例）', '类型3（示例）'],
           datasets: [{
             label: '项目数量',
-            data: [6, 0, 0],
+            data: [6, 2, 0],
             backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
             borderRadius: 6,
             borderSkipped: false
@@ -234,7 +234,7 @@ export default function Dashboard() {
           labels: ['123', '岳阳医院', '中医科', '曙光医院', '上海皮肤病医院'],
           datasets: [{
             label: '项目数量',
-            data: [1, 2, 1, 1, 1],
+            data: [1, 2, 1, 2, 2],
             backgroundColor: '#8b5cf6',
             borderRadius: 6,
             borderSkipped: false

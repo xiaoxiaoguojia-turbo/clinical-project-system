@@ -82,6 +82,35 @@ export interface InternalPreparationProject {
   }
 }
 
+// 类型2项目类型
+export interface Type2Project {
+  _id: string
+  department: string
+  source: string
+  name: string
+  category: string                           // 分类
+  leader: string                            // 负责人
+  startDate: Date                           // 开始日期
+  indication: string                        // 适应症/科室
+  followUpWeeks: number                     // 跟进时间/周
+  importance: 'very-important' | 'important' | 'normal'  // 重要程度
+  status: 'initial-assessment' | 'project-approval' | 'implementation'  // 状态
+  transformMethod: string                   // 转化方式/需求
+  hospitalPI: string                        // 院端PI
+  projectConclusion: string                 // 项目结论
+  attachments: string[]
+  createTime: Date
+  updateTime: Date
+  createdBy: string
+  // AI报告相关信息（暂时禁用）
+  aiReport: {
+    reportUrl?: string | null
+    status: 'idle' | 'generating' | 'completed' | 'error'
+    firstGeneratedAt?: Date | null
+    lastGeneratedAt?: Date | null
+  }
+}
+
 // 附件类型
 export interface Attachment {
   _id: string
@@ -93,7 +122,7 @@ export interface Attachment {
   filePath?: string
   gridfsId?: string
   projectId: string
-  projectType: 'overall' | 'internal-preparation'
+  projectType: 'overall' | 'internal-preparation' | 'type2'
   uploadTime: Date
   uploadedBy: string
 }

@@ -364,7 +364,7 @@ async function handleGetProject(
       })
     }
 
-    const projectTypeName = isInternalPreparationType(project.projectType) 
+    const projectTypeName = isInternalPreparationType((project as any).projectType) 
       ? '院内制剂项目' 
       : '项目（除院内制剂）'
 
@@ -532,7 +532,7 @@ async function handleDeleteProject(
       })
     }
 
-    const projectTypeName = isInternalPreparationType(project.projectType) 
+    const projectTypeName = isInternalPreparationType((project as any).projectType) 
       ? '院内制剂项目' 
       : '项目（除院内制剂）'
 

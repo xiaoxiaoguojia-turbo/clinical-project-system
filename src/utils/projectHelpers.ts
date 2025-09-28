@@ -149,22 +149,27 @@ export const validateProjectDataForReport = (project: Partial<UnifiedProject>): 
   // 基础字段验证
   if (!project) {
     errors.push('项目数据不能为空')
+    return { isValid: false, errors }
   }
   if (!project.department) {
     errors.push('部门不能为空')
+    return { isValid: false, errors }
   }
   if (!project.name?.trim()) {
     errors.push('项目名称不能为空')
+    return { isValid: false, errors }
   }
   if (!project.projectType) {
     errors.push('项目类型不能为空')
+    return { isValid: false, errors }
   }
   if (!project.source?.trim()) {
     errors.push('项目来源不能为空')
+    return { isValid: false, errors }
   }
   
-  // 院内制剂特有的报告生成验证
-  if (isInternalPreparation(project.projectType)) {
+  // 院内制剂特有的报告生成验证（添加类型保护）
+  if (project.projectType && isInternalPreparation(project.projectType)) {
     if (!project.composition?.trim()) {
       errors.push('组方不能为空，报告生成需要此信息')
     }
@@ -179,7 +184,6 @@ export const validateProjectDataForReport = (project: Partial<UnifiedProject>): 
   }
 }
 
-// 获取项目类型所需的必填字段
 export const getRequiredFieldsForType = (projectType: string): string[] => {
   if (isInternalPreparation(projectType)) {
     // 院内制剂必填字段
@@ -349,6 +353,7 @@ export const buildProjectSearchQuery = (filters: {
   importance?: string
   status?: string
   leader?: string
+  source?: string  // 添加缺失的source参数
 }) => {
   const query: any = {}
   
@@ -356,7 +361,9 @@ export const buildProjectSearchQuery = (filters: {
     query.$or = [
       { name: { $regex: filters.search, $options: 'i' } },
       { source: { $regex: filters.search, $options: 'i' } },
-      { leader: { $regex: filters.search, $options: 'i' } }
+      { leader: { $regex: filters.search, $options: 'i' } },
+      { composition: { $regex: filters.search, $options: 'i' } },
+      { function: { $regex: filters.search, $options: 'i' } }
     ]
   }
   
@@ -380,6 +387,10 @@ export const buildProjectSearchQuery = (filters: {
     query.leader = { $regex: filters.leader, $options: 'i' }
   }
   
+  if (filters.source) {
+    query.source = { $regex: filters.source, $options: 'i' }
+  }
+
   return query
 }
 

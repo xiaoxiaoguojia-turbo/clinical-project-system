@@ -51,7 +51,24 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
 
   const isActive = (route?: string) => {
     if (!route) return false
-    return currentPath === route
+    
+    // 处理带query参数的路由匹配
+    if (route.includes('?')) {
+      const [routePath, routeQuery] = route.split('?')
+      if (router.pathname !== routePath) return false
+      
+      // 检查query参数是否匹配
+      const urlParams = new URLSearchParams(routeQuery)
+      const currentQuery = router.query
+      
+      for (const [key, value] of urlParams) {
+        if (currentQuery[key] !== value) return false
+      }
+      return true
+    }
+    
+    // 处理普通路由匹配
+    return router.pathname === route
   }
 
   const isParentActive = (item: MenuItem): boolean => {

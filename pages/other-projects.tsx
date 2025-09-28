@@ -223,7 +223,7 @@ const OtherProjectsPage: React.FC = () => {
   
     // 表单数据状态
     const [formData, setFormData] = useState<ProjectFormData>({
-      department: '',
+      department: '转移转化与投资一部', // 设置默认部门，避免验证错误
       source: '',
       name: '',
       leader: '',
@@ -491,7 +491,7 @@ const OtherProjectsPage: React.FC = () => {
       // 重置表单
       const resetForm = useCallback(() => {
         setFormData({
-          department: '',
+          department: '转移转化与投资一部', // 保持默认部门值
           source: '',
           name: '',
           leader: '',
@@ -515,7 +515,7 @@ const OtherProjectsPage: React.FC = () => {
       // 处理编辑项目
       const handleEditProject = useCallback((project: UnifiedProject) => {
         setFormData({
-          department: project.department || '',
+          department: project.department || '转移转化与投资一部', // 保持默认部门值
           source: project.source || '',
           name: project.name || '',
           leader: project.leader || '',
@@ -574,7 +574,7 @@ const OtherProjectsPage: React.FC = () => {
     // 数据验证函数
     const validateFormData = (data: ProjectFormData): string | null => {
       if (!data.name.trim()) return '项目名称不能为空'
-      if (!data.department.trim()) return '部门不能为空'
+      // 移除部门验证，因为有默认值和下拉选择
       if (!data.source.trim()) return '项目来源不能为空'
       
       // 非院内制剂项目的特殊验证

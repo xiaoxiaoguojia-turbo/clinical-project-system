@@ -93,64 +93,50 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
               level: 3
             },
             {
-              id: 'type2',
-              label: '类型2',
+              id: 'ai-medical-research',
+              label: 'AI医疗及系统研究',
               icon: ChartBarIcon,
               route: '/type2-projects',
               level: 3
             },
             {
-              id: 'type3',
-              label: '类型3',
+              id: 'diagnostic-detection',
+              label: '检测诊断',
               icon: ChartBarIcon,
               route: '/underconstruction',
               level: 3
             },
             {
-              id: 'type4',
-              label: '类型4',
+              id: 'cell-therapy',
+              label: '细胞治疗',
               icon: ChartBarIcon,
               route: '/underconstruction',
               level: 3
             },
             {
-              id: 'type5',
-              label: '类型5',
+              id: 'drug',
+              label: '药物',
               icon: ChartBarIcon,
               route: '/underconstruction',
               level: 3
             },
             {
-              id: 'type6',
-              label: '类型6',
+              id: 'medical-device',
+              label: '医疗器械',
               icon: ChartBarIcon,
               route: '/underconstruction',
               level: 3
             },
             {
-              id: 'type7',
-              label: '类型7',
+              id: 'medical-material',
+              label: '医用材料',
               icon: ChartBarIcon,
               route: '/underconstruction',
               level: 3
             },
             {
-              id: 'type8',
-              label: '类型8',
-              icon: ChartBarIcon,
-              route: '/underconstruction',
-              level: 3
-            },
-            {
-              id: 'type9',
-              label: '类型9',
-              icon: ChartBarIcon,
-              route: '/underconstruction',
-              level: 3
-            },
-            {
-              id: 'type10',
-              label: '类型10',
+              id: 'other',
+              label: '其他',
               icon: ChartBarIcon,
               route: '/underconstruction',
               level: 3

@@ -564,11 +564,8 @@ const Type2ProjectsPage: React.FC = () => {
         <div className="page-header">
           <div className="header-content">
             <div className="title-section">
-              <h1 className="page-title">
-                <AcademicCapIcon className="w-8 h-8" />
-                类型2项目管理
-              </h1>
-              <p className="page-subtitle">管理和监控类型2项目的进展情况</p>
+              <h1>类型2项目管理</h1>
+              <p>管理和监控类型2项目的进展情况</p>
             </div>
             <button 
               className="create-button"
@@ -1341,22 +1338,19 @@ const Type2ProjectsPage: React.FC = () => {
           flex: 1;
         }
 
-        .page-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
+        .title-section h1 {
           font-size: 28px;
           font-weight: 700;
           color: #1e293b;
           margin: 0 0 8px 0;
         }
 
-        .page-subtitle {
+        .title-section p {
           font-size: 16px;
-          color: #6b7280;
+          color: #64748b;
           margin: 0;
         }
-
+        
         .create-button {
           display: flex;
           align-items: center;

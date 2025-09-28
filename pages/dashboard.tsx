@@ -205,11 +205,11 @@ export default function Dashboard() {
       typeProjectsChart: {
         type: 'bar' as const,
         data: {
-          labels: ['院内制剂', '类型2', '类型3'],
+          labels: ['院内制剂', 'AI医疗及系统研究', '检测诊断', '细胞治疗', '药物', '医疗器械', '医用材料', '其他'],
           datasets: [{
             label: '项目数量',
-            data: [6, 2, 0],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+            data: [6, 2, 0, 0, 0, 0, 0, 0],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b'],
             borderRadius: 6,
             borderSkipped: false
           }]

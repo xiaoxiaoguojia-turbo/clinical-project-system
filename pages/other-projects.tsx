@@ -207,6 +207,7 @@ const OtherProjectsPage: React.FC = () => {
   
     // 搜索和筛选状态
     const [searchQuery, setSearchQuery] = useState('')
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
     const [filters, setFilters] = useState<ProjectFilters>({
       status: '',
       importance: '',
@@ -278,6 +279,35 @@ const OtherProjectsPage: React.FC = () => {
       }
     }, [currentPage, isAuthenticated])
   
+    // 搜索防抖处理
+    useEffect(() => {
+      const timeoutId = setTimeout(() => {
+        setDebouncedSearchQuery(searchQuery)
+      }, 300)
+      return () => clearTimeout(timeoutId)
+    }, [searchQuery])
+
+    // 项目类型切换时重置和重新加载数据
+    useEffect(() => {
+      if (isAuthenticated && currentProjectType && mounted) {
+        setCurrentPage(1)
+        setSearchQuery('')
+        setDebouncedSearchQuery('')
+        setFilters({ status: '', importance: '', leader: '' })
+        setProjects([])
+        setStats(null)
+        loadProjectsData()
+      }
+    }, [currentProjectType.key, isAuthenticated, mounted])
+
+    // 搜索和筛选变化时重新加载数据
+    useEffect(() => {
+      if (isAuthenticated && mounted) {
+        setCurrentPage(1)
+        loadProjectsList()
+      }
+    }, [debouncedSearchQuery, filters, isAuthenticated, mounted])
+  
     /* ------------------------------------------------------------------------------------------ */
 
     // 加载项目数据
@@ -304,36 +334,56 @@ const OtherProjectsPage: React.FC = () => {
             const params = new URLSearchParams({
                 page: currentPage.toString(),
                 limit: pageSize.toString(),
-                ...(searchQuery && { search: searchQuery }),
-                ...(filters.status && { status: filters.status }),
-                ...(filters.importance && { importance: filters.importance }),
-                ...(filters.leader && { leader: filters.leader }),
-                type: currentProjectType.key
+                projectType: currentProjectType.key
             })
 
+            // 添加搜索和筛选参数
+            if (debouncedSearchQuery.trim()) {
+              params.append('search', debouncedSearchQuery.trim())
+            }
+            if (filters.status) {
+              params.append('status', filters.status)
+            }
+            if (filters.importance) {
+              params.append('importance', filters.importance)
+            }
+            if (filters.leader) {
+              params.append('leader', filters.leader)
+            }
+
             const response: ApiResponse<PaginatedResponse<UnifiedProject>> = await ApiClient.get<ApiResponse<PaginatedResponse<UnifiedProject>>>(`/projects?${params}`)
-      
+
             if (response.success && response.data) {
                 setProjects(response.data.data)
                 setTotalCount(response.data.pagination.total)
                 setTotalPages(response.data.pagination.totalPages)
+                setError(null)
             } else {
-                throw new Error(response.error || '获取项目列表失败')
+                throw new Error(response.error || `获取${currentProjectType.label}列表失败`)
             }
         } catch (error) {
             console.error('加载项目列表失败:', error)
-            throw error
+            const errorMessage = error instanceof Error ? error.message : `获取${currentProjectType.label}列表失败`
+            setError(errorMessage)
+            setProjects([])
+            setTotalCount(0)
+            setTotalPages(0)
         }
     }
 
     // 加载统计数据
     const loadProjectsStats = async () => {
         try {
-            const response: ApiResponse<PaginatedResponse<UnifiedProject>> = await ApiClient.get<ApiResponse<PaginatedResponse<UnifiedProject>>>(`/projects?limit=1000&type=${currentProjectType.key}`)
-      
+            const params = new URLSearchParams({
+                projectType: currentProjectType.key,
+                limit: '1000'
+            })
+
+            const response: ApiResponse<PaginatedResponse<UnifiedProject>> = await ApiClient.get<ApiResponse<PaginatedResponse<UnifiedProject>>>(`/projects?${params}`)
+
             if (response.success && response.data) {
                 const allProjects = response.data.data
-        
+
                 // 计算统计数据
                 const stats: ProjectStats = {
                     totalCount: allProjects.length,
@@ -359,28 +409,38 @@ const OtherProjectsPage: React.FC = () => {
                     if (project.status && stats.statusCounts[project.status] !== undefined) {
                         stats.statusCounts[project.status]++
                     }
-          
-                    // 重要程度统计
+
+                    // 重要程度统计  
                     if (project.importance && stats.importanceCounts[project.importance] !== undefined) {
                         stats.importanceCounts[project.importance]++
                     }
-          
+
                     // 部门统计
                     if (project.department) {
                         stats.departmentCounts[project.department] = (stats.departmentCounts[project.department] || 0) + 1
                     }
-          
+
                     // 负责人统计
                     if (project.leader) {
                         stats.leaderCounts[project.leader] = (stats.leaderCounts[project.leader] || 0) + 1
                     }
                 })
 
-                // 月度统计
+                // 月度统计 - 更安全的日期处理
                 const monthlyMap: { [key: string]: number } = {}
                 allProjects.forEach((project: UnifiedProject) => {
-                    const month = new Date(project.createTime).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit' })
-                    monthlyMap[month] = (monthlyMap[month] || 0) + 1
+                    try {
+                        const createDate = new Date(project.createTime)
+                        if (!isNaN(createDate.getTime())) {
+                            const month = createDate.toLocaleDateString('zh-CN', { 
+                                year: 'numeric', 
+                                month: '2-digit' 
+                            })
+                            monthlyMap[month] = (monthlyMap[month] || 0) + 1
+                        }
+                    } catch (e) {
+                        console.warn('无效的创建时间格式:', project.createTime)
+                    }
                 })
 
                 stats.monthlyStats = Object.entries(monthlyMap)
@@ -389,12 +449,14 @@ const OtherProjectsPage: React.FC = () => {
                   .map(([month, count]) => ({ month, count }))
 
                 setStats(stats)
+                setError(null)
             } else {
-                throw new Error(response.error || '获取统计数据失败')
+                throw new Error(response.error || `获取${currentProjectType.label}统计数据失败`)
             }
         } catch (error) {
             console.error('加载统计数据失败:', error)
-            throw error
+            const errorMessage = error instanceof Error ? error.message : `获取${currentProjectType.label}统计数据失败`
+            setError(errorMessage)
         }
     }
 
@@ -509,90 +571,123 @@ const OtherProjectsPage: React.FC = () => {
         }
     }
 
+    // 数据验证函数
+    const validateFormData = (data: ProjectFormData): string | null => {
+      if (!data.name.trim()) return '项目名称不能为空'
+      if (!data.department.trim()) return '部门不能为空'
+      if (!data.source.trim()) return '项目来源不能为空'
+      
+      // 非院内制剂项目的特殊验证
+      if (currentProjectType.key !== 'internal-preparation') {
+        if (!data.leader.trim()) return '负责人不能为空'
+        if (!data.startDate.trim()) return '开始日期不能为空'
+        if (!data.transformRequirement.trim()) return '转化需求不能为空'
+      }
+      
+      return null
+    }
+
     // 创建项目提交
     const handleCreateSubmit = async () => {
-        try {
-            setLoading(true)
-      
-            const submitData = {
-                ...formData,
-                followUpWeeks: parseInt(formData.followUpWeeks) || 12,
-                type: currentProjectType.key
-            }
+      try {
+        setLoading(true)
 
-            const response = await ApiClient.post<ApiResponse<UnifiedProject>>('/projects', submitData)
-      
-            if (response.success) {
-                setShowCreateModal(false)
-                resetForm()
-                await loadProjectsData()
-                alert('项目创建成功！')
-            } else {
-                throw new Error(response.error || '创建项目失败')
-            }
-        } catch (error) {
-            console.error('创建项目失败:', error)
-            alert(error instanceof Error ? error.message : '创建项目失败，请重试')
-        } finally {
-            setLoading(false)
+        // 数据验证
+        const validationError = validateFormData(formData)
+        if (validationError) {
+          alert(validationError)
+          return
         }
+
+        const submitData = {
+          ...formData,
+          followUpWeeks: parseInt(formData.followUpWeeks) || 12,
+          projectType: currentProjectType.key
+        }
+
+        const response = await ApiClient.post<ApiResponse<UnifiedProject>>('/projects', submitData)
+
+        if (response.success) {
+          setShowCreateModal(false)
+          resetForm()
+          await loadProjectsData()
+          alert(`${currentProjectType.label}创建成功！`)
+        } else {
+          throw new Error(response.error || `创建${currentProjectType.label}失败`)
+        }
+      } catch (error) {
+        console.error('创建项目失败:', error)
+        const errorMessage = error instanceof Error ? error.message : `创建${currentProjectType.label}失败，请重试`
+        alert(errorMessage)
+      } finally {
+        setLoading(false)
+      }
     }
 
     // 编辑项目提交
     const handleEditSubmit = async () => {
-        if (!editingProject) return
+      if (!editingProject) return
 
-        try {
-            setLoading(true)
-      
-            const submitData = {
-                ...formData,
-                followUpWeeks: parseInt(formData.followUpWeeks) || 12,
-                type: currentProjectType.key
-            }
+      try {
+        setLoading(true)
 
-            const response = await ApiClient.put<ApiResponse<UnifiedProject>>(`/projects/${editingProject._id}`, submitData)
-      
-            if (response.success) {
-                setShowEditModal(false)
-                setEditingProject(null)
-                resetForm()
-                await loadProjectsData()
-                alert('项目更新成功！')
-            } else {
-                throw new Error(response.error || '更新项目失败')
-            }
-        } catch (error) {
-            console.error('更新项目失败:', error)
-            alert(error instanceof Error ? error.message : '更新项目失败，请重试')
-        } finally {
-            setLoading(false)
+        // 数据验证
+        const validationError = validateFormData(formData)
+        if (validationError) {
+          alert(validationError)
+          return
         }
+
+        const submitData = {
+          ...formData,
+          followUpWeeks: parseInt(formData.followUpWeeks) || 12,
+          projectType: currentProjectType.key
+        }
+
+        const response = await ApiClient.put<ApiResponse<UnifiedProject>>(`/projects/${editingProject._id}`, submitData)
+
+        if (response.success) {
+          setShowEditModal(false)
+          setEditingProject(null)
+          resetForm()
+          await loadProjectsData()
+          alert(`${currentProjectType.label}更新成功！`)
+        } else {
+          throw new Error(response.error || `更新${currentProjectType.label}失败`)
+        }
+      } catch (error) {
+        console.error('更新项目失败:', error)
+        const errorMessage = error instanceof Error ? error.message : `更新${currentProjectType.label}失败，请重试`
+        alert(errorMessage)
+      } finally {
+        setLoading(false)
+      }
     }
 
     // 确认删除项目
     const confirmDeleteProject = async () => {
-        if (!deletingProjectId) return
+      if (!deletingProjectId) return
 
-        try {
-            setLoading(true)
-      
-            const response = await ApiClient.delete<ApiResponse<void>>(`/projects/${deletingProjectId}`)
-      
-            if (response.success) {
-                setShowDeleteModal(false)
-                setDeletingProjectId('')
-                await loadProjectsData()
-                alert('项目删除成功！')
-            } else {
-                throw new Error(response.error || '删除项目失败')
-            }
-        } catch (error) {
-            console.error('删除项目失败:', error)
-            alert(error instanceof Error ? error.message : '删除项目失败，请重试')
-        } finally {
-            setLoading(false)
+      try {
+        setLoading(true)
+
+        const response = await ApiClient.delete<ApiResponse<void>>(`/projects/${deletingProjectId}`)
+
+        if (response.success) {
+          setShowDeleteModal(false)
+          setDeletingProjectId('')
+          await loadProjectsData()
+          alert(`${currentProjectType.label}删除成功！`)
+        } else {
+          throw new Error(response.error || `删除${currentProjectType.label}失败`)
         }
+      } catch (error) {
+        console.error('删除项目失败:', error)
+        const errorMessage = error instanceof Error ? error.message : `删除${currentProjectType.label}失败，请重试`
+        alert(errorMessage)
+      } finally {
+        setLoading(false)
+      }
     }
 
   /* ------------------------------------------------------------------------------------------ */

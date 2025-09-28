@@ -9,9 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "migrate:unified": "node scripts/migrate-simple.js",
-    "migrate:dry-run": "node scripts/migrate-simple.js",
-    "migrate:help": "echo ' 数据迁移脚本使用说明：npm run migrate:unified (正式迁移) 或 npm run migrate:dry-run (模拟运行)'",
+    "migrate": "node scripts/migrate-simple.js",
+    "migrate-enum": "node scripts/migrate-enum-values.js",
     "db:diagnose": "node scripts/diagnose-db.js"
   },
   "dependencies": {

@@ -239,10 +239,10 @@
  *       - 统一项目管理
  *     summary: 删除项目
  *     description: |
- *       删除指定ID的项目（软删除）
+ *       删除指定ID的项目（物理删除）
  *       
  *       **注意事项：**
- *       - 实施软删除，项目数据保留但标记为已删除
+ *       - 实施物理删除，项目数据将被永久删除
  *       - 删除操作不可恢复，请谨慎操作
  *     security:
  *       - bearerAuth: []
@@ -536,14 +536,8 @@ async function handleDeleteProject(
       ? '院内制剂项目' 
       : '项目（除院内制剂）'
 
-    // 软删除：标记为已删除而不是物理删除
-    await UnifiedProject.findByIdAndUpdate(id, {
-      deletedAt: new Date(),
-      updateTime: new Date()
-    })
-
-    // 也可以选择硬删除（根据业务需求）
-    // await UnifiedProject.findByIdAndDelete(id)
+    // 物理删除：直接从数据库中删除
+    await UnifiedProject.findByIdAndDelete(id)
 
     return res.status(200).json({
       success: true,

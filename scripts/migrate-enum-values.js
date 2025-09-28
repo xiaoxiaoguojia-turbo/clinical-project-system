@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-require('dotenv').config()
+const MONGODB_URI = 'mongodb://localhost:27017/clinical_project_system'
 
 /* ------------------------------------------------------------------------------------------ */
 
@@ -10,8 +10,8 @@ const ENUM_MAPPING = {
     '转移转化与投资一部': 'transfer-investment-dept-1',
     '转移转化与投资二部': 'transfer-investment-dept-2', 
     '转移转化与投资三部': 'transfer-investment-dept-3',
-    '创新中心': 'innovation-center',
-    '知识产权部': 'ip-dept'
+    '转移转化与投资部门': 'transfer-investment-dept-1',
+    '牙科': 'transfer-investment-dept-1'
   },
   
   // 项目类型映射
@@ -70,12 +70,14 @@ async function migrateEnumValues() {
     console.log('🚀 开始枚举值标准化迁移...')
     
     // 连接数据库
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
     
+    console.log('MongoDB URI:', MONGODB_URI)
     console.log('✅ 数据库连接成功')
+    console.log('开始迁移枚举值...')
     
     // 迁移每个集合
     for (const collectionName of COLLECTIONS_TO_MIGRATE) {

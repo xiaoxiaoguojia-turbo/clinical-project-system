@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 // 简化的迁移配置
 const MIGRATION_CONFIG = {
-  DRY_RUN: process.env.DRY_RUN === 'true',
+  DRY_RUN: true,
   LOG_ENABLED: true
 }
 

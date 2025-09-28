@@ -124,7 +124,7 @@ const LoginPage: NextPage = () => {
   const features = [
     {
       icon: ChartPieIcon,
-      title: '数据报表统计与分析'
+      title: '数据报表统计分析'
     },
     {
       icon: ChartBarIcon,
@@ -164,7 +164,7 @@ const LoginPage: NextPage = () => {
             <div className="space-y-6 mb-6">
               <div className="flex items-center space-x-4">
                 <ChartPieIcon className="w-8 h-8" />
-                <span className="text-lg">数据报表统计与分析</span>
+                <span className="text-lg">数据报表统计分析</span>
               </div>
               <div className="flex items-center space-x-4">
                 <ChartBarIcon className="w-8 h-8" />

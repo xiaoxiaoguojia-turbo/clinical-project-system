@@ -96,49 +96,49 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
               id: 'ai-medical-research',
               label: 'AI医疗及系统研究',
               icon: ChartBarIcon,
-              route: '/type2-projects',
+              route: '/other-projects?type=ai-medical-research',
               level: 3
             },
             {
               id: 'diagnostic-detection',
               label: '检测诊断',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/other-projects?type=diagnostic-detection',
               level: 3
             },
             {
               id: 'cell-therapy',
               label: '细胞治疗',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/other-projects?type=cell-therapy',
               level: 3
             },
             {
               id: 'drug',
               label: '药物',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/other-projects?type=drug',
               level: 3
             },
             {
               id: 'medical-device',
               label: '医疗器械',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/other-projects?type=medical-device',
               level: 3
             },
             {
               id: 'medical-material',
               label: '医用材料',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/other-projects?type=medical-material',
               level: 3
             },
             {
               id: 'other',
               label: '其他',
               icon: ChartBarIcon,
-              route: '/underconstruction',
+              route: '/other-projects?type=other',
               level: 3
             }
           ]

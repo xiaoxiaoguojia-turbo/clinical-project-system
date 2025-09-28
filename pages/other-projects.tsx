@@ -27,12 +27,17 @@ import {
   ExclamationTriangleIcon,
   StarIcon,
   UserIcon,
-  ClockIcon
+  ClockIcon,
+  BeakerIcon,
+  ComputerDesktopIcon,
+  CpuChipIcon,
+  CubeIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline'
 import { 
   ApiResponse, 
   PaginatedResponse,
-  Type2Project 
+  UnifiedProject 
 } from '@/types'
 import { TokenManager, ApiClient } from '@/utils/auth'
 
@@ -65,8 +70,72 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
 
 /* ------------------------------------------------------------------------------------------ */
 
+// 项目类型配置接口
+interface ProjectTypeConfig {
+  key: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  bgColor: string
+}
+
+// 项目类型配置
+const PROJECT_TYPES: ProjectTypeConfig[] = [
+  {
+    key: 'ai-medical-research',
+    label: 'AI医疗及系统研究',
+    icon: ComputerDesktopIcon,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50'
+  },
+  {
+    key: 'diagnostic-detection',
+    label: '检测诊断',
+    icon: EyeIcon,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50'
+  },
+  {
+    key: 'cell-therapy',
+    label: '细胞治疗',
+    icon: BeakerIcon,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50'
+  },
+  {
+    key: 'drug',
+    label: '药物研发',
+    icon: CpuChipIcon,
+    color: 'text-red-600',
+    bgColor: 'bg-red-50'
+  },
+  {
+    key: 'medical-device',
+    label: '医疗器械',
+    icon: WrenchScrewdriverIcon,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50'
+  },
+  {
+    key: 'medical-material',
+    label: '医用材料',
+    icon: CubeIcon,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50'
+  },
+  {
+    key: 'other',
+    label: '其他项目',
+    icon: SparklesIcon,
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50'
+  }
+]
+
+/* ------------------------------------------------------------------------------------------ */
+
 // 统计数据接口
-interface Type2Stats {
+interface ProjectStats {
   totalCount: number
   statusCounts: {
     'initial-assessment': number
@@ -77,6 +146,7 @@ interface Type2Stats {
     'very-important': number
     'important': number
     'normal': number
+    'not-important': number
   }
   departmentCounts: { [key: string]: number }
   categoryCounts: { [key: string]: number }
@@ -102,7 +172,7 @@ interface ProjectFormData {
   startDate: string
   indication: string
   followUpWeeks: string
-  importance: 'very-important' | 'important' | 'normal'
+  importance: 'very-important' | 'important' | 'normal' | 'not-important'
   status: 'initial-assessment' | 'project-approval' | 'implementation'
   transformMethod: string
   hospitalPI: string
@@ -111,15 +181,23 @@ interface ProjectFormData {
 
 /* ------------------------------------------------------------------------------------------ */
 
-const Type2ProjectsPage: React.FC = () => {
+const OtherProjectsPage: React.FC = () => {
+    const router = useRouter()
+    
+    // 获取当前项目类型
+    const currentProjectType = useMemo(() => {
+      const type = router.query.type as string
+      return PROJECT_TYPES.find(t => t.key === type) || PROJECT_TYPES[0]
+    }, [router.query.type])
+    
     // 基础状态
     const [mounted, setMounted] = useState(false)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [activeTab, setActiveTab] = useState<'statistics' | 'projects'>('statistics')
     
     // 数据状态
-    const [projects, setProjects] = useState<Type2Project[]>([])
-    const [stats, setStats] = useState<Type2Stats | null>(null)
+    const [projects, setProjects] = useState<UnifiedProject[]>([])
+    const [stats, setStats] = useState<ProjectStats | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
   
@@ -142,7 +220,7 @@ const Type2ProjectsPage: React.FC = () => {
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
-    const [editingProject, setEditingProject] = useState<Type2Project | null>(null)
+    const [editingProject, setEditingProject] = useState<UnifiedProject | null>(null)
     const [deletingProjectId, setDeletingProjectId] = useState<string>('')
   
     // 表单数据状态
@@ -161,9 +239,7 @@ const Type2ProjectsPage: React.FC = () => {
       hospitalPI: '',
       projectConclusion: ''
     })
-  
-    const router = useRouter()
-  
+
     /* ------------------------------------------------------------------------------------------ */
     
     // 认证检查和数据加载
@@ -236,10 +312,11 @@ const Type2ProjectsPage: React.FC = () => {
                 ...(filters.status && { status: filters.status }),
                 ...(filters.importance && { importance: filters.importance }),
                 ...(filters.leader && { leader: filters.leader }),
-                ...(filters.category && { category: filters.category })
+                ...(filters.category && { category: filters.category }),
+                type: currentProjectType.key
             })
 
-            const response: ApiResponse<PaginatedResponse<Type2Project>> = await ApiClient.get<ApiResponse<PaginatedResponse<Type2Project>>>(`/type2-projects?${params}`)
+            const response: ApiResponse<PaginatedResponse<UnifiedProject>> = await ApiClient.get<ApiResponse<PaginatedResponse<UnifiedProject>>>(`/projects?${params}`)
       
             if (response.success && response.data) {
                 setProjects(response.data.data)
@@ -257,13 +334,13 @@ const Type2ProjectsPage: React.FC = () => {
     // 加载统计数据
     const loadProjectsStats = async () => {
         try {
-            const response: ApiResponse<PaginatedResponse<Type2Project>> = await ApiClient.get<ApiResponse<PaginatedResponse<Type2Project>>>('/type2-projects?limit=1000')
+            const response: ApiResponse<PaginatedResponse<UnifiedProject>> = await ApiClient.get<ApiResponse<PaginatedResponse<UnifiedProject>>>(`/projects?limit=1000&type=${currentProjectType.key}`)
       
             if (response.success && response.data) {
                 const allProjects = response.data.data
         
                 // 计算统计数据
-                const stats: Type2Stats = {
+                const stats: ProjectStats = {
                     totalCount: allProjects.length,
                     statusCounts: {
                         'initial-assessment': 0,
@@ -273,7 +350,8 @@ const Type2ProjectsPage: React.FC = () => {
                     importanceCounts: {
                         'very-important': 0,
                         'important': 0,
-                        'normal': 0
+                        'normal': 0,
+                        'not-important': 0
                     },
                     departmentCounts: {},
                     categoryCounts: {},
@@ -281,7 +359,7 @@ const Type2ProjectsPage: React.FC = () => {
                     monthlyStats: []
                 }
 
-                allProjects.forEach((project: Type2Project) => {
+                allProjects.forEach((project: UnifiedProject) => {
                     // 状态统计
                     if (project.status && stats.statusCounts[project.status] !== undefined) {
                         stats.statusCounts[project.status]++
@@ -310,7 +388,7 @@ const Type2ProjectsPage: React.FC = () => {
 
                 // 月度统计
                 const monthlyMap: { [key: string]: number } = {}
-                allProjects.forEach((project: Type2Project) => {
+                allProjects.forEach((project: UnifiedProject) => {
                     const month = new Date(project.createTime).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit' })
                     monthlyMap[month] = (monthlyMap[month] || 0) + 1
                 })
@@ -384,7 +462,7 @@ const Type2ProjectsPage: React.FC = () => {
       }, [resetForm])
     
       // 处理编辑项目
-      const handleEditProject = useCallback((project: Type2Project) => {
+      const handleEditProject = useCallback((project: UnifiedProject) => {
         setFormData({
           department: project.department || '',
           source: project.source || '',
@@ -412,13 +490,13 @@ const Type2ProjectsPage: React.FC = () => {
     
       // 处理查看项目详情
       const handleViewProject = useCallback((projectId: string) => {
-        router.push(`/type2-projects/${projectId}`)
+        router.push(`/projects/${projectId}`)
       }, [router])
     
       // 处理附件管理
       const handleManageAttachments = useCallback((projectId: string) => {
-        router.push(`/attachments?projectId=${projectId}&projectType=type2`)
-      }, [router])
+        router.push(`/attachments?projectId=${projectId}&projectType=${currentProjectType.key}`)
+      }, [router, currentProjectType.key])
     
       // 处理AI报告生成（暂时禁用）
       const handleGenerateReport = useCallback((projectId: string) => {
@@ -450,10 +528,11 @@ const Type2ProjectsPage: React.FC = () => {
       
             const submitData = {
                 ...formData,
-                followUpWeeks: parseInt(formData.followUpWeeks) || 12
+                followUpWeeks: parseInt(formData.followUpWeeks) || 12,
+                type: currentProjectType.key
             }
 
-            const response = await ApiClient.post<ApiResponse<Type2Project>>('/type2-projects', submitData)
+            const response = await ApiClient.post<ApiResponse<UnifiedProject>>('/projects', submitData)
       
             if (response.success) {
                 setShowCreateModal(false)
@@ -480,10 +559,11 @@ const Type2ProjectsPage: React.FC = () => {
       
             const submitData = {
                 ...formData,
-                followUpWeeks: parseInt(formData.followUpWeeks) || 12
+                followUpWeeks: parseInt(formData.followUpWeeks) || 12,
+                type: currentProjectType.key
             }
 
-            const response = await ApiClient.put<ApiResponse<Type2Project>>(`/type2-projects/${editingProject._id}`, submitData)
+            const response = await ApiClient.put<ApiResponse<UnifiedProject>>(`/projects/${editingProject._id}`, submitData)
       
             if (response.success) {
                 setShowEditModal(false)
@@ -509,7 +589,7 @@ const Type2ProjectsPage: React.FC = () => {
         try {
             setLoading(true)
       
-            const response = await ApiClient.delete<ApiResponse<void>>(`/type2-projects/${deletingProjectId}`)
+            const response = await ApiClient.delete<ApiResponse<void>>(`/projects/${deletingProjectId}`)
       
             if (response.success) {
                 setShowDeleteModal(false)
@@ -559,13 +639,13 @@ const Type2ProjectsPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="type2-projects-page">
+      <div className="other-projects-page">
         {/* 页面头部 */}
         <div className="page-header">
           <div className="header-content">
             <div className="title-section">
-              <h1>类型2项目管理</h1>
-              <p>管理和监控类型2项目的进展情况</p>
+              <h1>{currentProjectType.label}</h1>
+              <p>管理和监控{currentProjectType.label}的进展情况</p>
             </div>
             <button 
               className="create-button"
@@ -741,6 +821,11 @@ const Type2ProjectsPage: React.FC = () => {
                                 <span className="importance-label">一般</span>
                                 <span className="importance-count">{stats.importanceCounts.normal}</span>
                               </div>
+                              <div className="importance-item not-important">
+                                <div className="importance-dot"></div>
+                                <span className="importance-label">不重要</span>
+                                <span className="importance-count">{stats.importanceCounts['not-important']}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -880,6 +965,7 @@ const Type2ProjectsPage: React.FC = () => {
                           <option value="very-important">非常重要</option>
                           <option value="important">重要</option>
                           <option value="normal">一般</option>
+                          <option value="not-important">不重要</option>
                         </select>
                       </div>
 
@@ -974,6 +1060,7 @@ const Type2ProjectsPage: React.FC = () => {
                                     </>
                                   )}
                                   {project.importance === 'normal' && '一般'}
+                                  {project.importance === 'not-important' && '不重要'}
                                 </span>
                               </td>
                               <td>
@@ -1035,8 +1122,8 @@ const Type2ProjectsPage: React.FC = () => {
                   ) : (
                     <div className="empty-state">
                       <DocumentTextIcon className="w-16 h-16" />
-                      <h3>暂无类型2项目</h3>
-                      <p>开始创建您的第一个类型2项目吧</p>
+                      <h3>暂无{currentProjectType.label}</h3>
+                      <p>开始创建您的第一个{currentProjectType.label}吧</p>
                       <button
                         onClick={handleCreateProject}
                         className="empty-create-button"
@@ -1102,7 +1189,7 @@ const Type2ProjectsPage: React.FC = () => {
           }}>
             <div className="modal-content">
               <div className="modal-header">
-                <h2>{showCreateModal ? '新建类型2项目' : '编辑项目'}</h2>
+                <h2>{showCreateModal ? '新建' + currentProjectType.label : '编辑项目'}</h2>
                 <button
                   onClick={() => {
                     setShowCreateModal(false)
@@ -1211,6 +1298,7 @@ const Type2ProjectsPage: React.FC = () => {
                       <option value="very-important">非常重要</option>
                       <option value="important">重要</option>
                       <option value="normal">一般</option>
+                      <option value="not-important">不重要</option>
                     </select>
                   </div>
 
@@ -1311,7 +1399,7 @@ const Type2ProjectsPage: React.FC = () => {
       </div>
 
       <style jsx>{`
-        .type2-projects-page {
+        .other-projects-page {
           padding: 24px;
           background: #f8fafc;
           min-height: 100vh;
@@ -1644,6 +1732,10 @@ const Type2ProjectsPage: React.FC = () => {
           background: #6b7280;
         }
 
+        .importance-item.not-important .importance-dot {
+          background: #a3a3a3;
+        }
+
         .importance-label {
           flex: 1;
           font-size: 14px;
@@ -1912,6 +2004,10 @@ const Type2ProjectsPage: React.FC = () => {
 
         .importance-badge.normal {
           color: #6b7280;
+        }
+
+        .importance-badge.not-important {
+          color: #a3a3a3;
         }
 
         .follow-up-weeks {
@@ -2274,7 +2370,7 @@ const Type2ProjectsPage: React.FC = () => {
         /* ------------------------------------------------------------------------------------------ */
         /* 响应式设计 */
         @media (max-width: 768px) {
-          .type2-projects-page {
+          .other-projects-page {
             padding: 12px;
           }
 
@@ -2328,4 +2424,4 @@ const Type2ProjectsPage: React.FC = () => {
   )
 }
 
-export default Type2ProjectsPage
+export default OtherProjectsPage

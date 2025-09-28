@@ -18,7 +18,7 @@ const options: swaggerJsdoc.Options = {
       title: '临床创新项目管理系统 API',
       version: '1.0.0',
       description: `
-        上海临床创新转化研究院项目管理系统的API文档
+        # 上海临床创新转化研究院项目管理系统的API文档
         
         ## 功能特性
         - 用户认证与权限管理

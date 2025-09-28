@@ -205,7 +205,7 @@ export default function Dashboard() {
       typeProjectsChart: {
         type: 'bar' as const,
         data: {
-          labels: ['院内制剂', '类型2（示例）', '类型3（示例）'],
+          labels: ['院内制剂', '类型2', '类型3'],
           datasets: [{
             label: '项目数量',
             data: [6, 2, 0],

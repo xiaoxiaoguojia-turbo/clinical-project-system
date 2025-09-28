@@ -237,6 +237,13 @@ const OtherProjectsPage: React.FC = () => {
       conclusion: ''
     })
 
+    // 部门选项数据定义
+    const departmentOptions = [
+      { value: 'transfer-investment-dept-1', label: '转移转化与投资一部' },
+      { value: 'transfer-investment-dept-2', label: '转移转化与投资二部' },
+      { value: 'transfer-investment-dept-3', label: '转移转化与投资三部' }
+    ]
+
     /* ------------------------------------------------------------------------------------------ */
     
     // 认证检查和数据加载
@@ -1269,13 +1276,17 @@ const OtherProjectsPage: React.FC = () => {
 
                   <div className="form-group">
                     <label>部门 *</label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.department}
                       onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                      placeholder="请输入部门"
                       required
-                    />
+                    >
+                      {departmentOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="form-group">
@@ -2301,34 +2312,36 @@ const OtherProjectsPage: React.FC = () => {
 
         .form-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem 2rem;
+          padding: 1.5rem 0;
+          max-width: 100%;
         }
 
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 6px;
-        }
-
-        .form-group.full-width {
-          grid-column: 1 / -1;
+          gap: 0.5rem;
         }
 
         .form-group label {
-          font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
+          font-size: 0.875rem;
           color: #374151;
+          margin-bottom: 0.25rem;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
-          padding: 10px 12px;
+          width: 100%;
+          padding: 0.75rem 1rem;
           border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 14px;
-          transition: border-color 0.2s;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          background-color: #ffffff;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
         }
 
         .form-group input:focus,
@@ -2339,79 +2352,44 @@ const OtherProjectsPage: React.FC = () => {
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+          color: #9ca3af;
+        }
+
+        .form-group select {
+          cursor: pointer;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+          background-position: right 0.75rem center;
+          background-repeat: no-repeat;
+          background-size: 1rem;
+          padding-right: 2.5rem;
+          appearance: none;
+        }
+
+        .form-group.full-width {
+          grid-column: 1 / -1;
+        }
+
         .form-group textarea {
           resize: vertical;
-          min-height: 80px;
+          min-height: 6rem;
         }
 
-        .modal-footer {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 12px;
-          padding: 20px 24px;
-          border-top: 1px solid #e5e7eb;
-        }
-
-        .cancel-button {
-          background: white;
-          color: #374151;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          padding: 10px 20px;
-          font-size: 14px;
-          cursor: pointer;
-        }
-
-        .cancel-button:hover {
-          background: #f9fafb;
-        }
-
-        .submit-button {
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          padding: 10px 20px;
-          font-size: 14px;
-          cursor: pointer;
-        }
-
-        .submit-button:hover:not(:disabled) {
-          background: #2563eb;
-        }
-
-        .submit-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .delete-button {
-          background: #dc2626;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          padding: 10px 20px;
-          font-size: 14px;
-          cursor: pointer;
-        }
-
-        .delete-button:hover:not(:disabled) {
-          background: #b91c1c;
-        }
-
-        .delete-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .delete-warning {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-          color: #dc2626;
-          text-align: center;
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+          .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 1rem 0;
+          }
+          
+          .form-group input,
+          .form-group select,
+          .form-group textarea {
+            padding: 0.625rem 0.875rem;
+            font-size: 1rem;
+          }
         }
 
         /* ------------------------------------------------------------------------------------------ */

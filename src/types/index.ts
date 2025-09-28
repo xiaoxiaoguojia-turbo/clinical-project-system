@@ -34,42 +34,42 @@ export interface UnifiedProject {
   _id?: string
   
   // 通用必填字段
-  department: string
-  name: string
-  projectType: 'internal-preparation' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other'
-  source: string
-  importance: 'very-important' | 'important' | 'normal' | 'not-important'
-  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'
+  department: string // 临转院部门，必填
+  name: string // 项目名称，必填
+  projectType: 'internal-preparation' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other' // 项目分类型，必填
+  source: string // 项目来源，必填
+  importance: 'very-important' | 'important' | 'normal' | 'not-important' // 重要程度，必填
+  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product' // 项目进展阶段，必填
   
   // 院内制剂特有字段
-  composition?: string
-  function?: string
-  specification?: string
-  duration?: string
-  dosage?: string
-  recordNumber?: string
-  remarks?: string
+  composition?: string // 组方，必填
+  function?: string // 功能主治，必填
+  specification?: string // 规格，非必填
+  duration?: string // 年限，非必填
+  dosage?: string // 用量，非必填
+  recordNumber?: string // 备案号，非必填
+  remarks?: string // 备注，非必填
   
   // 其他类型特有字段
-  leader?: string
-  startDate?: string
-  indication?: string
-  followUpWeeks?: number
-  transformRequirement?: 'license-transfer' | 'equity-investment' | 'trust-holding' | 'trust-management' | 'company-operation' | 'license-transfer-cash' | 'to-be-determined'
-  hospitalDoctor?: string
-  conclusion?: string
+  leader?: string // 负责人，必填
+  startDate?: string // 开始日期，必填
+  indication?: string // 适应症/科室，非必填
+  followUpWeeks?: number // 跟进时间/周，必填
+  transformRequirement?: 'license-transfer' | 'equity-investment' | 'trust-holding' | 'trust-management' | 'company-operation' | 'license-transfer-cash' | 'to-be-determined' // 转化需求，必填
+  hospitalDoctor?: string // 院端医生，非必填
+  conclusion?: string // 项目结论，非必填
   
   // 通用扩展字段
-  patent?: string
-  clinicalData?: string
-  marketSize?: string
-  competitorStatus?: string
+  patent?: string // 专利，非必填
+  clinicalData?: string // 临床数据，非必填
+  marketSize?: string // 市场规模，非必填
+  competitorStatus?: string // 竞争态势，非必填
   
   // 系统字段
-  attachments: string[]
-  createTime: string
-  updateTime: string
-  createdBy: string
+  attachments: string[] // 附件
+  createTime: string // 创建时间
+  updateTime: string // 更新时间
+  createdBy: string // 创建人
   
   // AI报告
   aiReport?: {

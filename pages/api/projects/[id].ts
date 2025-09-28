@@ -366,7 +366,7 @@ async function handleGetProject(
 
     const projectTypeName = isInternalPreparationType(project.projectType) 
       ? '院内制剂项目' 
-      : '项目'
+      : '项目（除院内制剂）'
 
     return res.status(200).json({
       success: true,
@@ -374,11 +374,11 @@ async function handleGetProject(
       message: `获取${projectTypeName}详情成功`
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取项目详情失败:', error)
     return res.status(500).json({
       success: false,
-      error: '获取项目详情失败'
+      error: error instanceof Error ? error.message : '获取项目详情失败'
     })
   }
 }
@@ -403,7 +403,7 @@ async function handleUpdateProject(
     }
 
     // 防止修改项目类型
-    if (updateData.projectType && updateData.projectType !== existingProject.projectType) {
+    if (updateData.projectType && updateData.projectType !== (existingProject as any).projectType) {
       return res.status(400).json({
         success: false,
         error: '不允许修改项目类型'
@@ -411,21 +411,21 @@ async function handleUpdateProject(
     }
 
     // 根据现有项目类型验证更新数据
-    const projectType = existingProject.projectType
+    const projectType = (existingProject as any).projectType
     
     // 如果更新了关键字段，验证必填字段完整性
     const requiredFields = getRequiredFieldsForType(projectType)
-    const hasRequiredFieldUpdates = requiredFields.some(field => updateData.hasOwnProperty(field))
+    const hasRequiredFieldUpdates = requiredFields.some((field: string) => updateData.hasOwnProperty(field))
     
     if (hasRequiredFieldUpdates) {
       // 合并现有数据和更新数据进行验证
       const mergedData = { ...existingProject.toObject(), ...updateData }
-      const missingFields = requiredFields.filter(field => !mergedData[field])
+      const missingFields = requiredFields.filter((field: string) => !mergedData[field])
       
       if (missingFields.length > 0) {
         return res.status(400).json({
           success: false,
-          error: `缺少${isInternalPreparationType(projectType) ? '院内制剂' : '项目'}必填字段: ${missingFields.join(', ')}`
+          error: `缺少${isInternalPreparationType(projectType) ? '院内制剂' : '项目（除院内制剂）'}必填字段: ${missingFields.join(', ')}`
         })
       }
 
@@ -480,7 +480,7 @@ async function handleUpdateProject(
 
     const projectTypeName = isInternalPreparationType(projectType) 
       ? '院内制剂项目' 
-      : '项目'
+      : '项目（除院内制剂）'
 
     return res.status(200).json({
       success: true,
@@ -488,7 +488,7 @@ async function handleUpdateProject(
       message: `${projectTypeName}更新成功`
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('更新项目失败:', error)
     
     // 处理MongoDB验证错误
@@ -510,7 +510,7 @@ async function handleUpdateProject(
 
     return res.status(500).json({
       success: false,
-      error: '更新项目失败'
+      error: error instanceof Error ? error.message : '未知错误'
     })
   }
 }
@@ -534,7 +534,7 @@ async function handleDeleteProject(
 
     const projectTypeName = isInternalPreparationType(project.projectType) 
       ? '院内制剂项目' 
-      : '项目'
+      : '项目（除院内制剂）'
 
     // 软删除：标记为已删除而不是物理删除
     await UnifiedProject.findByIdAndUpdate(id, {

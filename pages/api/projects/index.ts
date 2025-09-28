@@ -334,7 +334,7 @@ async function handler(
         error: '不支持的请求方法'
       })
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('统一项目管理API错误:', error)
     return res.status(500).json({
       success: false,
@@ -404,7 +404,7 @@ async function handleGetProjects(
       message: `获取项目列表成功，共${total}个项目`
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取项目列表失败:', error)
     return res.status(500).json({
       success: false,
@@ -432,12 +432,12 @@ async function handleCreateProject(
 
     // 根据项目类型验证特有字段
     const requiredFields = getRequiredFieldsForType(projectData.projectType)
-    const missingFields = requiredFields.filter(field => !projectData[field])
+    const missingFields = requiredFields.filter((field: string) => !projectData[field])
     
     if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        error: `缺少${projectData.projectType === 'internal-preparation' ? '院内制剂' : '项目'}必填字段: ${missingFields.join(', ')}`
+        error: `缺少${projectData.projectType === 'internal-preparation' ? '院内制剂' : '项目（除院内制剂）'}必填字段: ${missingFields.join(', ')}`
       })
     }
 
@@ -494,10 +494,10 @@ async function handleCreateProject(
     return res.status(201).json({
       success: true,
       data: populatedProject as IUnifiedProject,
-      message: `${isInternalPreparationType(projectData.projectType) ? '院内制剂' : '项目'}创建成功`
+      message: `${isInternalPreparationType(projectData.projectType) ? '院内制剂' : '项目（除院内制剂）'}创建成功`
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('创建项目失败:', error)
     
     // 处理MongoDB验证错误
@@ -519,7 +519,7 @@ async function handleCreateProject(
 
     return res.status(500).json({
       success: false,
-      error: '创建项目失败'
+      error: error instanceof Error ? error.message : '创建项目失败'
     })
   }
 }

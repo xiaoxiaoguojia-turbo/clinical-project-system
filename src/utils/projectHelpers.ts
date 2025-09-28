@@ -7,6 +7,8 @@ export const isInternalPreparation = (projectType: string): boolean => {
   return projectType === UnifiedProjectTypeEnum.INTERNAL_PREPARATION
 }
 
+export const isInternalPreparationType = isInternalPreparation
+
 export const requiresLeader = (projectType: string): boolean => {
   return !isInternalPreparation(projectType)
 }
@@ -137,6 +139,54 @@ export const validateProjectData = (project: Partial<UnifiedProject>): { isValid
   return {
     isValid: errors.length === 0,
     errors
+  }
+}
+
+// 报告生成数据验证函数
+export const validateProjectDataForReport = (project: Partial<UnifiedProject>): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = []
+  
+  // 基础字段验证
+  if (!project) {
+    errors.push('项目数据不能为空')
+  }
+  if (!project.department) {
+    errors.push('部门不能为空')
+  }
+  if (!project.name?.trim()) {
+    errors.push('项目名称不能为空')
+  }
+  if (!project.projectType) {
+    errors.push('项目类型不能为空')
+  }
+  if (!project.source?.trim()) {
+    errors.push('项目来源不能为空')
+  }
+  
+  // 院内制剂特有的报告生成验证
+  if (isInternalPreparation(project.projectType)) {
+    if (!project.composition?.trim()) {
+      errors.push('组方不能为空，报告生成需要此信息')
+    }
+    if (!project.function?.trim()) {
+      errors.push('功能主治不能为空，报告生成需要此信息')
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
+// 获取项目类型所需的必填字段
+export const getRequiredFieldsForType = (projectType: string): string[] => {
+  if (isInternalPreparation(projectType)) {
+    // 院内制剂必填字段
+    return ['composition', 'function', 'specification', 'duration', 'dosage', 'recordNumber']
+  } else {
+    // 其他类型项目必填字段
+    return ['leader', 'startDate', 'indication', 'followUpWeeks']
   }
 }
 
@@ -332,6 +382,8 @@ export const buildProjectSearchQuery = (filters: {
   
   return query
 }
+
+export const buildSearchQuery = buildProjectSearchQuery
 
 /* ------------------------------------------------------------------------------------------ */
 

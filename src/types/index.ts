@@ -29,6 +29,99 @@ export interface UserResponse {
   createdBy?: string
 }
 
+// 统一项目类型定义
+export interface UnifiedProject {
+  _id?: string
+  
+  // 通用必填字段
+  department: string
+  name: string
+  projectType: 'internal-preparation' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other'
+  source: string
+  importance: 'very-important' | 'important' | 'normal' | 'not-important'
+  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'
+  
+  // 院内制剂特有字段
+  composition?: string
+  function?: string
+  specification?: string
+  duration?: string
+  dosage?: string
+  recordNumber?: string
+  remarks?: string
+  
+  // 其他类型特有字段
+  leader?: string
+  startDate?: string
+  indication?: string
+  followUpWeeks?: number
+  transformRequirement?: 'license-transfer' | 'equity-investment' | 'trust-holding' | 'trust-management' | 'company-operation' | 'license-transfer-cash' | 'to-be-determined'
+  hospitalDoctor?: string
+  conclusion?: string
+  
+  // 通用扩展字段
+  patent?: string
+  clinicalData?: string
+  marketSize?: string
+  competitorStatus?: string
+  
+  // 系统字段
+  attachments: string[]
+  createTime: string
+  updateTime: string
+  createdBy: string
+  
+  // AI报告
+  aiReport?: {
+    reportUrl?: string
+    status: 'idle' | 'generating' | 'completed' | 'error'
+    firstGeneratedAt?: string
+    lastGeneratedAt?: string
+  }
+}
+
+// 统一项目枚举类型
+export const UnifiedProjectTypeEnum = {
+  INTERNAL_PREPARATION: 'internal-preparation',
+  AI_MEDICAL_RESEARCH: 'ai-medical-research',
+  DIAGNOSTIC_DETECTION: 'diagnostic-detection',
+  CELL_THERAPY: 'cell-therapy',
+  DRUG: 'drug',
+  MEDICAL_DEVICE: 'medical-device',
+  MEDICAL_MATERIAL: 'medical-material',
+  OTHER: 'other'
+} as const
+
+export const UnifiedProjectImportanceEnum = {
+  VERY_IMPORTANT: 'very-important',
+  IMPORTANT: 'important',
+  NORMAL: 'normal',
+  NOT_IMPORTANT: 'not-important'
+} as const
+
+export const UnifiedProjectStatusEnum = {
+  EARLY_STAGE: 'early-stage',
+  PRECLINICAL: 'preclinical',
+  CLINICAL_STAGE: 'clinical-stage',
+  MARKET_PRODUCT: 'market-product'
+} as const
+
+export const UnifiedProjectTransformRequirementEnum = {
+  LICENSE_TRANSFER: 'license-transfer',
+  EQUITY_INVESTMENT: 'equity-investment',
+  TRUST_HOLDING: 'trust-holding',
+  TRUST_MANAGEMENT: 'trust-management',
+  COMPANY_OPERATION: 'company-operation',
+  LICENSE_TRANSFER_CASH: 'license-transfer-cash',
+  TO_BE_DETERMINED: 'to-be-determined'
+} as const
+
+export const UnifiedProjectDepartmentEnum = {
+  DEPT_ONE: 'transfer-investment-dept-1',
+  DEPT_TWO: 'transfer-investment-dept-2',
+  DEPT_THREE: 'transfer-investment-dept-3'
+} as const
+
 // 总体项目类型
 export interface OverallProject {
   _id: string

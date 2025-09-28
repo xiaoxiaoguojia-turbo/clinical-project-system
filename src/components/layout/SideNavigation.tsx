@@ -57,11 +57,13 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
       const [routePath, routeQuery] = route.split('?')
       if (router.pathname !== routePath) return false
       
-      // 检查query参数是否匹配
+      // 检查query参数是否匹配 - 使用兼容的迭代方法
       const urlParams = new URLSearchParams(routeQuery)
       const currentQuery = router.query
       
-      for (const [key, value] of urlParams) {
+      // 使用entries()方法替代for...of迭代，解决TypeScript兼容性问题
+      const urlParamsEntries = Array.from(urlParams.entries())
+      for (const [key, value] of urlParamsEntries) {
         if (currentQuery[key] !== value) return false
       }
       return true

@@ -223,7 +223,7 @@ const OtherProjectsPage: React.FC = () => {
   
     // 表单数据状态
     const [formData, setFormData] = useState<ProjectFormData>({
-      department: '转移转化与投资一部', // 设置默认部门，避免验证错误
+      department: 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
       source: '',
       name: '',
       leader: '',
@@ -491,7 +491,7 @@ const OtherProjectsPage: React.FC = () => {
       // 重置表单
       const resetForm = useCallback(() => {
         setFormData({
-          department: '转移转化与投资一部', // 保持默认部门值
+          department: 'transfer-investment-dept-1', // 使用正确的英文enum值
           source: '',
           name: '',
           leader: '',
@@ -515,7 +515,7 @@ const OtherProjectsPage: React.FC = () => {
       // 处理编辑项目
       const handleEditProject = useCallback((project: UnifiedProject) => {
         setFormData({
-          department: project.department || '转移转化与投资一部', // 保持默认部门值
+          department: project.department || 'transfer-investment-dept-1', // 使用正确的英文enum值
           source: project.source || '',
           name: project.name || '',
           leader: project.leader || '',

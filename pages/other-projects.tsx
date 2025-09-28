@@ -138,9 +138,10 @@ const PROJECT_TYPES: ProjectTypeConfig[] = [
 interface ProjectStats {
   totalCount: number
   statusCounts: {
-    'initial-assessment': number
-    'project-approval': number
-    'implementation': number
+    'early-stage': number
+    'preclinical': number
+    'clinical-stage': number
+    'market-product': number
   }
   importanceCounts: {
     'very-important': number
@@ -149,7 +150,6 @@ interface ProjectStats {
     'not-important': number
   }
   departmentCounts: { [key: string]: number }
-  categoryCounts: { [key: string]: number }
   leaderCounts: { [key: string]: number }
   monthlyStats: { month: string; count: number }[]
 }
@@ -159,7 +159,6 @@ interface ProjectFilters {
   status: string
   importance: string
   leader: string
-  category: string
 }
 
 // 表单数据接口
@@ -167,16 +166,15 @@ interface ProjectFormData {
   department: string
   source: string
   name: string
-  category: string
   leader: string
   startDate: string
   indication: string
   followUpWeeks: string
   importance: 'very-important' | 'important' | 'normal' | 'not-important'
-  status: 'initial-assessment' | 'project-approval' | 'implementation'
-  transformMethod: string
-  hospitalPI: string
-  projectConclusion: string
+  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'
+  transformRequirement: string
+  hospitalDoctor: string
+  conclusion: string
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -212,8 +210,7 @@ const OtherProjectsPage: React.FC = () => {
     const [filters, setFilters] = useState<ProjectFilters>({
       status: '',
       importance: '',
-      leader: '',
-      category: ''
+      leader: ''
     })
   
     // 模态框状态
@@ -228,16 +225,15 @@ const OtherProjectsPage: React.FC = () => {
       department: '',
       source: '',
       name: '',
-      category: '',
       leader: '',
       startDate: '',
       indication: '',
       followUpWeeks: '12',
       importance: 'normal',
-      status: 'initial-assessment',
-      transformMethod: '',
-      hospitalPI: '',
-      projectConclusion: ''
+      status: 'early-stage',
+      transformRequirement: '',
+      hospitalDoctor: '',
+      conclusion: ''
     })
 
     /* ------------------------------------------------------------------------------------------ */
@@ -312,7 +308,6 @@ const OtherProjectsPage: React.FC = () => {
                 ...(filters.status && { status: filters.status }),
                 ...(filters.importance && { importance: filters.importance }),
                 ...(filters.leader && { leader: filters.leader }),
-                ...(filters.category && { category: filters.category }),
                 type: currentProjectType.key
             })
 
@@ -343,9 +338,10 @@ const OtherProjectsPage: React.FC = () => {
                 const stats: ProjectStats = {
                     totalCount: allProjects.length,
                     statusCounts: {
-                        'initial-assessment': 0,
-                        'project-approval': 0,
-                        'implementation': 0
+                        'early-stage': 0,
+                        'preclinical': 0,
+                        'clinical-stage': 0,
+                        'market-product': 0
                     },
                     importanceCounts: {
                         'very-important': 0,
@@ -354,7 +350,6 @@ const OtherProjectsPage: React.FC = () => {
                         'not-important': 0
                     },
                     departmentCounts: {},
-                    categoryCounts: {},
                     leaderCounts: {},
                     monthlyStats: []
                 }
@@ -373,11 +368,6 @@ const OtherProjectsPage: React.FC = () => {
                     // 部门统计
                     if (project.department) {
                         stats.departmentCounts[project.department] = (stats.departmentCounts[project.department] || 0) + 1
-                    }
-          
-                    // 分类统计
-                    if (project.category) {
-                        stats.categoryCounts[project.category] = (stats.categoryCounts[project.category] || 0) + 1
                     }
           
                     // 负责人统计
@@ -442,16 +432,15 @@ const OtherProjectsPage: React.FC = () => {
           department: '',
           source: '',
           name: '',
-          category: '',
           leader: '',
           startDate: '',
           indication: '',
           followUpWeeks: '12',
           importance: 'normal',
-          status: 'initial-assessment',
-          transformMethod: '',
-          hospitalPI: '',
-          projectConclusion: ''
+          status: 'early-stage',
+          transformRequirement: '',
+          hospitalDoctor: '',
+          conclusion: ''
         })
       }, [])
     
@@ -467,16 +456,15 @@ const OtherProjectsPage: React.FC = () => {
           department: project.department || '',
           source: project.source || '',
           name: project.name || '',
-          category: project.category || '',
           leader: project.leader || '',
           startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
           indication: project.indication || '',
           followUpWeeks: project.followUpWeeks?.toString() || '12',
           importance: project.importance || 'normal',
-          status: project.status || 'initial-assessment',
-          transformMethod: project.transformMethod || '',
-          hospitalPI: project.hospitalPI || '',
-          projectConclusion: project.projectConclusion || ''
+          status: project.status || 'early-stage',
+          transformRequirement: project.transformRequirement || '',
+          hospitalDoctor: project.hospitalDoctor || '',
+          conclusion: project.conclusion || ''
         })
         setEditingProject(project)
         setShowEditModal(true)
@@ -494,7 +482,7 @@ const OtherProjectsPage: React.FC = () => {
       }, [router])
     
       // 处理附件管理
-      const handleManageAttachments = useCallback((projectId: string) => {
+      const handleAttachments = useCallback((projectId: string) => {
         router.push(`/attachments?projectId=${projectId}&projectType=${currentProjectType.key}`)
       }, [router, currentProjectType.key])
     
@@ -620,16 +608,6 @@ const OtherProjectsPage: React.FC = () => {
     return Array.from(leaders).sort()
   }, [projects])
 
-  const availableCategories = useMemo(() => {
-    const categories = new Set<string>()
-    projects.forEach(project => {
-      if (project.category) {
-        categories.add(project.category)
-      }
-    })
-    return Array.from(categories).sort()
-  }, [projects])
-
   /* ------------------------------------------------------------------------------------------ */
 
   // 组件挂载检查
@@ -714,8 +692,8 @@ const OtherProjectsPage: React.FC = () => {
                             <PlayCircleIcon className="w-8 h-8" />
                           </div>
                           <div className="metric-content">
-                            <h3 className="metric-value">{stats.statusCounts['initial-assessment']}</h3>
-                            <p className="metric-label">初始评估</p>
+                            <h3 className="metric-value">{stats.statusCounts['early-stage']}</h3>
+                            <p className="metric-label">早期</p>
                           </div>
                         </div>
 
@@ -724,8 +702,8 @@ const OtherProjectsPage: React.FC = () => {
                             <CheckCircleIcon className="w-8 h-8" />
                           </div>
                           <div className="metric-content">
-                            <h3 className="metric-value">{stats.statusCounts.implementation}</h3>
-                            <p className="metric-label">落地转化</p>
+                            <h3 className="metric-value">{stats.statusCounts['clinical-stage']}</h3>
+                            <p className="metric-label">临床阶段</p>
                           </div>
                         </div>
 
@@ -753,45 +731,60 @@ const OtherProjectsPage: React.FC = () => {
                               <div className="status-item">
                                 <div className="status-bar">
                                   <div 
-                                    className="status-fill initial"
+                                    className="status-fill early-stage"
                                     style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['initial-assessment'] / stats.totalCount * 100) : 0}%` 
+                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['early-stage'] / stats.totalCount * 100) : 0}%` 
                                     }}
                                   ></div>
                                 </div>
                                 <div className="status-info">
-                                  <span className="status-label">初始评估</span>
-                                  <span className="status-count">{stats.statusCounts['initial-assessment']}</span>
+                                  <span className="status-label">早期</span>
+                                  <span className="status-count">{stats.statusCounts['early-stage']}</span>
                                 </div>
                               </div>
 
                               <div className="status-item">
                                 <div className="status-bar">
                                   <div 
-                                    className="status-fill approval"
+                                    className="status-fill preclinical"
                                     style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['project-approval'] / stats.totalCount * 100) : 0}%` 
+                                      width: `${stats.totalCount > 0 ? (stats.statusCounts.preclinical / stats.totalCount * 100) : 0}%` 
                                     }}
                                   ></div>
                                 </div>
                                 <div className="status-info">
-                                  <span className="status-label">立项上会</span>
-                                  <span className="status-count">{stats.statusCounts['project-approval']}</span>
+                                  <span className="status-label">临床前</span>
+                                  <span className="status-count">{stats.statusCounts.preclinical}</span>
                                 </div>
                               </div>
 
                               <div className="status-item">
                                 <div className="status-bar">
                                   <div 
-                                    className="status-fill implementation"
+                                    className="status-fill clinical-stage"
                                     style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts.implementation / stats.totalCount * 100) : 0}%` 
+                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['clinical-stage'] / stats.totalCount * 100) : 0}%` 
                                     }}
                                   ></div>
                                 </div>
                                 <div className="status-info">
-                                  <span className="status-label">落地转化</span>
-                                  <span className="status-count">{stats.statusCounts.implementation}</span>
+                                  <span className="status-label">临床阶段</span>
+                                  <span className="status-count">{stats.statusCounts['clinical-stage']}</span>
+                                </div>
+                              </div>
+
+                              <div className="status-item">
+                                <div className="status-bar">
+                                  <div 
+                                    className="status-fill market-product"
+                                    style={{ 
+                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['market-product'] / stats.totalCount * 100) : 0}%` 
+                                    }}
+                                  ></div>
+                                </div>
+                                <div className="status-info">
+                                  <span className="status-label">上市产品</span>
+                                  <span className="status-count">{stats.statusCounts['market-product']}</span>
                                 </div>
                               </div>
                             </div>
@@ -826,27 +819,6 @@ const OtherProjectsPage: React.FC = () => {
                                 <span className="importance-label">不重要</span>
                                 <span className="importance-count">{stats.importanceCounts['not-important']}</span>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 分类分布 */}
-                        <div className="chart-card">
-                          <div className="chart-header">
-                            <h3 className="chart-title">项目分类分布</h3>
-                            <BuildingOffice2Icon className="w-5 h-5" />
-                          </div>
-                          <div className="chart-content">
-                            <div className="category-list">
-                              {Object.entries(stats.categoryCounts)
-                                .sort(([,a], [,b]) => b - a)
-                                .slice(0, 8)
-                                .map(([category, count]) => (
-                                  <div key={category} className="category-item">
-                                    <span className="category-name">{category}</span>
-                                    <span className="category-count">{count}</span>
-                                  </div>
-                                ))}
                             </div>
                           </div>
                         </div>
@@ -947,9 +919,10 @@ const OtherProjectsPage: React.FC = () => {
                           className="filter-select"
                         >
                           <option value="">全部状态</option>
-                          <option value="initial-assessment">初始评估</option>
-                          <option value="project-approval">立项上会</option>
-                          <option value="implementation">落地转化</option>
+                          <option value="early-stage">早期</option>
+                          <option value="preclinical">临床前</option>
+                          <option value="clinical-stage">临床阶段</option>
+                          <option value="market-product">上市产品</option>
                         </select>
                       </div>
 
@@ -983,21 +956,6 @@ const OtherProjectsPage: React.FC = () => {
                           ))}
                         </select>
                       </div>
-
-                      {/* 分类筛选 */}
-                      <div className="filter-group">
-                        <BuildingOffice2Icon className="w-4 h-4" />
-                        <select
-                          value={filters.category}
-                          onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                          className="filter-select"
-                        >
-                          <option value="">全部分类</option>
-                          {availableCategories.map(category => (
-                            <option key={category} value={category}>{category}</option>
-                          ))}
-                        </select>
-                      </div>
                     </div>
                   </div>
 
@@ -1008,13 +966,12 @@ const OtherProjectsPage: React.FC = () => {
                         <thead>
                           <tr>
                             <th>项目名称</th>
-                            <th>分类</th>
                             <th>负责人</th>
                             <th>状态</th>
                             <th>重要程度</th>
                             <th>开始日期</th>
                             <th>跟进周期</th>
-                            <th>院端PI</th>
+                            <th>院端医生</th>
                             <th>操作</th>
                           </tr>
                         </thead>
@@ -1030,9 +987,6 @@ const OtherProjectsPage: React.FC = () => {
                                 </div>
                               </td>
                               <td>
-                                <span className="category-tag">{project.category}</span>
-                              </td>
-                              <td>
                                 <div className="leader-info">
                                   <UserIcon className="w-4 h-4" />
                                   <span>{project.leader}</span>
@@ -1040,9 +994,10 @@ const OtherProjectsPage: React.FC = () => {
                               </td>
                               <td>
                                 <span className={`status-badge ${project.status}`}>
-                                  {project.status === 'initial-assessment' && '初始评估'}
-                                  {project.status === 'project-approval' && '立项上会'}
-                                  {project.status === 'implementation' && '落地转化'}
+                                  {project.status === 'early-stage' && '早期'}
+                                  {project.status === 'preclinical' && '临床前'}
+                                  {project.status === 'clinical-stage' && '临床阶段'}
+                                  {project.status === 'market-product' && '上市产品'}
                                 </span>
                               </td>
                               <td>
@@ -1068,18 +1023,19 @@ const OtherProjectsPage: React.FC = () => {
                               </td>
                               <td>
                                 <span className="follow-up-weeks">
-                                  {project.followUpWeeks ? `${project.followUpWeeks}周` : '-'}
+                                  {project.followUpWeeks || 0}周
                                 </span>
                               </td>
                               <td>
-                                {project.hospitalPI || '-'}
+                                {project.hospitalDoctor || '-'}
                               </td>
                               <td className="actions-cell">
                                 <div className="action-buttons-group">
                                   <button
-                                    onClick={() => handleViewProject(project._id)}
+                                    onClick={() => project._id && handleViewProject(project._id)}
                                     className="action-btn view"
                                     title="查看详情"
+                                    disabled={!project._id}
                                   >
                                     <EyeIcon className="w-4 h-4" />
                                   </button>
@@ -1091,14 +1047,15 @@ const OtherProjectsPage: React.FC = () => {
                                     <PencilIcon className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => handleManageAttachments(project._id)}
+                                    onClick={() => project._id && handleAttachments(project._id)}
                                     className="action-btn attachments"
                                     title="附件管理"
+                                    disabled={!project._id}
                                   >
                                     <PaperClipIcon className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => handleGenerateReport(project._id)}
+                                    onClick={() => project._id && handleGenerateReport(project._id)}
                                     className="action-btn report"
                                     title="AI报告(暂未开放)"
                                     disabled
@@ -1106,9 +1063,10 @@ const OtherProjectsPage: React.FC = () => {
                                     <DocumentTextIcon className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => handleDeleteProject(project._id)}
+                                    onClick={() => project._id && handleDeleteProject(project._id)}
                                     className="action-btn delete"
                                     title="删除项目"
+                                    disabled={!project._id}
                                   >
                                     <TrashIcon className="w-4 h-4" />
                                   </button>
@@ -1236,17 +1194,6 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>分类 *</label>
-                    <input
-                      type="text"
-                      value={formData.category}
-                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="请输入项目分类"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
                     <label>负责人 *</label>
                     <input
                       type="text"
@@ -1308,37 +1255,45 @@ const OtherProjectsPage: React.FC = () => {
                       value={formData.status}
                       onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
                     >
-                      <option value="initial-assessment">初始评估</option>
-                      <option value="project-approval">立项上会</option>
-                      <option value="implementation">落地转化</option>
+                      <option value="early-stage">早期</option>
+                      <option value="preclinical">临床前</option>
+                      <option value="clinical-stage">临床阶段</option>
+                      <option value="market-product">上市产品</option>
                     </select>
                   </div>
 
                   <div className="form-group">
-                    <label>转化方式/需求</label>
-                    <input
-                      type="text"
-                      value={formData.transformMethod}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transformMethod: e.target.value }))}
-                      placeholder="请输入转化方式或需求"
-                    />
+                    <label>转化需求</label>
+                    <select
+                      value={formData.transformRequirement}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transformRequirement: e.target.value }))}
+                    >
+                      <option value="">请选择转化需求</option>
+                      <option value="license-transfer">许可转让</option>
+                      <option value="equity-investment">代价入股</option>
+                      <option value="trust-holding">代持</option>
+                      <option value="trust-management">代持托管</option>
+                      <option value="company-operation">公司化运营</option>
+                      <option value="license-transfer-cash">许可转让现金</option>
+                      <option value="to-be-determined">待定</option>
+                    </select>
                   </div>
 
                   <div className="form-group">
-                    <label>院端PI</label>
+                    <label>院端医生</label>
                     <input
                       type="text"
-                      value={formData.hospitalPI}
-                      onChange={(e) => setFormData(prev => ({ ...prev, hospitalPI: e.target.value }))}
-                      placeholder="请输入院端PI"
+                      value={formData.hospitalDoctor}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hospitalDoctor: e.target.value }))}
+                      placeholder="请输入院端医生"
                     />
                   </div>
 
                   <div className="form-group full-width">
                     <label>项目结论</label>
                     <textarea
-                      value={formData.projectConclusion}
-                      onChange={(e) => setFormData(prev => ({ ...prev, projectConclusion: e.target.value }))}
+                      value={formData.conclusion}
+                      onChange={(e) => setFormData(prev => ({ ...prev, conclusion: e.target.value }))}
                       placeholder="请输入项目结论"
                       rows={4}
                     />
@@ -1672,16 +1627,20 @@ const OtherProjectsPage: React.FC = () => {
           transition: width 0.3s ease;
         }
 
-        .status-fill.initial {
+        .status-fill.early-stage {
           background: #f59e0b;
         }
 
-        .status-fill.approval {
+        .status-fill.preclinical {
           background: #3b82f6;
         }
 
-        .status-fill.implementation {
+        .status-fill.clinical-stage {
           background: #10b981;
+        }
+
+        .status-fill.market-product {
+          background: #8b5cf6;
         }
 
         .status-info {
@@ -1747,15 +1706,13 @@ const OtherProjectsPage: React.FC = () => {
           color: #1f2937;
         }
 
-        /* 分类和负责人列表 */
-        .category-list,
+        /* 负责人列表 */
         .leader-list {
           display: flex;
           flex-direction: column;
           gap: 12px;
         }
 
-        .category-item,
         .leader-item {
           display: flex;
           align-items: center;
@@ -1764,13 +1721,11 @@ const OtherProjectsPage: React.FC = () => {
           border-bottom: 1px solid #f3f4f6;
         }
 
-        .category-name,
         .leader-name {
           font-size: 14px;
           color: #374151;
         }
 
-        .category-count,
         .leader-count {
           font-weight: 600;
           color: #1f2937;
@@ -1906,7 +1861,7 @@ const OtherProjectsPage: React.FC = () => {
           background: white;
           border-radius: 8px;
           overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
         .projects-table {
@@ -1948,14 +1903,6 @@ const OtherProjectsPage: React.FC = () => {
           color: #6b7280;
         }
 
-        .category-tag {
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-        }
-
         .leader-info {
           display: flex;
           align-items: center;
@@ -1971,19 +1918,24 @@ const OtherProjectsPage: React.FC = () => {
           font-weight: 500;
         }
 
-        .status-badge.initial-assessment {
+        .status-badge.early-stage {
           background: #fef3c7;
-          color: #92400e;
+          color: #d97706;
         }
 
-        .status-badge.project-approval {
+        .status-badge.preclinical {
           background: #dbeafe;
-          color: #1e40af;
+          color: #2563eb;
         }
 
-        .status-badge.implementation {
+        .status-badge.clinical-stage {
           background: #d1fae5;
-          color: #065f46;
+          color: #059669;
+        }
+
+        .status-badge.market-product {
+          background: #ede9fe;
+          color: #7c3aed;
         }
 
         .importance-badge {

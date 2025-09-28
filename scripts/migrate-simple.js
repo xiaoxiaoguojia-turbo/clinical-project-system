@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 // 简化的迁移配置
 const MIGRATION_CONFIG = {
-  DRY_RUN: true,
+  DRY_RUN: false,
   LOG_ENABLED: true
 }
 
@@ -24,12 +24,113 @@ const log = (message, type = 'info') => {
 // 数据库连接
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinical-project-system'
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinical_project_system'
+    console.log('MongoDB URI:', process.env.MONGODB_URI)
+    console.log('MongoDB URI:', mongoURI)
     await mongoose.connect(mongoURI)
     log('✅ 数据库连接成功')
   } catch (error) {
     log(`❌ 数据库连接失败: ${error.message}`, 'error')
     throw error
+  }
+}
+
+// 定义原始Schema（用于读取现有数据）
+const createOriginalSchemas = () => {
+  // 院内制剂项目Schema
+  if (!mongoose.models.InternalPreparationProject) {
+    const internalPrepSchema = new mongoose.Schema({
+      department: String,
+      source: String,
+      name: String,
+      composition: String,
+      function: String,
+      specification: String,
+      duration: String,
+      dosage: String,
+      recordNumber: String,
+      remarks: String,
+      patent: String,
+      status: String,
+      attachments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attachment' }],
+      createTime: Date,
+      updateTime: Date,
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      aiReport: {
+        reportUrl: String,
+        status: String,
+        firstGeneratedAt: Date,
+        lastGeneratedAt: Date
+      }
+    })
+    mongoose.model('InternalPreparationProject', internalPrepSchema)
+  }
+
+  // 类型2项目Schema
+  if (!mongoose.models.Type2Project) {
+    const type2Schema = new mongoose.Schema({
+      department: String,
+      source: String,
+      name: String,
+      category: String,
+      leader: String,
+      startDate: Date,
+      indication: String,
+      followUpWeeks: Number,
+      hospitalPI: String,
+      conclusion: String,
+      importance: String,
+      status: String,
+      attachments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attachment' }],
+      createTime: Date,
+      updateTime: Date,
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    })
+    mongoose.model('Type2Project', type2Schema)
+  }
+
+  // 统一项目Schema
+  if (!mongoose.models.UnifiedProject) {
+    const unifiedSchema = new mongoose.Schema({
+      department: String,
+      name: { type: String, required: true },
+      projectType: { type: String, required: true },
+      source: { type: String, required: true },
+      importance: String,
+      status: String,
+      
+      // 院内制剂特有字段
+      composition: String,
+      function: String,
+      specification: String,
+      duration: String,
+      dosage: String,
+      recordNumber: String,
+      remarks: String,
+      
+      // 其他类型特有字段
+      leader: String,
+      startDate: Date,
+      indication: String,
+      followUpWeeks: Number,
+      transformRequirement: String,
+      hospitalDoctor: String,
+      conclusion: String,
+      
+      // 通用字段
+      patent: String,
+      attachments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attachment' }],
+      createTime: { type: Date, default: Date.now },
+      updateTime: { type: Date, default: Date.now },
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      aiReport: {
+        reportUrl: String,
+        status: { type: String, default: 'idle' },
+        firstGeneratedAt: Date,
+        lastGeneratedAt: Date
+      }
+    })
+    mongoose.model('UnifiedProject', unifiedSchema)
   }
 }
 
@@ -95,11 +196,13 @@ const runMigration = async () => {
     // 连接数据库
     await connectDB()
     
-    // 获取现有模型（使用动态require避免ESM问题）
-    const InternalPreparationProject = mongoose.model('InternalPreparationProject') || 
-      require('../src/models/InternalPreparationProject').default
-    const Type2Project = mongoose.model('Type2Project') || 
-      require('../src/models/Type2Project').default
+    // 创建Schema定义
+    createOriginalSchemas()
+    
+    // 获取模型
+    const InternalPreparationProject = mongoose.model('InternalPreparationProject')
+    const Type2Project = mongoose.model('Type2Project')
+    const UnifiedProject = mongoose.model('UnifiedProject')
     
     // 检查现有数据
     const internalPrepData = await InternalPreparationProject.find({}).lean()
@@ -112,53 +215,6 @@ const runMigration = async () => {
       log('⚠️ 没有数据需要迁移', 'warning')
       return { success: 0, failed: 0 }
     }
-    
-    // 创建统一项目schema（简化版本）
-    if (!mongoose.models.UnifiedProject) {
-      const unifiedSchema = new mongoose.Schema({
-        department: String,
-        name: { type: String, required: true },
-        projectType: { type: String, required: true },
-        source: { type: String, required: true },
-        importance: String,
-        status: String,
-        
-        // 院内制剂特有字段
-        composition: String,
-        function: String,
-        specification: String,
-        duration: String,
-        dosage: String,
-        recordNumber: String,
-        remarks: String,
-        
-        // 其他类型特有字段
-        leader: String,
-        startDate: Date,
-        indication: String,
-        followUpWeeks: Number,
-        transformRequirement: String,
-        hospitalDoctor: String,
-        conclusion: String,
-        
-        // 通用字段
-        patent: String,
-        attachments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Attachment' }],
-        createTime: { type: Date, default: Date.now },
-        updateTime: { type: Date, default: Date.now },
-        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        aiReport: {
-          reportUrl: String,
-          status: { type: String, default: 'idle' },
-          firstGeneratedAt: Date,
-          lastGeneratedAt: Date
-        }
-      })
-      
-      mongoose.model('UnifiedProject', unifiedSchema)
-    }
-    
-    const UnifiedProject = mongoose.model('UnifiedProject')
     
     let totalSuccess = 0
     let totalFailed = 0

@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "migrate:unified": "node scripts/migrate-simple.js",
     "migrate:dry-run": "node scripts/migrate-simple.js",
-    "migrate:help": "echo ' 数据迁移脚本使用说明：npm run migrate:unified (正式迁移) 或 npm run migrate:dry-run (模拟运行)'"
+    "migrate:help": "echo ' 数据迁移脚本使用说明：npm run migrate:unified (正式迁移) 或 npm run migrate:dry-run (模拟运行)'",
+    "db:diagnose": "node scripts/diagnose-db.js"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.0",

@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "migrate:unified": "ts-node scripts/migrate-to-unified-projects.ts",
+    "migrate:dry-run": "ts-node -e \"const { runMigration, MIGRATION_CONFIG } = require('./scripts/migrate-to-unified-projects.ts'); MIGRATION_CONFIG.DRY_RUN = true; runMigration();\"",
+    "migrate:help": "echo ' 数据迁移脚本使用说明：npm run migrate:unified (正式迁移) 或 npm run migrate:dry-run (模拟运行)'"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.0",
@@ -43,6 +46,7 @@
     "eslint-config-next": "^14.0.0",
     "postcss": "^8.4.0",
     "prettier": "^3.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
   },
   "engines": {

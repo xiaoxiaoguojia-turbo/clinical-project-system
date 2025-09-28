@@ -200,36 +200,93 @@ export const convertType2ToUnified = (type2Project: any): Partial<UnifiedProject
 /* ------------------------------------------------------------------------------------------ */
 
 // 状态映射函数
-const mapInternalPrepStatus = (oldStatus: string): string => {
-  const statusMap: Record<string, string> = {
-    'active': UnifiedProjectStatusEnum.EARLY_STAGE,
-    'completed': UnifiedProjectStatusEnum.MARKET_PRODUCT,
-    'paused': UnifiedProjectStatusEnum.EARLY_STAGE
+const mapInternalPrepStatus = (oldStatus: string): 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product' => {
+  const statusMap: Record<string, 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'> = {
+    'active': 'early-stage',
+    'completed': 'market-product',
+    'paused': 'early-stage'
   }
-  return statusMap[oldStatus] || UnifiedProjectStatusEnum.EARLY_STAGE
+  return statusMap[oldStatus] || 'early-stage'
 }
 
-const mapType2Status = (oldStatus: string): string => {
-  const statusMap: Record<string, string> = {
-    'initial-assessment': UnifiedProjectStatusEnum.EARLY_STAGE,
-    'project-approval': UnifiedProjectStatusEnum.PRECLINICAL,
-    'implementation': UnifiedProjectStatusEnum.CLINICAL_STAGE
+const mapType2Status = (oldStatus: string): 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product' => {
+  const statusMap: Record<string, 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'> = {
+    'initial-assessment': 'early-stage',
+    'project-approval': 'preclinical',
+    'implementation': 'clinical-stage'
   }
-  return statusMap[oldStatus] || UnifiedProjectStatusEnum.EARLY_STAGE
+  return statusMap[oldStatus] || 'early-stage'
 }
 
-const mapType2Importance = (oldImportance: string): string => {
-  const importanceMap: Record<string, string> = {
-    'very-important': UnifiedProjectImportanceEnum.VERY_IMPORTANT,
-    'important': UnifiedProjectImportanceEnum.IMPORTANT,
-    'normal': UnifiedProjectImportanceEnum.NORMAL
+const mapType2Importance = (oldImportance: string): 'very-important' | 'important' | 'normal' | 'not-important' => {
+  const importanceMap: Record<string, 'very-important' | 'important' | 'normal' | 'not-important'> = {
+    'very-important': 'very-important',
+    'important': 'important',
+    'normal': 'normal'
   }
-  return importanceMap[oldImportance] || UnifiedProjectImportanceEnum.NORMAL
+  return importanceMap[oldImportance] || 'normal'
 }
 
-const mapTransformMethod = (oldMethod: string): string => {
-  // 根据实际业务逻辑映射转化方式
-  return UnifiedProjectTransformRequirementEnum.TO_BE_DETERMINED
+const mapTransformMethod = (oldMethod: string): 'license-transfer' | 'equity-investment' | 'trust-holding' | 'trust-management' | 'company-operation' | 'license-transfer-cash' | 'to-be-determined' => {
+  // 简化处理：默认选择"待定"
+  return 'to-be-determined'
+}
+
+/* ------------------------------------------------------------------------------------------ */
+
+// 数据迁移相关函数
+export const migrateInternalPreparationData = async (internalPrepData: any[]): Promise<Partial<UnifiedProject>[]> => {
+  return internalPrepData.map(item => ({
+    department: item.department || 'transfer-investment-dept-1',
+    name: item.name || '未命名项目',
+    projectType: 'internal-preparation' as const,
+    source: item.source || '未知来源',
+    importance: 'very-important' as const, // 默认值
+    status: mapInternalPrepStatus(item.status || 'active'),
+    
+    // 院内制剂特有字段
+    composition: item.composition || '',
+    function: item.function || '',
+    specification: item.specification,
+    duration: item.duration,
+    dosage: item.dosage,
+    recordNumber: item.recordNumber,
+    remarks: item.remarks,
+    
+    // 通用字段
+    patent: item.patent,
+    attachments: item.attachments || [],
+    createTime: item.createTime || new Date().toISOString(),
+    updateTime: item.updateTime || new Date().toISOString(),
+    createdBy: item.createdBy || '',
+    aiReport: item.aiReport
+  }))
+}
+
+export const migrateType2ProjectData = async (type2Data: any[]): Promise<Partial<UnifiedProject>[]> => {
+  return type2Data.map(item => ({
+    department: item.department || 'transfer-investment-dept-1',
+    name: item.name || '未命名项目',
+    projectType: 'other' as const, // 简化为"其他"类型
+    source: item.source || '未知来源',
+    importance: mapType2Importance(item.importance || 'normal'),
+    status: mapType2Status(item.status || 'initial-assessment'),
+    
+    // 其他类型特有字段
+    leader: item.leader || '未指定',
+    startDate: item.startDate || new Date().toISOString(),
+    indication: item.indication,
+    followUpWeeks: item.followUpWeeks || 1,
+    transformRequirement: mapTransformMethod(item.transformMethod),
+    hospitalDoctor: item.hospitalPI,
+    conclusion: item.conclusion,
+    
+    // 通用字段
+    attachments: item.attachments || [],
+    createTime: item.createTime || new Date().toISOString(),
+    updateTime: item.updateTime || new Date().toISOString(),
+    createdBy: item.createdBy || ''
+  }))
 }
 
 /* ------------------------------------------------------------------------------------------ */

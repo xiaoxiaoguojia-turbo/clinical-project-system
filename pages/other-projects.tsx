@@ -1399,11 +1399,11 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group full-width">
-                    <label>项目结论</label>
+                    <label>专利信息及项目结论</label>
                     <textarea
                       value={formData.conclusion}
                       onChange={(e) => setFormData(prev => ({ ...prev, conclusion: e.target.value }))}
-                      placeholder="请输入项目结论"
+                      placeholder="请输入专利信息及项目结论"
                       rows={4}
                     />
                   </div>
@@ -1526,7 +1526,7 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group full-width">
-                    <label>项目结论</label>
+                    <label>专利信息及项目结论</label>
                     <div className="readonly-field readonly-textarea">
                       {viewingProject.conclusion || '-'}
                     </div>

@@ -1408,16 +1408,15 @@ const OtherProjectsPage: React.FC = () => {
 
                 <div className="modal-footer">
                   <button
-                    type="button"
+                    className="btn-secondary"
                     onClick={() => {
                       setShowCreateModal(false)
                       setShowEditModal(false)
                     }}
-                    className="cancel-button"
                   >
                     取消
                   </button>
-                  <button type="submit" className="submit-button" disabled={loading}>
+                  <button className="btn-primary" disabled={loading}>
                     {loading ? '处理中...' : (showCreateModal ? '创建项目' : '保存修改')}
                   </button>
                 </div>
@@ -1435,8 +1434,13 @@ const OtherProjectsPage: React.FC = () => {
               </div>
               <div className="modal-body">
                 <div className="delete-warning">
-                  <ExclamationTriangleIcon className="w-12 h-12" />
-                  <p>您确定要删除这个项目吗？此操作无法撤销。</p>
+                  <div className="warning-icon">
+                    <ExclamationTriangleIcon className="w-6 h-6" />
+                  </div>
+                  <div className="warning-content">
+                    <h3>确认删除项目</h3>
+                    <p>您确定要删除这个项目吗？此操作无法撤销。</p>
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
@@ -2275,7 +2279,9 @@ const OtherProjectsPage: React.FC = () => {
         }
 
         .modal-content.small {
-          max-width: 400px;
+          max-width: 420px;
+          border-radius: 0.75rem;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
         .modal-header {
@@ -2443,6 +2449,187 @@ const OtherProjectsPage: React.FC = () => {
           to {
             transform: rotate(360deg);
           }
+        }
+
+        /* 模态框底部按钮样式 */
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 16px;
+          padding: 24px 32px;
+          border-top: 1px solid #f1f5f9;
+          background: #fafbfc;
+        }
+
+        .btn-secondary {
+          padding: 14px 28px;
+          border: 2px solid #e2e8f0;
+          background: white;
+          color: #64748b;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          min-width: 100px;
+        }
+
+        .btn-secondary:hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          color: #475569;
+        }
+
+        .btn-primary {
+          padding: 14px 28px;
+          border: none;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+          min-width: 120px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 10px -1px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .cancel-button {
+          background: #ffffff;
+          color: #374151;
+          border: 1px solid #d1d5db;
+          border-radius: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .cancel-button:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+          transform: translateY(-1px);
+        }
+
+        .submit-button {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+          color: white;
+          border: none;
+          border-radius: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .delete-button {
+          background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+          color: white;
+          border: none;
+          border-radius: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+        }
+
+        .delete-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .delete-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+        }
+
+        /* 删除确认弹窗优化 */
+        .modal-content.small {
+          max-width: 420px;
+          border-radius: 0.75rem;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .delete-warning {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          padding: 1.5rem;
+          background: linear-gradient(135deg, #fef2f2 0%, #fdf2f8 100%);
+          border: 1px solid #fecaca;
+          border-radius: 0.5rem;
+        }
+
+        .warning-icon {
+          flex-shrink: 0;
+          width: 2.5rem;
+          height: 2.5rem;
+          background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+        }
+
+        .warning-content {
+          flex: 1;
+        }
+
+        .warning-content h3 {
+          font-size: 1rem;
+          font-weight: 600;
+          color: #dc2626;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .warning-content p {
+          font-size: 0.875rem;
+          color: #6b7280;
+          margin: 0;
+          line-height: 1.5;
         }
       `}</style>
     </DashboardLayout>

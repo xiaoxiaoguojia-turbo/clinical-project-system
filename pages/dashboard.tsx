@@ -264,14 +264,6 @@ export default function Dashboard() {
     console.log('导出数据功能开发中...')
   }
 
-  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTimeRange(e.target.value)
-  }
-
-  const handleProjectTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setProjectType(e.target.value)
-  }
-
   const handleChartAction = (chartId: string) => {
     console.log(`图表操作: ${chartId}`)
   }
@@ -388,38 +380,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 筛选区域 */}
-        <div className="filter-section">
-          <div className="filter-item">
-            <CalendarIcon className="w-5 h-5 filter-icon" />
-            <span className="filter-label">时间范围:</span>
-            <select 
-              className="filter-select"
-              value={timeRange}
-              onChange={handleTimeRangeChange}
-            >
-              <option value="本月">本月</option>
-              <option value="本季度">本季度</option>
-              <option value="本年">本年</option>
-              <option value="自定义">自定义</option>
-            </select>
-          </div>
-          <div className="filter-item">
-            <FunnelIcon className="w-5 h-5 filter-icon" />
-            <span className="filter-label">项目类型:</span>
-            <select 
-              className="filter-select"
-              value={projectType}
-              onChange={handleProjectTypeChange}
-            >
-              <option value="全部项目">全部项目</option>
-              <option value="院内制剂">院内制剂</option>
-              <option value="临床试验">临床试验</option>
-              <option value="创新项目">创新项目</option>
-            </select>
-          </div>
-        </div>
-
         {/* 统计卡片区域 */}
         <div className="stats-grid">
           {statisticCards.map((card, index) => {
@@ -526,7 +486,7 @@ export default function Dashboard() {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 24px;
+          margin-bottom: 32px;
           background: white;
           padding: 24px;
           border-radius: 12px;
@@ -621,7 +581,7 @@ export default function Dashboard() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 24px;
-          margin-bottom: 32px;
+          margin-bottom: 28px;
         }
 
         .stat-card {

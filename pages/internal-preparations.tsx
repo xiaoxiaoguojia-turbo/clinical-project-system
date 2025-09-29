@@ -470,14 +470,6 @@ export default function InternalPreparationsPage() {
     console.log('导出院内制剂数据功能开发中...')
   }
 
-  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTimeRange(e.target.value)
-  }
-
-  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(e.target.value)
-  }
-
   const handleRefreshData = () => {
     if (activeTab === 'statistics') {
       loadPreparationData()
@@ -1048,41 +1040,6 @@ export default function InternalPreparationsPage() {
         {/* 统计报表内容 */}
         {activeTab === 'statistics' && (
           <>
-            {/* 筛选控制栏 */}
-            <div className="filter-bar">
-              <div className="filter-controls">
-                <div className="filter-item">
-                  <CalendarIcon className="w-4 h-4 filter-icon" />
-                  <select 
-                    value={timeRange} 
-                    onChange={handleTimeRangeChange}
-                    className="filter-select"
-                  >
-                    <option>本月</option>
-                    <option>最近3个月</option>
-                    <option>本年度</option>
-                    <option>全部</option>
-                  </select>
-                </div>
-                <div className="filter-item">
-                  <FunnelIcon className="w-4 h-4 filter-icon" />
-                  <select 
-                    value={statusFilter} 
-                    onChange={handleStatusFilterChange}
-                    className="filter-select"
-                  >
-                    <option>全部状态</option>
-                    <option>进行中</option>
-                    <option>已完成</option>
-                    <option>已暂停</option>
-                  </select>
-                </div>
-              </div>
-              <button className="refresh-button" onClick={handleRefreshData}>
-                刷新数据
-              </button>
-            </div>
-
             {/* 统计卡片 */}
             <div className="stats-grid">
               {loading ? (
@@ -1877,9 +1834,9 @@ export default function InternalPreparationsPage() {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
             background: white;
-            padding: 24px;
+            padding: 36px;
             border-radius: 12px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
           }
@@ -1937,7 +1894,7 @@ export default function InternalPreparationsPage() {
             border-radius: 12px;
             padding: 6px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
+            margin-bottom: 32px;
             gap: 4px;
           }
 

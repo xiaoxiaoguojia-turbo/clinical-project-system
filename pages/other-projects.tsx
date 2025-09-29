@@ -220,6 +220,8 @@ const OtherProjectsPage: React.FC = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [editingProject, setEditingProject] = useState<UnifiedProject | null>(null)
     const [deletingProjectId, setDeletingProjectId] = useState<string>('')
+    const [showViewModal, setShowViewModal] = useState(false)
+    const [viewingProject, setViewingProject] = useState<UnifiedProject | null>(null)
   
     // 表单数据状态
     const [formData, setFormData] = useState<ProjectFormData>({
@@ -546,9 +548,10 @@ const OtherProjectsPage: React.FC = () => {
       }, [])
     
       // 处理查看项目详情
-      const handleViewProject = useCallback((projectId: string) => {
-        router.push(`/projects/${projectId}`)
-      }, [router])
+      const handleViewProject = useCallback((project: UnifiedProject) => {
+        setViewingProject(project)
+        setShowViewModal(true)
+      }, [])
     
       // 处理附件管理
       const handleAttachments = useCallback((projectId: string) => {
@@ -1134,10 +1137,9 @@ const OtherProjectsPage: React.FC = () => {
                               <td className="actions-cell">
                                 <div className="action-buttons-group">
                                   <button
-                                    onClick={() => project._id && handleViewProject(project._id)}
+                                    onClick={() => handleViewProject(project)}
                                     className="action-btn view"
                                     title="查看详情"
-                                    disabled={!project._id}
                                   >
                                     <EyeIcon className="w-4 h-4" />
                                   </button>
@@ -1145,6 +1147,7 @@ const OtherProjectsPage: React.FC = () => {
                                     onClick={() => handleEditProject(project)}
                                     className="action-btn edit"
                                     title="编辑项目"
+                                    disabled={!project._id}
                                   >
                                     <PencilIcon className="w-4 h-4" />
                                   </button>
@@ -1425,6 +1428,129 @@ const OtherProjectsPage: React.FC = () => {
           </div>
         )}
 
+        {/* 查看项目详情模态框 */}
+        {showViewModal && viewingProject && (
+          <div className="modal-overlay" onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowViewModal(false)
+            }
+          }}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2>查看项目详情</h2>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="modal-close"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="modal-body">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>项目名称</label>
+                    <div className="readonly-field">{viewingProject.name || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>部门</label>
+                    <div className="readonly-field">
+                      {departmentOptions.find(opt => opt.value === viewingProject.department)?.label || viewingProject.department || '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>来源</label>
+                    <div className="readonly-field">{viewingProject.source || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>负责人</label>
+                    <div className="readonly-field">{viewingProject.leader || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>开始日期</label>
+                    <div className="readonly-field">
+                      {viewingProject.startDate ? new Date(viewingProject.startDate).toLocaleDateString('zh-CN') : '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>适应症/科室</label>
+                    <div className="readonly-field">{viewingProject.indication || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>跟进时间(周)</label>
+                    <div className="readonly-field">{viewingProject.followUpWeeks || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>重要程度</label>
+                    <div className="readonly-field">
+                      {viewingProject.importance === 'very-important' ? '非常重要' :
+                       viewingProject.importance === 'important' ? '重要' :
+                       viewingProject.importance === 'normal' ? '一般' :
+                       viewingProject.importance === 'not-important' ? '不重要' : '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>项目状态</label>
+                    <div className="readonly-field">
+                      {viewingProject.status === 'early-stage' ? '早期' :
+                       viewingProject.status === 'preclinical' ? '临床前' :
+                       viewingProject.status === 'clinical-stage' ? '临床阶段' :
+                       viewingProject.status === 'market-product' ? '上市产品' : '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>转化需求</label>
+                    <div className="readonly-field">
+                      {viewingProject.transformRequirement === 'license-transfer' ? '许可转让' :
+                       viewingProject.transformRequirement === 'equity-investment' ? '代价入股' :
+                       viewingProject.transformRequirement === 'trust-holding' ? '代持' :
+                       viewingProject.transformRequirement === 'trust-management' ? '代持托管' :
+                       viewingProject.transformRequirement === 'company-operation' ? '公司化运营' :
+                       viewingProject.transformRequirement === 'license-transfer-cash' ? '许可转让现金' :
+                       viewingProject.transformRequirement === 'to-be-determined' ? '待定' : '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>院端医生</label>
+                    <div className="readonly-field">{viewingProject.hospitalDoctor || '-'}</div>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>项目结论</label>
+                    <div className="readonly-field readonly-textarea">
+                      {viewingProject.conclusion || '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>创建时间</label>
+                    <div className="readonly-field">
+                      {viewingProject.createTime ? new Date(viewingProject.createTime).toLocaleString('zh-CN') : '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>更新时间</label>
+                    <div className="readonly-field">
+                      {viewingProject.updateTime ? new Date(viewingProject.updateTime).toLocaleString('zh-CN') : '-'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 删除确认对话框 */}
         {showDeleteModal && (
           <div className="modal-overlay">
@@ -1473,14 +1599,14 @@ const OtherProjectsPage: React.FC = () => {
         /* ------------------------------------------------------------------------------------------ */
         /* 页面头部样式 */
         .page-header {
-          margin-bottom: 24px;
+          margin-bottom: 32px;
         }
 
         .header-content {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 24px;
+          margin-bottom: 32px;
           background: white;
           padding: 24px;
           border-radius: 12px;
@@ -1530,7 +1656,7 @@ const OtherProjectsPage: React.FC = () => {
         .tab-bar {
           display: flex;
           border-bottom: 2px solid #e5e7eb;
-          margin-bottom: 24px;
+          margin-bottom: 32px;
           background: white;
           border-radius: 8px 8px 0 0;
           padding: 0 16px;
@@ -2672,6 +2798,28 @@ const OtherProjectsPage: React.FC = () => {
         .warning-text {
           font-size: 14px;
           color: #6b7280;
+        }
+
+        /* 只读字段样式 */
+        .readonly-field {
+          padding: 0.75rem 1rem;
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          color: #374151;
+          font-size: 0.875rem;
+          line-height: 1.5;
+          min-height: 2.75rem;
+          display: flex;
+          align-items: center;
+        }
+
+        .readonly-textarea {
+          min-height: 6rem;
+          align-items: flex-start;
+          padding-top: 0.75rem;
+          white-space: pre-wrap;
+          word-break: break-word;
         }
       `}</style>
     </DashboardLayout>

@@ -1430,31 +1430,31 @@ const OtherProjectsPage: React.FC = () => {
           <div className="modal-overlay">
             <div className="modal-content small">
               <div className="modal-header">
-                <h2>确认删除</h2>
+                <h3>确认删除</h3>
+                <button className="close-btn" onClick={() => setShowDeleteModal(false)}>
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
               </div>
               <div className="modal-body">
-                <div className="delete-warning">
-                  <div className="warning-icon">
-                    <ExclamationTriangleIcon className="w-6 h-6" />
-                  </div>
-                  <div className="warning-content">
-                    <h3>确认删除项目</h3>
-                    <p>您确定要删除这个项目吗？此操作无法撤销。</p>
-                  </div>
+                <div className="warning-content">
+                  <ExclamationTriangleIcon className="w-12 h-12 warning-icon" />
+                  <h3>确认删除项目</h3>
+                  <p>您确定要删除这个项目吗？此操作无法撤销。</p>
                 </div>
               </div>
               <div className="modal-footer">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="cancel-button"
+                  className="cancel-btn"
                 >
                   取消
                 </button>
                 <button
                   onClick={confirmDeleteProject}
-                  className="delete-button"
+                  className="danger-btn"
                   disabled={loading}
                 >
+                  <TrashIcon className="w-4 h-4" />
                   {loading ? '删除中...' : '确定删除'}
                 </button>
               </div>
@@ -1943,6 +1943,7 @@ const OtherProjectsPage: React.FC = () => {
 
         .search-input {
           flex: 1;
+          background: white;
           border: none;
           outline: none;
           font-size: 14px;
@@ -1962,7 +1963,7 @@ const OtherProjectsPage: React.FC = () => {
           border: none;
           outline: none;
           font-size: 14px;
-          background: transparent;
+          background: white;
           cursor: pointer;
         }
 
@@ -2299,6 +2300,32 @@ const OtherProjectsPage: React.FC = () => {
           color: #1f2937;
         }
 
+        .modal-header h3 {
+          font-size: 20px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .close-btn {
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: #f1f5f9;
+          color: #64748b;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+          background: #e2e8f0;
+          color: #475569;
+        }
+
         .modal-close {
           background: none;
           border: none;
@@ -2314,6 +2341,8 @@ const OtherProjectsPage: React.FC = () => {
 
         .modal-body {
           padding: 24px;
+          max-height: 60vh;
+          overflow-y: auto;
         }
 
         .form-grid {
@@ -2614,8 +2643,17 @@ const OtherProjectsPage: React.FC = () => {
           color: white;
         }
 
+        /* 警告内容 */
         .warning-content {
-          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 16px;
+        }
+
+        .warning-icon {
+          color: #f59e0b;
         }
 
         .warning-content h3 {
@@ -2626,10 +2664,14 @@ const OtherProjectsPage: React.FC = () => {
         }
 
         .warning-content p {
-          font-size: 0.875rem;
-          color: #6b7280;
           margin: 0;
-          line-height: 1.5;
+          color: #374151;
+          line-height: 1.6;
+        }
+
+        .warning-text {
+          font-size: 14px;
+          color: #6b7280;
         }
       `}</style>
     </DashboardLayout>

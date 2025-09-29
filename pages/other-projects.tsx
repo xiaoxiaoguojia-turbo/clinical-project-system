@@ -554,8 +554,8 @@ const OtherProjectsPage: React.FC = () => {
       }, [])
     
       // 处理附件管理
-      const handleAttachments = useCallback((projectId: string) => {
-        router.push(`/attachments?projectId=${projectId}&projectType=${currentProjectType.key}`)
+      const handleAttachments = useCallback((projectId: string, projectName: string) => {
+        router.push(`/other-projects-attachments?projectId=${projectId}&projectType=${currentProjectType.key}&projectName=${projectName}`)
       }, [router, currentProjectType.key])
     
       // 处理AI报告生成（暂时禁用）
@@ -1152,7 +1152,7 @@ const OtherProjectsPage: React.FC = () => {
                                     <PencilIcon className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => project._id && handleAttachments(project._id)}
+                                    onClick={() => project._id && handleAttachments(project._id, project.name)}
                                     className="action-btn attachments"
                                     title="附件管理"
                                     disabled={!project._id}

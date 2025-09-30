@@ -12,6 +12,7 @@ import {
   BeakerIcon as PillIcon,
   WrenchScrewdriverIcon,
   CubeIcon,
+  RectangleStackIcon,
   EllipsisHorizontalIcon,
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline'
@@ -157,7 +158,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
             {
               id: 'medical-material',
               label: '医用材料',
-              icon: EllipsisHorizontalIcon,
+              icon: RectangleStackIcon,
               route: '/other-projects?type=medical-material',
               level: 3
             },

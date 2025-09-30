@@ -1283,7 +1283,7 @@ export default function InternalPreparationsPage() {
                               >
                                 {project.aiReport?.status === 'generating' ? (
                                   <>
-                                    <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"></div>
+                                    <div className="w-6 h-6 animate-spin rounded-full border-b-2 border-current"></div>
                                     <span className="ml-1 text-xs">生成中</span>
                                   </>
                                 ) : project.aiReport?.status === 'error' ? (
@@ -2413,20 +2413,68 @@ export default function InternalPreparationsPage() {
 
           .action-btn.ai-generate-btn {
             color: #f59e0b;
+            position: relative;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
           }
 
           .action-btn.ai-generate-btn:hover {
-            background: #fef3c7;
-            color: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4);
+          }
+
+          .action-btn.ai-generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+          }
+
+          .action-btn.ai-generate-btn.loading {
+            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+            animation: pulse 1s infinite;
           }
 
           .action-btn.ai-view-btn {
             color: #06b6d4;
+            position: relative;
           }
 
           .action-btn.ai-view-btn:hover {
             background: #cffafe;
             color: #0891b2;
+          }
+
+          .action-btn.ai-view-btn.has-report {
+            color: #f59e0b;
+          }
+
+          .action-btn.ai-view-btn.has-report:hover {
+            background: #d1fae5;
+            color: #047857;
+          }
+
+          .loading-spinner {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            border: 1px solid #d97706;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
           }
 
           .loading-row td {

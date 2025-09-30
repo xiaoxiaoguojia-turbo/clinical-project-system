@@ -446,12 +446,12 @@ export default function Dashboard() {
                       <span className="value">{card.value}</span>
                       <span className="unit">{card.unit}</span>
                     </div>
-                    {card.trend && (
+                    {/* {card.trend && (
                       <div className={`card-trend ${card.trend.isPositive ? 'positive' : 'negative'}`}>
                         <ArrowTrendingUpIcon className="w-4 h-4" />
                         <span>{card.trend.value}% {card.trend.label}</span>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
               ))}
@@ -461,19 +461,19 @@ export default function Dashboard() {
             <div className="charts-container">
               {getChartConfigs && (
                 <>
-                  <div className="chart-item" style={{ height: '300px' }}>
+                  <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">项目类型分布</h3>
                     <Bar data={getChartConfigs.projectTypes.data} options={getChartConfigs.projectTypes.options} />
                   </div>
-                  <div className="chart-item" style={{ height: '300px' }}>
+                  <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">部门分布</h3>
                     <Doughnut data={getChartConfigs.departments.data} options={getChartConfigs.departments.options} />
                   </div>
-                  <div className="chart-item" style={{ height: '300px' }}>
+                  <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">项目状态分布</h3>
                     <Bar data={getChartConfigs.status.data} options={getChartConfigs.status.options} />
                   </div>
-                  <div className="chart-item" style={{ height: '300px' }}>
+                  <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">重要程度分布</h3>
                     <Pie data={getChartConfigs.importance.data} options={getChartConfigs.importance.options} />
                   </div>
@@ -657,6 +657,8 @@ export default function Dashboard() {
           font-weight: 500;
           color: #64748b;
           line-height: 1.2;
+          white-space: nowrap;
+          margin-bottom: 18px;
         }
 
         .card-value {

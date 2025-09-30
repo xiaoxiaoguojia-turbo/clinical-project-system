@@ -5,7 +5,15 @@ import {
   ChevronRightIcon,
   ChartBarIcon,
   DocumentTextIcon,
-  BeakerIcon
+  BeakerIcon,
+  CpuChipIcon,
+  MagnifyingGlassIcon,
+  BoltIcon,
+  BeakerIcon as PillIcon,
+  WrenchScrewdriverIcon,
+  CubeIcon,
+  EllipsisHorizontalIcon,
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline'
 
 interface SideNavigationProps {
@@ -88,7 +96,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
     {
       id: 'dept-main',
       label: '转移转化与投资部门',
-      icon: ChartBarIcon,
+      icon: BuildingOfficeIcon,
       level: 1,
       children: [
         {
@@ -101,62 +109,62 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
         {
           id: 'project-types',
           label: '项目分类型',
-          icon: DocumentTextIcon,
+          icon: CubeIcon,
           level: 2,
           children: [
             {
               id: 'internal-preparations',
               label: '院内制剂',
-              icon: BeakerIcon,
+              icon: PillIcon,
               route: '/internal-preparations',
               level: 3
             },
             {
               id: 'ai-medical-research',
               label: 'AI医疗及系统研究',
-              icon: ChartBarIcon,
+              icon: CpuChipIcon,
               route: '/other-projects?type=ai-medical-research',
               level: 3
             },
             {
               id: 'diagnostic-detection',
               label: '检测诊断',
-              icon: ChartBarIcon,
+              icon: MagnifyingGlassIcon,
               route: '/other-projects?type=diagnostic-detection',
               level: 3
             },
             {
               id: 'cell-therapy',
               label: '细胞治疗',
-              icon: ChartBarIcon,
+              icon: BoltIcon,
               route: '/other-projects?type=cell-therapy',
               level: 3
             },
             {
               id: 'drug',
               label: '药物',
-              icon: ChartBarIcon,
+              icon: BeakerIcon,
               route: '/other-projects?type=drug',
               level: 3
             },
             {
               id: 'medical-device',
               label: '医疗器械',
-              icon: ChartBarIcon,
+              icon: WrenchScrewdriverIcon,
               route: '/other-projects?type=medical-device',
               level: 3
             },
             {
               id: 'medical-material',
               label: '医用材料',
-              icon: ChartBarIcon,
+              icon: EllipsisHorizontalIcon,
               route: '/other-projects?type=medical-material',
               level: 3
             },
             {
               id: 'other',
               label: '其他',
-              icon: ChartBarIcon,
+              icon: DocumentTextIcon,
               route: '/other-projects?type=other',
               level: 3
             }

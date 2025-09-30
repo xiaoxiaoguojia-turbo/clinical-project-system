@@ -438,7 +438,9 @@ export default function Dashboard() {
                   <div className="card-content">
                     <div className="card-header">
                       <h3 className="card-title">{card.title}</h3>
-                      <card.icon className="w-6 h-6" />
+                      <div className="card-icon">
+                        <card.icon className="w-6 h-6" />
+                      </div>
                     </div>
                     <div className="card-value">
                       <span className="value">{card.value}</span>
@@ -642,8 +644,12 @@ export default function Dashboard() {
         .card-header {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
+          align-items: center;
           margin-bottom: 16px;
+        }
+
+        .card-icon {
+          margin-left: 8px;
         }
 
         .card-title {

@@ -703,7 +703,7 @@ export default function Dashboard() {
         }
 
         .chart-item {
-          padding: 24px;
+          padding: 24px 24px 60px 24px;
           border-radius: 12px;
           border: 1px solid #d1d5db;
           background: white;

@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { CalendarIcon, FunnelIcon, ArrowDownTrayIcon, ChartBarIcon, UsersIcon } from '@heroicons/react/24/outline'
-import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
+import { 
+  CalendarIcon, 
+  FunnelIcon, 
+  ArrowDownTrayIcon, 
+  ChartBarIcon, 
+  UsersIcon,
+  BuildingOfficeIcon,
+  CubeIcon,
+  StarIcon,
+  ClockIcon,
+  ArrowTrendingUpIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline'
+
+/* ------------------------------------------------------------------------------------------ */
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -30,13 +43,48 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
   )
 })
 
-interface DashboardData {
-  totalProjects: number
-  activeProjects: number
-  completedProjects: number
-  projectTypeCount: number
-  chargePersonCount: number
-}
+// Chart.js动态导入 - 修复导入方式
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Bar })), { ssr: false })
+const Doughnut = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Doughnut })), { ssr: false })
+const Pie = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Pie })), { ssr: false })
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+
+// 注册Chart.js组件
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+)
+
+/* ------------------------------------------------------------------------------------------ */
+
+import { TokenManager } from '@/utils/auth'
+import { 
+  DashboardStats, 
+  DashboardFilters, 
+  StatCard as StatCardType,
+  CHART_COLORS 
+} from '@/types/dashboard'
+
+/* ------------------------------------------------------------------------------------------ */
 
 interface StatCard {
   title: string
@@ -44,55 +92,47 @@ interface StatCard {
   unit: string
   icon: React.ComponentType<any>
   color: string
-  trend: string
-  trendLabel: string
+  trend?: {
+    value: number
+    isPositive: boolean
+    label: string
+  }
 }
 
+/* ------------------------------------------------------------------------------------------ */
+
 export default function Dashboard() {
-  /* ------------------------------------------------------------------------------------------ */
-  // 状态管理
+  // 基础状态
   const [mounted, setMounted] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState('本月')
-  const [projectType, setProjectType] = useState('全部项目')
-  const [dashboardData, setDashboardData] = useState<DashboardData>({
-    totalProjects: 0,
-    activeProjects: 0,
-    completedProjects: 0,
-    projectTypeCount: 0,
-    chargePersonCount: 0
+  const [refreshing, setRefreshing] = useState(false)
+  
+  // 数据状态
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null)
+  
+  // 筛选状态  
+  const [filters, setFilters] = useState<DashboardFilters>({
+    timeRange: 'all',
+    projectTypes: [],
+    departments: []
   })
-  const [charts, setCharts] = useState<{[key: string]: any}>({})
-  /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
-  // 认证检查和数据加载
+
+  // 认证检查
   useEffect(() => {
     setMounted(true)
     
     const checkAuth = async () => {
       try {
-        const { TokenManager } = await import('@/utils/auth')
-        
         if (!TokenManager.isAuthenticated()) {
           window.location.href = '/login'
           return
         }
         
         setIsAuthenticated(true)
-        
-        // 模拟数据加载延迟
-        setTimeout(() => {
-          setDashboardData({
-            totalProjects: 8,
-            activeProjects: 5,
-            completedProjects: 1,
-            projectTypeCount: 3,
-            chargePersonCount: 4
-          })
-          setLoading(false)
-        }, 1000)
+        await loadDashboardData()
       } catch (error) {
         console.error('认证检查失败:', error)
         window.location.href = '/login'
@@ -102,377 +142,354 @@ export default function Dashboard() {
     checkAuth()
   }, [])
 
-  // 图表初始化
+  // 筛选变化时重新加载数据
   useEffect(() => {
-    if (!loading && typeof window !== 'undefined') {
-      initializeCharts()
+    if (isAuthenticated && mounted) {
+      loadDashboardData()
     }
-  }, [loading])
+  }, [filters, isAuthenticated, mounted])
 
-  // 清理图表
-  useEffect(() => {
-    return () => {
-      Object.values(charts).forEach((chart: any) => {
-        if (chart && typeof chart.destroy === 'function') {
-          chart.destroy()
+  /* ------------------------------------------------------------------------------------------ */
+
+  // 加载Dashboard数据
+  const loadDashboardData = async () => {
+    try {
+      console.log('🔄 开始加载Dashboard数据...')
+      setLoading(true)
+      
+      const params = new URLSearchParams()
+      params.append('timeRange', filters.timeRange)
+      
+      if (filters.projectTypes && filters.projectTypes.length > 0) {
+        params.append('projectTypes', filters.projectTypes.join(','))
+      }
+      
+      if (filters.departments && filters.departments.length > 0) {
+        params.append('departments', filters.departments.join(','))
+      }
+
+      const token = TokenManager.getToken()
+      const response = await fetch(`/api/dashboard/stats?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       })
-    }
-  }, [charts])
-  /* ------------------------------------------------------------------------------------------ */
 
-  /* ------------------------------------------------------------------------------------------ */
-  // 图表初始化函数
-  const initializeCharts = async () => {
-    try {
-      // 动态导入 Chart.js
-      const Chart = (await import('chart.js/auto')).default
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
       
-      const chartConfigs = getChartConfigs()
-      const newCharts: {[key: string]: any} = {}
-
-      // 添加延迟确保DOM元素已渲染
-      setTimeout(() => {
-        Object.entries(chartConfigs).forEach(([key, config]) => {
-          const canvas = document.getElementById(key) as HTMLCanvasElement
-          if (canvas) {
-            const ctx = canvas.getContext('2d')
-            if (ctx) {
-              newCharts[key] = new Chart(ctx, config as any)
-            }
-          }
-        })
-        setCharts(newCharts)
-      }, 100)
+      if (result.success) {
+        console.log('✅ Dashboard数据加载成功:', result.data)
+        setDashboardData(result.data)
+      } else {
+        console.error('❌ Dashboard数据加载失败:', result.error)
+        alert('加载统计数据失败: ' + result.error)
+      }
     } catch (error) {
-      console.error('图表初始化失败:', error)
+      console.error('❌ Dashboard数据加载异常:', error)
+      alert('加载统计数据失败，请重试')
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
     }
   }
 
-  const getChartConfigs = () => {
-    return {
-      projectStatusChart: {
-        type: 'doughnut' as const,
-        data: {
-          labels: ['进行中', '已完成', '已暂停'],
-          datasets: [{
-            data: [5, 1, 2],
-            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
-            borderWidth: 0,
-            cutout: '60%'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom' as const,
-              labels: { padding: 20, usePointStyle: true }
-            }
-          }
+  // 刷新数据
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await loadDashboardData()
+  }
+
+  // 处理筛选变化
+  const handleFilterChange = (newFilters: Partial<DashboardFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }
+
+  /* ------------------------------------------------------------------------------------------ */
+
+  // 生成统计卡片数据
+  const getStatCards = (): StatCard[] => {
+    if (!dashboardData) return []
+
+    const { overview, otherProjects, trends } = dashboardData
+
+    return [
+      {
+        title: '项目总数',
+        value: overview.totalProjects,
+        unit: '个',
+        icon: CubeIcon,
+        color: 'blue',
+        trend: {
+          value: trends.growth.totalGrowth,
+          isPositive: trends.growth.totalGrowth >= 0,
+          label: '年度增长'
         }
       },
-      completionTrendChart: {
-        type: 'line' as const,
-        data: {
-          labels: ['4月', '5月', '6月', '7月', '8月', '9月'],
-          datasets: [{
-            label: '完成率',
-            data: [65, 72, 68, 96, 82, 78],
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-              ticks: { callback: (value: any) => value + '%' }
-            }
-          }
-        }
+      {
+        title: '院内制剂',
+        value: overview.byProjectType.find(item => item.label === '院内制剂')?.value || 0,
+        unit: '个',
+        icon: BuildingOfficeIcon,
+        color: 'green'
       },
-      typeProjectsChart: {
-        type: 'bar' as const,
-        data: {
-          labels: ['院内制剂', 'AI医疗及系统研究', '检测诊断', '细胞治疗', '药物', '医疗器械', '医用材料', '其他'],
-          datasets: [{
-            label: '项目数量',
-            data: [6, 2, 0, 0, 0, 0, 0, 0],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b'],
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
+      {
+        title: '其他项目',
+        value: otherProjects.totalOtherProjects,
+        unit: '个',
+        icon: ChartBarIcon,
+        color: 'purple'
       },
-      sourceProjectsChart: {
-        type: 'bar' as const,
-        data: {
-          labels: ['123', '岳阳医院', '中医科', '曙光医院', '上海皮肤病医院'],
-          datasets: [{
-            label: '项目数量',
-            data: [1, 2, 1, 2, 2],
-            backgroundColor: '#8b5cf6',
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
+      {
+        title: '平均跟进',
+        value: otherProjects.averageFollowUpWeeks || 0,
+        unit: '周',
+        icon: ClockIcon,
+        color: 'orange'
+      }
+    ]
+  }
+
+  // 生成图表配置数据
+  const getChartConfigs = useMemo(() => {
+    if (!dashboardData) return null
+
+    const { overview } = dashboardData
+
+    // 简化的图表配置
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false as const, // 修复类型：使用字面值类型
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom' as const,
+          labels: {
+            padding: 15,
+            usePointStyle: true,
+            font: { size: 11 }
           }
         }
       }
     }
-  }
-  /* ------------------------------------------------------------------------------------------ */
 
-  /* ------------------------------------------------------------------------------------------ */
-  // 事件处理函数
-  const handleExport = () => {
-    console.log('导出数据功能开发中...')
-  }
+    return {
+      // 项目类型分布 - 柱状图
+      projectTypes: {
+        data: {
+          labels: overview.byProjectType.map(item => item.label),
+          datasets: [{
+            label: '项目数量',
+            data: overview.byProjectType.map(item => item.value),
+            backgroundColor: CHART_COLORS.projectType.slice(0, overview.byProjectType.length),
+            borderWidth: 1,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          ...baseOptions,
+          plugins: {
+            ...baseOptions.plugins,
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      },
 
-  const handleChartAction = (chartId: string) => {
-    console.log(`图表操作: ${chartId}`)
-  }
-  /* ------------------------------------------------------------------------------------------ */
+      // 部门分布 - 环形图
+      departments: {
+        data: {
+          labels: overview.byDepartment.map(item => item.label),
+          datasets: [{
+            data: overview.byDepartment.map(item => item.value),
+            backgroundColor: CHART_COLORS.department.slice(0, overview.byDepartment.length),
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          ...baseOptions,
+          cutout: '50%'
+        }
+      },
 
-  /* ------------------------------------------------------------------------------------------ */
-  // 数据处理
-  const statisticCards: StatCard[] = [
-    {
-      title: '总项目数',
-      value: dashboardData.totalProjects,
-      unit: '个',
-      icon: ChartBarIcon,
-      color: 'blue',
-      trend: '+3',
-      trendLabel: '较上月'
-    },
-    {
-      title: '进行中项目',
-      value: dashboardData.activeProjects,
-      unit: '个',
-      icon: ChartBarIcon,
-      color: 'green',
-      trend: '+2',
-      trendLabel: '较上月'
-    },
-    {
-      title: '已完成项目',
-      value: dashboardData.completedProjects,
-      unit: '个',
-      icon: CalendarIcon,
-      color: 'orange',
-      trend: '+2',
-      trendLabel: '较上月'
-    },
-    {
-      title: '项目类型数量',
-      value: dashboardData.projectTypeCount,
-      unit: '类',
-      icon: UsersIcon,
-      color: 'cyan',
-      trend: '+0',
-      trendLabel: '较上月'
-    },
-    {
-      title: '负责人员',
-      value: dashboardData.chargePersonCount,
-      unit: '人',
-      icon: UsersIcon,
-      color: 'pink',
-      trend: '+3',
-      trendLabel: '较上月'
+      // 项目状态分布 - 柱状图
+      status: {
+        data: {
+          labels: overview.byStatus.map(item => item.label),
+          datasets: [{
+            label: '项目数量',
+            data: overview.byStatus.map(item => item.value),
+            backgroundColor: CHART_COLORS.status.slice(0, overview.byStatus.length),
+            borderWidth: 1,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          ...baseOptions,
+          plugins: {
+            ...baseOptions.plugins,
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      },
+
+      // 重要程度分布 - 饼图
+      importance: {
+        data: {
+          labels: overview.byImportance.map(item => item.label),
+          datasets: [{
+            data: overview.byImportance.map(item => item.value),
+            backgroundColor: CHART_COLORS.importance.slice(0, overview.byImportance.length),
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          }]
+        },
+        options: baseOptions
+      }
     }
-  ]
+  }, [dashboardData])
 
-  const getCardColorClasses = (color: string) => {
-    const colorMap = {
-      blue: { bg: 'bg-blue-50', border: 'border-blue-200', icon: 'text-blue-600', trend: 'text-blue-600' },
-      green: { bg: 'bg-green-50', border: 'border-green-200', icon: 'text-green-600', trend: 'text-green-600' },
-      purple: { bg: 'bg-purple-50', border: 'border-purple-200', icon: 'text-purple-600', trend: 'text-purple-600' },
-      orange: { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'text-orange-600', trend: 'text-orange-600' },
-      cyan: { bg: 'bg-cyan-50', border: 'border-cyan-200', icon: 'text-cyan-600', trend: 'text-cyan-600' },
-      pink: { bg: 'bg-pink-50', border: 'border-pink-200', icon: 'text-pink-600', trend: 'text-pink-600' }
-    }
-    return colorMap[color as keyof typeof colorMap] || colorMap.blue
-  }
   /* ------------------------------------------------------------------------------------------ */
 
-  // 在组件挂载前显示加载状态
-  if (!mounted) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f8fafc'
-      }}>
-        <div style={{ textAlign: 'center', color: '#6b7280' }}>
-          <div style={{ 
-            width: '40px', 
-            height: '40px', 
-            border: '4px solid #e5e7eb',
-            borderTopColor: '#3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }}></div>
-          <p>初始化系统...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // 认证失败或正在重定向
-  if (!isAuthenticated) {
+  if (!mounted || !isAuthenticated) {
     return null
   }
 
   return (
-    <DashboardLayout title="总项目报表统计 - 临床创新项目管理系统">
+    <DashboardLayout title="数据统计">
       <div className="dashboard-page">
-        {/* 页面标题和操作区域 */}
+        {/* 页面头部 */}
         <div className="page-header">
-          <div className="title-section">
-            <h1>总项目报表统计</h1>
-            <p>欢迎回来，系统管理员！这里是您的总体项目数据统计。</p>
-          </div>
-          <div className="action-section">
-            <button className="export-button" onClick={handleExport}>
-              <ArrowDownTrayIcon className="w-4 h-4" />
-              导出报告
-            </button>
+          <div className="header-content">
+            <div className="title-section">
+              <h1 className="page-title">数据统计</h1>
+              <p className="page-subtitle">
+                项目管理系统统计分析 {dashboardData && `· 更新于 ${new Date(dashboardData.lastUpdated).toLocaleString('zh-CN')}`}
+              </p>
+            </div>
+            
+            <div className="header-actions">
+              <button
+                onClick={handleRefresh}
+                disabled={loading || refreshing}
+                className="refresh-button"
+              >
+                <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? '刷新中' : '刷新数据'}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* 统计卡片区域 */}
-        <div className="stats-grid">
-          {statisticCards.map((card, index) => {
-            const colors = getCardColorClasses(card.color)
-            const IconComponent = card.icon
-            
-            return (
-              <div key={index} className={`stat-card ${colors.bg} ${colors.border}`}>
-                <div className="card-header">
-                  <div className="card-title">{card.title}</div>
-                  <div className={`card-icon ${colors.icon}`}>
-                    <IconComponent className="w-6 h-6" />
-                  </div>
-                </div>
-                <div className="card-body">
-                  <div className="card-value">
-                    {loading ? (
-                      <div className="loading-placeholder">--</div>
-                    ) : (
-                      <>
-                        <span className="value-number">{card.value}</span>
-                        <span className="value-unit">{card.unit}</span>
-                      </>
+        {/* 筛选控制栏 */}
+        <div className="filter-bar">
+          <div className="filter-section">
+            <div className="filter-item">
+              <CalendarIcon className="w-4 h-4 text-gray-400" />
+              <select
+                value={filters.timeRange}
+                onChange={(e) => handleFilterChange({ timeRange: e.target.value as any })}
+                className="filter-select"
+              >
+                <option value="all">全部时间</option>
+                <option value="thisYear">今年</option>
+                <option value="thisMonth">本月</option>
+                <option value="lastMonth">上月</option>
+              </select>
+            </div>
+
+            <div className="filter-item">
+              <FunnelIcon className="w-4 h-4 text-gray-400" />
+              <span className="filter-label">筛选条件</span>
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-content">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">正在加载统计数据...</p>
+            </div>
+          </div>
+        ) : dashboardData ? (
+          <>
+            {/* 统计卡片网格 */}
+            <div className="stats-grid">
+              {getStatCards().map((card, index) => (
+                <div key={index} className={`stat-card ${card.color}`}>
+                  <div className="card-content">
+                    <div className="card-header">
+                      <h3 className="card-title">{card.title}</h3>
+                      <card.icon className="w-6 h-6" />
+                    </div>
+                    <div className="card-value">
+                      <span className="value">{card.value}</span>
+                      <span className="unit">{card.unit}</span>
+                    </div>
+                    {card.trend && (
+                      <div className={`card-trend ${card.trend.isPositive ? 'positive' : 'negative'}`}>
+                        <ArrowTrendingUpIcon className="w-4 h-4" />
+                        <span>{card.trend.value}% {card.trend.label}</span>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* 图表展示区域 */}
-        <div className="charts-section">
-          {/* 第一行图表 */}
-          <div className="charts-container">
-            <div className="chart-box">
-              <div className="chart-header">
-                <h3>项目状态分布</h3>
-                <div className="chart-actions">
-                  <button onClick={() => handleChartAction('projectStatusChart')}>
-                    <EllipsisVerticalIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="chart-container">
-                <canvas id="projectStatusChart"></canvas>
-              </div>
+              ))}
             </div>
-            <div className="chart-box">
-              <div className="chart-header">
-                <h3>项目完成率趋势</h3>
-                <div className="chart-actions">
-                  <button onClick={() => handleChartAction('completionTrendChart')}>
-                    <EllipsisVerticalIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="chart-container">
-                <canvas id="completionTrendChart"></canvas>
-              </div>
+
+            {/* 图表容器 */}
+            <div className="charts-container">
+              {getChartConfigs && (
+                <>
+                  <div className="chart-item" style={{ height: '300px' }}>
+                    <h3 className="chart-title">项目类型分布</h3>
+                    <Bar data={getChartConfigs.projectTypes.data} options={getChartConfigs.projectTypes.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '300px' }}>
+                    <h3 className="chart-title">部门分布</h3>
+                    <Doughnut data={getChartConfigs.departments.data} options={getChartConfigs.departments.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '300px' }}>
+                    <h3 className="chart-title">项目状态分布</h3>
+                    <Bar data={getChartConfigs.status.data} options={getChartConfigs.status.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '300px' }}>
+                    <h3 className="chart-title">重要程度分布</h3>
+                    <Pie data={getChartConfigs.importance.data} options={getChartConfigs.importance.options} />
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="error-container">
+            <div className="error-content">
+              <h3>数据加载失败</h3>
+              <p>无法获取统计数据，请重试</p>
+              <button onClick={handleRefresh} className="retry-button">
+                重新加载
+              </button>
             </div>
           </div>
-
-          {/* 第二行图表 */}
-          <div className="charts-container">
-            <div className="chart-box">
-              <div className="chart-header">
-                <h3>各分类型项目数量</h3>
-                <div className="chart-actions">
-                  <button onClick={() => handleChartAction('typeProjectsChart')}>
-                    <EllipsisVerticalIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="chart-container">
-                <canvas id="typeProjectsChart"></canvas>
-              </div>
-            </div>
-            <div className="chart-box">
-              <div className="chart-header">
-                <h3>项目来源分布</h3>
-                <div className="chart-actions">
-                  <button onClick={() => handleChartAction('sourceProjectsChart')}>
-                    <EllipsisVerticalIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="chart-container">
-                <canvas id="sourceProjectsChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       <style jsx>{`
@@ -493,27 +510,40 @@ export default function Dashboard() {
           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
-        .title-section h1 {
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        }
+
+        .title-section {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .page-title {
           font-size: 28px;
           font-weight: bold;
           color: #1a202c;
           margin: 0 0 8px 0;
         }
 
-        .title-section p {
+        .page-subtitle {
           font-size: 16px;
           color: #64748b;
           margin: 0;
           line-height: 1.5;
         }
 
-        .action-section {
+        .header-actions {
           display: flex;
           gap: 12px;
           margin-top: 20px;
         }
 
-        .export-button {
+        .refresh-button {
           display: flex;
           align-items: center;
           gap: 8px;
@@ -529,19 +559,26 @@ export default function Dashboard() {
           box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
         }
 
-        .export-button:hover {
+        .refresh-button:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .filter-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+          background: white;
+          padding: 20px 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
         .filter-section {
           display: flex;
           gap: 24px;
-          background: white;
-          padding: 20px 24px;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          margin-bottom: 42px;
+          align-items: center;
         }
 
         .filter-item {
@@ -596,6 +633,12 @@ export default function Dashboard() {
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
+        .card-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
         .card-header {
           display: flex;
           justify-content: space-between;
@@ -610,47 +653,38 @@ export default function Dashboard() {
           line-height: 1.2;
         }
 
-        .card-icon {
-          padding: 8px;
-          border-radius: 8px;
-          background: white;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-body {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-        }
-
         .card-value {
           display: flex;
           align-items: baseline;
           gap: 4px;
         }
 
-        .value-number {
+        .value {
           font-size: 32px;
           font-weight: bold;
           color: #1a202c;
           line-height: 1;
         }
 
-        .value-unit {
+        .unit {
           font-size: 14px;
           color: #64748b;
           font-weight: 500;
         }
 
-        .loading-placeholder {
-          font-size: 32px;
-          font-weight: bold;
-          color: #cbd5e1;
-          line-height: 1;
+        .card-trend {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 8px;
         }
 
-        .charts-section {
-          margin-top: 40px;
+        .card-trend.positive {
+          color: #10b981;
+        }
+
+        .card-trend.negative {
+          color: #ef4444;
         }
 
         .charts-container {
@@ -660,86 +694,323 @@ export default function Dashboard() {
           margin-bottom: 24px;
         }
 
-        .chart-box {
-          background: white;
+        .chart-item {
+          padding: 24px;
           border-radius: 12px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-          transition: all 0.2s ease;
+          border: 1px solid #d1d5db;
+          background: white;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
-        .chart-box:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .chart-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 20px 24px 16px;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .chart-header h3 {
-          font-size: 16px;
+        .chart-title {
+          font-size: 18px;
           font-weight: 600;
-          color: #1a202c;
+          color: #374151;
+          margin: 0 0 16px 0;
+        }
+
+        .loading-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 400px;
+        }
+
+        .loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          border: 1px solid #d1d5db;
+          border-radius: 12px;
+          background: white;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #e5e7eb;
+          border-top-color: #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 16px;
+        }
+
+        .loading-text {
+          font-size: 16px;
+          color: #64748b;
           margin: 0;
         }
 
-        .chart-actions button {
+        .error-container {
           display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 400px;
+        }
+
+        .error-content {
+          display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          width: 32px;
-          height: 32px;
+          padding: 40px;
+          border: 1px solid #d1d5db;
+          border-radius: 12px;
+          background: white;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          text-align: center;
+        }
+
+        .error-content h3 {
+          font-size: 18px;
+          font-weight: 600;
+          color: #374151;
+          margin: 0 0 8px 0;
+        }
+
+        .error-content p {
+          font-size: 14px;
+          color: #6b7280;
+          margin: 0 0 24px 0;
+        }
+
+        .retry-button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
           border: none;
-          background: transparent;
-          border-radius: 6px;
-          color: #64748b;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
         }
 
-        .chart-actions button:hover {
-          background: #f1f5f9;
-          color: #374151;
+        .retry-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
         }
 
-        .chart-container {
-          padding: 16px 24px 24px;
-          height: 300px;
-          position: relative;
+        /* 统计卡片颜色主题 */
+        .stat-card.blue {
+          background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+          border: 2px solid #bfdbfe;
         }
 
-        .chart-container canvas {
-          width: 100% !important;
-          height: 100% !important;
+        .stat-card.blue .card-title {
+          color: #1e40af;
+        }
+
+        .stat-card.blue .card-header svg {
+          color: #3b82f6;
+        }
+
+        .stat-card.blue .value {
+          color: #1e3a8a;
+        }
+
+        .stat-card.green {
+          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          border: 2px solid #a7f3d0;
+        }
+
+        .stat-card.green .card-title {
+          color: #065f46;
+        }
+
+        .stat-card.green .card-header svg {
+          color: #10b981;
+        }
+
+        .stat-card.green .value {
+          color: #064e3b;
+        }
+
+        .stat-card.purple {
+          background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
+          border: 2px solid #c4b5fd;
+        }
+
+        .stat-card.purple .card-title {
+          color: #6b21a8;
+        }
+
+        .stat-card.purple .card-header svg {
+          color: #8b5cf6;
+        }
+
+        .stat-card.purple .value {
+          color: #581c87;
+        }
+
+        .stat-card.orange {
+          background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+          border: 2px solid #fdba74;
+        }
+
+        .stat-card.orange .card-title {
+          color: #c2410c;
+        }
+
+        .stat-card.orange .card-header svg {
+          color: #f97316;
+        }
+
+        .stat-card.orange .value {
+          color: #9a3412;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
 
         @media (max-width: 768px) {
+          .dashboard-page {
+            padding: 16px;
+          }
+
           .page-header {
             flex-direction: column;
             gap: 16px;
             align-items: stretch;
           }
 
-          .filter-section {
+          .header-content {
             flex-direction: column;
             gap: 16px;
             align-items: stretch;
           }
 
+          .header-actions {
+            margin-top: 0;
+            justify-content: center;
+          }
+
+          .filter-bar {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+          }
+
+          .filter-section {
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+
           .stats-grid {
             grid-template-columns: 1fr;
+            gap: 16px;
+          }
+
+          .stat-card {
+            padding: 20px;
+          }
+
+          .card-header {
+            margin-bottom: 12px;
+          }
+
+          .card-title {
+            font-size: 16px;
+          }
+
+          .value {
+            font-size: 28px;
+          }
+
+          .unit {
+            font-size: 12px;
           }
 
           .charts-container {
             grid-template-columns: 1fr;
           }
 
-          .chart-container {
-            height: 250px;
+          .loading-container,
+          .error-container {
+            height: 300px;
+          }
+
+          .loading-content,
+          .error-content {
+            padding: 24px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .dashboard-page {
+            padding: 12px;
+          }
+
+          .page-header {
+            padding: 16px;
+          }
+
+          .page-title {
+            font-size: 24px;
+          }
+
+          .page-subtitle {
+            font-size: 14px;
+          }
+
+          .filter-bar {
+            padding: 16px;
+          }
+
+          .filter-item {
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+          }
+
+          .filter-select {
+            width: 100%;
+            min-width: 120px;
+          }
+
+          .stat-card {
+            padding: 16px;
+          }
+
+          .card-header {
+            margin-bottom: 8px;
+          }
+
+          .card-title {
+            font-size: 14px;
+          }
+
+          .value {
+            font-size: 24px;
+          }
+
+          .card-trend {
+            font-size: 12px;
+          }
+
+          .refresh-button,
+          .retry-button {
+            padding: 10px 20px;
+            font-size: 13px;
+          }
+
+          .chart-item {
+            padding: 20px;
+          }
+
+          .chart-title {
+            font-size: 16px;
           }
         }
 

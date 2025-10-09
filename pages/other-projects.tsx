@@ -1017,7 +1017,7 @@ const OtherProjectsPage: React.FC = () => {
 
                       {/* 状态筛选 */}
                       <div className="filter-group">
-                        <FunnelIcon className="w-4 h-4" />
+                        <FunnelIcon className="w-5 h-5" />
                         <select
                           value={filters.status}
                           onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
@@ -1033,7 +1033,7 @@ const OtherProjectsPage: React.FC = () => {
 
                       {/* 重要程度筛选 */}
                       <div className="filter-group">
-                        <StarIcon className="w-4 h-4" />
+                        <StarIcon className="w-5 h-5" />
                         <select
                           value={filters.importance}
                           onChange={(e) => setFilters(prev => ({ ...prev, importance: e.target.value }))}
@@ -1049,7 +1049,7 @@ const OtherProjectsPage: React.FC = () => {
 
                       {/* 负责人筛选 */}
                       <div className="filter-group">
-                        <UserIcon className="w-4 h-4" />
+                        <UserIcon className="w-5 h-5" />
                         <select
                           value={filters.leader}
                           onChange={(e) => setFilters(prev => ({ ...prev, leader: e.target.value }))}

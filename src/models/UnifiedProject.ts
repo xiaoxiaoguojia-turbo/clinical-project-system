@@ -59,12 +59,12 @@ export interface IUnifiedProject {
   status: string
   
   // 院内制剂特有字段
-  composition?: string                    // 组方
-  function?: string                       // 功能
-  specification?: string                  // 规格
-  duration?: string                       // 年限
+  composition?: string                   // 组方
+  function?: string                      // 功能
+  specification?: string                 // 规格
+  duration?: string                      // 年限
   dosage?: string                        // 用量
-  recordNumber?: string                   // 备案号
+  recordNumber?: string                  // 备案号
   remarks?: string                       // 备注
   
   // 其他类型特有字段

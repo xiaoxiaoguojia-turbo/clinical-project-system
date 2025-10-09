@@ -23,7 +23,8 @@ import {
   PaperClipIcon,
   SparklesIcon,
   DocumentTextIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 import { 
   ApiResponse, 
@@ -1007,13 +1008,16 @@ export default function InternalPreparationsPage() {
       <div className="preparations-page">
         {/* 页面头部 */}
         <div className="page-header">
-          <div className="title-section">
-            <h1>院内制剂管理</h1>
-            <p>院内制剂项目的统计分析与项目管理</p>
-          </div>
-          <div className="action-section">
-            <button className="export-button" onClick={handleExport}>
-              <ArrowDownTrayIcon className="w-4 h-4" />
+          <div className="header-content">
+            <div className="title-section">
+              <h1>院内制剂管理</h1>
+              <p>院内制剂项目的统计分析与项目管理</p>
+            </div>
+            <button 
+              className="export-button"
+              onClick={handleExport}
+            >
+              <ArrowDownTrayIcon className="w-5 h-5" />
               导出数据
             </button>
           </div>
@@ -1025,14 +1029,14 @@ export default function InternalPreparationsPage() {
             className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
             onClick={() => handleTabChange('statistics')}
           >
-            <ChartBarIcon className="w-4 h-4" />
+            <ChartBarIcon className="w-5 h-5" />
             统计报表
           </button>
           <button 
             className={`tab-button ${activeTab === 'projects' ? 'active' : ''}`}
             onClick={() => handleTabChange('projects')}
           >
-            <ClipboardDocumentListIcon className="w-4 h-4" />
+            <ClipboardDocumentListIcon className="w-5 h-5" />
             项目列表
           </button>
         </div>
@@ -1149,7 +1153,7 @@ export default function InternalPreparationsPage() {
               </div>
               <div className="action-section-2">
                 <button className="create-button" onClick={handleCreateProject}>
-                  <PlusIcon className="w-4 h-4" />
+                  <PlusIcon className="w-5 h-5" />
                   新建项目
                 </button>
               </div>
@@ -1159,7 +1163,7 @@ export default function InternalPreparationsPage() {
             <div className="filter-bar">
               <div className="filter-controls">
                 <div className="filter-item">
-                  <FunnelIcon className="w-4 h-4 filter-icon" />
+                  <FunnelIcon className="w-5 h-5 filter-icon" />
                   <select 
                     value={projectStatusFilter} 
                     onChange={handleProjectStatusFilterChange}
@@ -1172,7 +1176,7 @@ export default function InternalPreparationsPage() {
                   </select>
                 </div>
                 <div className="filter-item">
-                  <BuildingOffice2Icon className="w-4 h-4 filter-icon" />
+                  <BuildingOffice2Icon className="w-5 h-5 filter-icon" />
                   <select 
                     value={sourceFilter} 
                     onChange={handleSourceFilterChange}
@@ -1185,7 +1189,12 @@ export default function InternalPreparationsPage() {
                   </select>
                 </div>
               </div>
-              <button className="refresh-button" onClick={handleRefreshData}>
+              <button
+                className="refresh-button" 
+                onClick={handleRefreshData}
+                disabled={projectsLoading}
+              >
+                <ArrowPathIcon className="w-4 h-4" />
                 刷新数据
               </button>
             </div>
@@ -1829,16 +1838,24 @@ export default function InternalPreparationsPage() {
             min-height: 100vh;
           }
 
-          /* 页面头部 */
+          /* 页面头部样式 */
           .page-header {
+            margin-bottom: 32px;
+          }
+
+          .header-content {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 32px;
             background: white;
-            padding: 36px;
+            padding: 24px;
             border-radius: 12px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          }
+
+          .title-section {
+            flex: 1;
           }
 
           .title-section h1 {
@@ -1853,13 +1870,7 @@ export default function InternalPreparationsPage() {
             color: #64748b;
             margin: 0;
           }
-
-          .action-section {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-          }
-
+          
           .action-section-2 {
             display: flex;
             gap: 12px;
@@ -1880,6 +1891,7 @@ export default function InternalPreparationsPage() {
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+            margin-top: 17px;
           }
 
           .export-button:hover {
@@ -1890,40 +1902,50 @@ export default function InternalPreparationsPage() {
           /* 标签栏 */
           .tab-bar {
             display: flex;
+            padding: 0 16px;
             background: white;
-            border-radius: 12px;
-            padding: 6px;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border-radius: 8px 8px 0 0;
+            border-bottom: 2px solid #e5e7eb;
             margin-bottom: 32px;
-            gap: 4px;
+
+            // box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            // border-radius: 12px;
+            // padding: 6px;
+            // gap: 4px;
           }
 
           .tab-button {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 24px;
+            background: none;
             border: none;
-            background: transparent;
-            color: #64748b;
-            border-radius: 8px;
+            padding: 16px 24px;
             font-size: 14px;
             font-weight: 500;
+            color: #6b7280;
             cursor: pointer;
-            transition: all 0.2s ease;
-            flex: 1;
-            justify-content: center;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+
+            // padding: 12px 24px;
+            // border: none;
+            // background: transparent;
+            // color: #64748b;
+            // border-radius: 8px;
+            // transition: all 0.2s ease;
+            // flex: 1;
+            // justify-content: center;
           }
 
           .tab-button:hover {
-            background: #f1f5f9;
-            color: #334155;
+            color: #3b82f6;
+            background: #f3f4f6;
           }
 
           .tab-button.active {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
           }
 
           /* 筛选控制栏 */
@@ -1971,19 +1993,23 @@ export default function InternalPreparationsPage() {
           }
 
           .refresh-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             padding: 8px 16px;
-            background: #f8fafc;
+            background: #3b82f6;
             border: 1px solid #e2e8f0;
-            color: #64748b;
+            color: white;
             border-radius: 6px;
             font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
           }
 
           .refresh-button:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
           }
 
           /* 统计卡片网格 */

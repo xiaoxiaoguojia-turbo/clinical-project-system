@@ -759,7 +759,7 @@ const OtherProjectsPage: React.FC = () => {
         </div>
 
         {/* 内容区域 */}
-        <div className="main-content">
+        {/* <div className="main-content"> */}
           {loading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
@@ -1240,7 +1240,7 @@ const OtherProjectsPage: React.FC = () => {
               )}
             </>
           )}
-        </div>
+        {/* </div> */}
 
         {/* 创建/编辑项目模态框 */}
         {(showCreateModal || showEditModal) && (
@@ -1637,13 +1637,13 @@ const OtherProjectsPage: React.FC = () => {
           background: #3b82f6;
           color: white;
           border: none;
+          padding: 12px 24px;
           border-radius: 8px;
-          padding: 12px 20px;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
-          margin-top: 20px;
+          transition: all 0.2s ease;
+          margin-top: 17px;
         }
 
         .create-button:hover {
@@ -1655,11 +1655,11 @@ const OtherProjectsPage: React.FC = () => {
         /* 标签栏样式 */
         .tab-bar {
           display: flex;
-          border-bottom: 2px solid #e5e7eb;
-          margin-bottom: 32px;
+          padding: 0 16px;
           background: white;
           border-radius: 8px 8px 0 0;
-          padding: 0 16px;
+          border-bottom: 2px solid #e5e7eb;
+          margin-bottom: 32px;
         }
 
         .tab-button {
@@ -1732,7 +1732,7 @@ const OtherProjectsPage: React.FC = () => {
         /* ------------------------------------------------------------------------------------------ */
         /* 统计报表样式 */
         .statistics-content {
-          padding: 24px;
+          // padding: 24px;
         }
 
         .metrics-grid {
@@ -2041,7 +2041,7 @@ const OtherProjectsPage: React.FC = () => {
         /* ------------------------------------------------------------------------------------------ */
         /* 项目列表样式 */
         .projects-content {
-          padding: 24px;
+          // padding: 24px;
         }
 
         .filter-section {

@@ -505,7 +505,7 @@ export default function UsersPage() {
           </div>
           <div className="filter-controls">
             <div className="filter-item">
-              <FunnelIcon className="w-4 h-4" />
+              <FunnelIcon className="w-5 h-5" />
               <select value={roleFilter} onChange={handleRoleFilterChange} className="filter-select">
                 <option value="all">全部角色</option>
                 <option value="admin">管理员</option>
@@ -1053,7 +1053,7 @@ export default function UsersPage() {
           cursor: pointer;
           transition: all 0.2s ease;
           box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-          margin-top: 20px;
+          margin-top: 17px;
         }
 
         .create-button:hover {

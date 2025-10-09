@@ -384,22 +384,19 @@ export default function Dashboard() {
                 项目管理系统统计分析 {dashboardData && `· 更新于 ${new Date(dashboardData.lastUpdated).toLocaleString('zh-CN')}`}
               </p>
             </div>
-            
-            <div className="header-actions">
-              <button
-                onClick={handleRefresh}
-                disabled={loading || refreshing}
-                className="refresh-button"
-              >
-                <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? '刷新中' : '刷新数据'}
-              </button>
-            </div>
+            <button
+              className="refresh-button"
+              onClick={handleRefresh}
+              disabled={loading || refreshing}             
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? '刷新中' : '刷新数据'}
+            </button>
           </div>
         </div>
 
         {/* 筛选控制栏 */}
-        <div className="filter-bar">
+        {/* <div className="filter-bar">
           <div className="filter-section">
             <div className="filter-item">
               <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -420,7 +417,7 @@ export default function Dashboard() {
               <span className="filter-label">筛选条件</span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {loading ? (
           <div className="loading-container">
@@ -539,17 +536,11 @@ export default function Dashboard() {
           line-height: 1.5;
         }
 
-        .header-actions {
-          display: flex;
-          gap: 12px;
-          margin-top: 20px;
-        }
-
         .refresh-button {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: #3b82f6;
           color: white;
           border: none;
           padding: 12px 24px;
@@ -897,11 +888,6 @@ export default function Dashboard() {
             flex-direction: column;
             gap: 16px;
             align-items: stretch;
-          }
-
-          .header-actions {
-            margin-top: 0;
-            justify-content: center;
           }
 
           .filter-bar {

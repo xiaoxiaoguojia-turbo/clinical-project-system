@@ -1403,6 +1403,7 @@ const OtherProjectsPage: React.FC = () => {
                     <textarea
                       value={formData.conclusion}
                       onChange={(e) => setFormData(prev => ({ ...prev, conclusion: e.target.value }))}
+                      className="form-textarea"
                       placeholder="请输入专利信息及项目结论"
                       rows={4}
                     />
@@ -2098,8 +2099,8 @@ const OtherProjectsPage: React.FC = () => {
         .projects-table-container {
           background: white;
           border-radius: 8px;
-          overflow: hidden;
           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          overflow-x: auto;
         }
 
         .projects-table {
@@ -2537,6 +2538,19 @@ const OtherProjectsPage: React.FC = () => {
           resize: vertical;
           min-height: 6rem;
         }
+
+        .form-textarea {
+          padding: 14px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          color: #374151;
+          transition: all 0.2s ease;
+          width: 100%;
+          box-sizing: border-box;
+        }
+          
 
         /* 响应式优化 */
         @media (max-width: 768px) {

@@ -35,12 +35,25 @@ export const ProjectStatusEnum = {
 } as const
 
 export const TransformRequirementEnum = {
-  LICENSE_TRANSFER: 'license-transfer',                // 许可转让
-  EQUITY_INVESTMENT: 'equity-investment',              // 代价入股
-  TRUST_HOLDING: 'trust-holding',                      // 代持
-  TRUST_MANAGEMENT: 'trust-management',                // 代持托管
+  LICENSE: 'license',                                  // 许可
+  TRANSFER: 'transfer',                                // 转让
   COMPANY_OPERATION: 'company-operation',              // 公司化运营
-  LICENSE_TRANSFER_CASH: 'license-transfer-cash',      // 许可转让现金
+  OTHER: 'other'                                       // 其他
+} as const
+
+export const TransformProgressEnum = {
+  CONTRACT_COMPLETED: 'contract-completed',            // 签约已完成
+  CONTRACT_INCOMPLETE: 'contract-incomplete'           // 未完成
+} as const
+
+export const LeaderEnum = {
+  YANGFENG: 'yangfeng',                                // 杨锋
+  QINQINGSONG: 'qinqingsong',                          // 秦青松
+  HAOJINGJING: 'haojingjing',                          // 郝菁菁
+  CHENLONG: 'chenlong',                                // 陈栊
+  WANGLIYAN: 'wangliyan',                              // 王立言
+  MAOSHIWEI: 'maoshiwei',                              // 毛世伟
+  XIAOLANCHUAN: 'xiaolanchuan',                        // 肖蓝川
   TO_BE_DETERMINED: 'to-be-determined'                 // 待定
 } as const
 
@@ -48,45 +61,49 @@ export const TransformRequirementEnum = {
 
 // 统一项目接口定义
 export interface IUnifiedProject {
-  _id?: string
+  _id?: string                             // ID
   
   // 通用必填字段
-  department: string
-  name: string
-  projectType: string
-  source: string
-  importance: string
-  status: string
+  department: string                       // 归属部门
+  name: string                             // 项目名称
+  projectType: string                      // 项目分类型
+  source: string                           // 医院来源
+  importance: string                       // 重要程度
+  status: string                           // 项目进展状态
+  leader: string                           // 负责人
+
+  // 通用选填字段
+  indication?: string                      // 适应症/科室
+  transformRequirement?: string            // 转化需求（许可、转让、公司化运营、其他）
+  transformProgress?: string               // 转化推进状态（签约已完成、未完成）
+  hospitalDoctor?: string                  // 院端医生
+  patent?: string                          // 专利信息
+  clinicalData?: string                    // 临床数据
+  marketSize?: string                      // 市场规模
+  competitorStatus?: string                // 竞品状态
+  conclusion?: string                      // 项目结论
   
   // 院内制剂特有字段
-  composition?: string                   // 组方
-  function?: string                      // 功能
-  specification?: string                 // 规格
-  duration?: string                      // 年限
-  dosage?: string                        // 用量
-  recordNumber?: string                  // 备案号
-  remarks?: string                       // 备注
+
+  // 院内制剂必填字段
+  composition?: string                     // 组方
+  function?: string                        // 功能
+
+  // 院内制剂选填字段
+  specification?: string                   // 制剂规格
+  duration?: string                        // 使用年限
+  recordNumber?: string                    // 备案号
   
   // 其他类型特有字段
-  leader?: string                        // 负责人
-  startDate?: Date                       // 开始日期
-  indication?: string                    // 适应症/科室
-  followUpWeeks?: number                 // 跟进时间/周
-  transformRequirement?: string          // 转化需求
-  hospitalDoctor?: string                // 院端医生
-  conclusion?: string                    // 项目结论
-  
-  // 通用扩展字段
-  patent?: string                        // 专利信息
-  clinicalData?: string                  // 临床数据
-  marketSize?: string                    // 市场规模
-  competitorStatus?: string              // 竞品状态
-  
+
+  // 其他类型必填字段
+  startDate?: Date                         // 开始日期
+
   // 系统字段
-  attachments: string[]
-  createTime: Date
-  updateTime: Date
-  createdBy: string
+  attachments: string[]                    // 附件管理数组
+  createTime: Date                         // 创建时间
+  updateTime: Date                         // 更新时间
+  createdBy: string                        // 创建人
   
   // AI报告
   aiReport?: {
@@ -163,7 +180,85 @@ const UnifiedProjectSchema: Schema = new Schema({
     index: true  // 添加索引用于筛选
   },
   
+  leader: {
+    type: String,
+    enum: {
+      values: Object.values(LeaderEnum),
+      message: '负责人必须是：杨锋、秦青松、郝菁菁、陈栊、王立言、毛世伟、肖蓝川、待定 之一'
+    },
+    required: [true, '负责人为必填项'],
+    default: LeaderEnum.TO_BE_DETERMINED,
+    trim: true,
+    maxlength: [50, '负责人姓名不能超过50个字符'],
+    index: true  // 添加索引用于筛选
+  },
+
+  // 通用选填字段
+  indication: {
+    type: String,
+    trim: true,
+    maxlength: [200, '适应症/科室不能超过200个字符']
+  },
+  
+  transformRequirement: {
+    type: String,
+    enum: {
+      values: Object.values(TransformRequirementEnum),
+      message: '转化需求必须是：许可、转让、公司化运营、其他 之一'
+    },
+    default: TransformRequirementEnum.OTHER,
+    trim: true
+  },
+  
+  transformProgress: {
+    type: String,
+    enum: {
+      values: Object.values(TransformProgressEnum),
+      message: '转化推进状态必须是：签约已完成、未完成 之一'
+    },
+    default: TransformProgressEnum.CONTRACT_INCOMPLETE,
+    trim: true
+  },
+  
+  hospitalDoctor: {
+    type: String,
+    trim: true,
+    maxlength: [50, '院端医生姓名不能超过50个字符']
+  },
+
+  patent: {
+    type: String,
+    trim: true,
+    maxlength: [500, '专利信息不能超过500个字符']
+  },
+  
+  clinicalData: {
+    type: String,
+    trim: true,
+    maxlength: [1000, '临床数据不能超过1000个字符']
+  },
+  
+  marketSize: {
+    type: String,
+    trim: true,
+    maxlength: [200, '市场规模不能超过200个字符']
+  },
+  
+  competitorStatus: {
+    type: String,
+    trim: true,
+    maxlength: [500, '竞品状态不能超过500个字符']
+  },
+  
+  conclusion: {
+    type: String,
+    trim: true,
+    maxlength: [1000, '项目结论不能超过1000个字符']
+  },
+  
   // 院内制剂特有字段
+
+  // 院内制剂必填字段
   composition: {
     type: String,
     trim: true,
@@ -195,6 +290,7 @@ const UnifiedProjectSchema: Schema = new Schema({
     }
   },
   
+  // 院内制剂选填字段
   specification: {
     type: String,
     trim: true,
@@ -207,12 +303,6 @@ const UnifiedProjectSchema: Schema = new Schema({
     maxlength: [50, '年限不能超过50个字符']
   },
   
-  dosage: {
-    type: String,
-    trim: true,
-    maxlength: [100, '用量不能超过100个字符']
-  },
-  
   recordNumber: {
     type: String,
     trim: true,
@@ -220,30 +310,9 @@ const UnifiedProjectSchema: Schema = new Schema({
     // 注意：按业务要求，不设置unique约束
   },
   
-  remarks: {
-    type: String,
-    trim: true,
-    maxlength: [500, '备注不能超过500个字符']
-  },
-  
   // 其他类型特有字段
-  leader: {
-    type: String,
-    trim: true,
-    maxlength: [50, '负责人姓名不能超过50个字符'],
-    validate: {
-      validator: function(this: UnifiedProjectDocument, value: string) {
-        // 非院内制剂类型必填
-        if (this.projectType !== ProjectTypeEnum.INTERNAL_PREPARATION) {
-          return value && value.trim().length > 0
-        }
-        return true
-      },
-      message: '该项目类型的负责人为必填项'
-    },
-    index: true  // 添加索引用于筛选
-  },
-  
+
+  // 其他类型必填字段
   startDate: {
     type: Date,
     validate: {
@@ -257,85 +326,7 @@ const UnifiedProjectSchema: Schema = new Schema({
       message: '该项目类型的开始日期为必填项'
     }
   },
-  
-  indication: {
-    type: String,
-    trim: true,
-    maxlength: [200, '适应症/科室不能超过200个字符']
-  },
-  
-  followUpWeeks: {
-    type: Number,
-    min: [1, '跟进时间至少为1周'],
-    max: [208, '跟进时间不能超过208周（4年）'],
-    validate: {
-      validator: function(this: UnifiedProjectDocument, value: number) {
-        // 非院内制剂类型必填
-        if (this.projectType !== ProjectTypeEnum.INTERNAL_PREPARATION) {
-          return value != null && value > 0
-        }
-        return true
-      },
-      message: '该项目类型的跟进时间为必填项'
-    }
-  },
-  
-  transformRequirement: {
-    type: String,
-    enum: {
-      values: Object.values(TransformRequirementEnum),
-      message: '转化需求必须是：许可转让、代价入股、代持、代持托管、公司化运营、许可转让现金、待定 之一'
-    },
-    default: TransformRequirementEnum.TO_BE_DETERMINED,
-    validate: {
-      validator: function(this: UnifiedProjectDocument, value: string) {
-        // 非院内制剂类型必填
-        if (this.projectType !== ProjectTypeEnum.INTERNAL_PREPARATION) {
-          return value && Object.values(TransformRequirementEnum).includes(value as any)
-        }
-        return true
-      },
-      message: '该项目类型的转化需求为必填项'
-    }
-  },
-  
-  hospitalDoctor: {
-    type: String,
-    trim: true,
-    maxlength: [50, '院端医生姓名不能超过50个字符']
-  },
-  
-  conclusion: {
-    type: String,
-    trim: true,
-    maxlength: [1000, '项目结论不能超过1000个字符']
-  },
-  
-  // 通用扩展字段
-  patent: {
-    type: String,
-    trim: true,
-    maxlength: [500, '专利信息不能超过500个字符']
-  },
-  
-  clinicalData: {
-    type: String,
-    trim: true,
-    maxlength: [1000, '临床数据不能超过1000个字符']
-  },
-  
-  marketSize: {
-    type: String,
-    trim: true,
-    maxlength: [200, '市场规模不能超过200个字符']
-  },
-  
-  competitorStatus: {
-    type: String,
-    trim: true,
-    maxlength: [500, '竞品状态不能超过500个字符']
-  },
-  
+
   // 系统字段
   attachments: [{
     type: Schema.Types.ObjectId,

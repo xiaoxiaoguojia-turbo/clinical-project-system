@@ -13,39 +13,22 @@ export interface StatItem {
 // 项目总体统计
 export interface ProjectOverviewStats {
   totalProjects: number
-  byDepartment: StatItem[]
-  byProjectType: StatItem[]
-  bySource: StatItem[]
-  byImportance: StatItem[]
-  byStatus: StatItem[]
-}
-
-// 除院内制剂外的项目特有统计
-export interface OtherProjectsStats {
-  totalOtherProjects: number
-  byTransformRequirement: StatItem[]
-  byIndication: StatItem[]
-  averageFollowUpWeeks?: number
-}
-
-// 时间趋势统计
-export interface TrendStats {
-  monthly: Array<{
-    period: string
-    count: number
-    projectType?: string
-  }>
-  growth: {
-    totalGrowth: number
-    monthlyGrowth: number
-  }
+  internalPreparationCount: number        // 院内制剂数量
+  contractCompletedCount: number          // 签约已完成数量
+  contractIncompleteCount: number         // 签约未完成数量
+  byDepartment: StatItem[]                // 归属部门分布
+  byProjectType: StatItem[]               // 项目分类型分布
+  bySource: StatItem[]                    // 医院来源分布
+  byImportance: StatItem[]                // 重要程度分布
+  byStatus: StatItem[]                    // 项目进展状态分布
+  byIndication: StatItem[]                // 适应症/科室分布
+  byTransformRequirement: StatItem[]      // 转化需求分布
+  byTransformProgress: StatItem[]         // 转化推进状态分布
 }
 
 // 完整的Dashboard数据接口
 export interface DashboardStats {
   overview: ProjectOverviewStats
-  otherProjects: OtherProjectsStats
-  trends: TrendStats
   lastUpdated: string
 }
 
@@ -58,11 +41,8 @@ export interface DashboardStatsResponse {
 
 // 筛选参数接口
 export interface DashboardFilters {
-  timeRange: 'all' | 'thisYear' | 'thisMonth' | 'lastMonth'
   projectTypes?: string[]
   departments?: string[]
-  dateFrom?: string
-  dateTo?: string
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -88,11 +68,6 @@ export interface StatCard {
   unit?: string
   icon: string
   color: string
-  trend?: {
-    value: number
-    isPositive: boolean
-    label: string
-  }
   description?: string
 }
 
@@ -101,7 +76,7 @@ export interface StatCard {
 // 枚举映射（用于图表显示）
 export const DEPARTMENT_LABELS: Record<string, string> = {
   'transfer-investment-dept-1': '转移转化与投资一部',
-  'transfer-investment-dept-2': '转移转化与投资二部', 
+  'transfer-investment-dept-2': '转移转化与投资二部',
   'transfer-investment-dept-3': '转移转化与投资三部'
 }
 
@@ -131,12 +106,25 @@ export const STATUS_LABELS: Record<string, string> = {
 }
 
 export const TRANSFORM_REQUIREMENT_LABELS: Record<string, string> = {
-  'license-transfer': '许可转让',
-  'equity-investment': '代价入股',
-  'trust-holding': '代持',
-  'trust-management': '代持托管',
+  'license': '许可',
+  'transfer': '转让',
   'company-operation': '公司化运营',
-  'license-transfer-cash': '许可转让现金',
+  'other': '其他'
+}
+
+export const TRANSFORM_PROGRESS_LABELS: Record<string, string> = {
+  'contract-completed': '签约已完成',
+  'contract-incomplete': '未完成'
+}
+
+export const LEADER_LABELS: Record<string, string> = {
+  'yangfeng': '杨锋',
+  'qinqingsong': '秦青松',
+  'haojingjing': '郝菁菁',
+  'chenlong': '陈栊',
+  'wangliyan': '王立言',
+  'maoshiwei': '毛世伟',
+  'xiaolanchuan': '肖蓝川',
   'to-be-determined': '待定'
 }
 

@@ -467,10 +467,6 @@ export default function InternalPreparationsPage() {
     setCharts({})
   }
 
-  const handleExport = () => {
-    console.log('导出院内制剂数据功能开发中...')
-  }
-
   const handleRefreshData = () => {
     if (activeTab === 'statistics') {
       loadPreparationData()
@@ -1013,12 +1009,12 @@ export default function InternalPreparationsPage() {
               <h1>院内制剂管理</h1>
               <p>院内制剂项目的统计分析与项目管理</p>
             </div>
-            <button 
-              className="export-button"
-              onClick={handleExport}
+            <button
+              className="create-button"
+              onClick={handleCreateProject}
             >
-              <ArrowDownTrayIcon className="w-5 h-5" />
-              导出数据
+              <PlusIcon className="w-5 h-5" />
+              新建项目
             </button>
           </div>
         </div>
@@ -1137,8 +1133,8 @@ export default function InternalPreparationsPage() {
         {/* 项目列表内容 */}
         {activeTab === 'projects' && (
           <div className="projects-section">
-            {/* 顶部操作栏 */}
-            <div className="project-header">
+            {/* 筛选控制栏 */}
+            <div className="filter-bar">
               <div className="search-section">
                 <div className="search-input-wrapper">
                   <MagnifyingGlassIcon className="w-5 h-5 search-icon" />
@@ -1151,16 +1147,6 @@ export default function InternalPreparationsPage() {
                   />
                 </div>
               </div>
-              <div className="action-section-2">
-                <button className="create-button" onClick={handleCreateProject}>
-                  <PlusIcon className="w-5 h-5" />
-                  新建项目
-                </button>
-              </div>
-            </div>
-
-            {/* 筛选控制栏 */}
-            <div className="filter-bar">
               <div className="filter-controls">
                 <div className="filter-item">
                   <FunnelIcon className="w-5 h-5 filter-icon" />
@@ -1907,11 +1893,6 @@ export default function InternalPreparationsPage() {
             border-radius: 8px 8px 0 0;
             border-bottom: 2px solid #e5e7eb;
             margin-bottom: 32px;
-
-            // box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            // border-radius: 12px;
-            // padding: 6px;
-            // gap: 4px;
           }
 
           .tab-button {
@@ -1927,15 +1908,6 @@ export default function InternalPreparationsPage() {
             cursor: pointer;
             transition: all 0.2s;
             border-bottom: 2px solid transparent;
-
-            // padding: 12px 24px;
-            // border: none;
-            // background: transparent;
-            // color: #64748b;
-            // border-radius: 8px;
-            // transition: all 0.2s ease;
-            // flex: 1;
-            // justify-content: center;
           }
 
           .tab-button:hover {
@@ -1955,9 +1927,8 @@ export default function InternalPreparationsPage() {
             align-items: center;
             background: white;
             padding: 20px 24px;
-            border-radius: 12px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            margin-bottom: 42px;
+            margin-bottom: 40px;
           }
 
           .filter-controls {
@@ -1994,6 +1965,7 @@ export default function InternalPreparationsPage() {
 
           .refresh-button {
             display: flex;
+            max-width: 120px;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
@@ -2262,14 +2234,6 @@ export default function InternalPreparationsPage() {
             overflow: hidden;
           }
 
-          .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px;
-            border-bottom: 1px solid #f1f5f9;
-          }
-
           .search-section {
             flex: 1;
             max-width: 400px;
@@ -2307,7 +2271,7 @@ export default function InternalPreparationsPage() {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: #3b82f6;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -2317,11 +2281,12 @@ export default function InternalPreparationsPage() {
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            margin-top: 17px;
           }
 
           .create-button:hover {
+            background: #2563eb;
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
           }
 
           .project-table-container {

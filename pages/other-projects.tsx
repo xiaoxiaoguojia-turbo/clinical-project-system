@@ -1252,7 +1252,7 @@ const OtherProjectsPage: React.FC = () => {
           }}>
             <div className="modal-content">
               <div className="modal-header">
-                <h2>{showCreateModal ? '新建' + currentProjectType.label : '编辑项目'}</h2>
+                <h2>{showCreateModal ? '新建' + currentProjectType.label + '项目' : '编辑项目'}</h2>
                 <button
                   onClick={() => {
                     setShowCreateModal(false)
@@ -1643,6 +1643,7 @@ const OtherProjectsPage: React.FC = () => {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
           margin-top: 17px;
         }
 

@@ -102,21 +102,21 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
           
           // 按适应症/科室分组（过滤空值）
           byIndication: [
-            { $match: { indication: { $exists: true, $ne: null, $ne: '' } } },
+            { $match: { indication: { $exists: true, $nin: [null, ''] } } },
             { $group: { _id: '$indication', count: { $sum: 1 } } },
             { $sort: { count: -1 } }
           ],
           
           // 按转化需求分组（过滤空值）
           byTransformRequirement: [
-            { $match: { transformRequirement: { $exists: true, $ne: null, $ne: '' } } },
+            { $match: { transformRequirement: { $exists: true, $nin: [null, ''] } } },
             { $group: { _id: '$transformRequirement', count: { $sum: 1 } } },
             { $sort: { count: -1 } }
           ],
           
           // 按转化推进状态分组（过滤空值）
           byTransformProgress: [
-            { $match: { transformProgress: { $exists: true, $ne: null, $ne: '' } } },
+            { $match: { transformProgress: { $exists: true, $nin: [null, ''] } } },
             { $group: { _id: '$transformProgress', count: { $sum: 1 } } },
             { $sort: { count: -1 } }
           ]

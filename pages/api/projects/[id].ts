@@ -53,15 +53,25 @@
  *                     source: "中医科"
  *                     importance: "very-important"
  *                     status: "early-stage"
+ *                     leader: "yangfeng"
+ *                     indication: "清热解毒/流行病科室"
+ *                     transformRequirement: "company-operation"
+ *                     transformProgress: "contract-completed"
+ *                     hospitalDoctor: "张医生"
+ *                     patent: "已申请发明专利"
+ *                     clinicalData: "已完成临床观察200例"
+ *                     marketSize: "预计年销售额500万元"
+ *                     competitorStatus: "市场上暂无同类产品"
+ *                     conclusion: "项目具有良好的临床应用价值"
  *                     composition: "金银花15g、连翘12g、板蓝根10g"
  *                     function: "清热解毒，抗病毒感染"
  *                     specification: "10g/袋"
  *                     duration: "3年"
- *                     dosage: "每次1袋，每日3次"
  *                     recordNumber: "ZZ-2024-001"
- *                     patent: "已申请发明专利"
+ *                     attachments: []
  *                     createTime: "2024-01-15T08:30:00.000Z"
  *                     updateTime: "2024-01-15T08:30:00.000Z"
+ *                     createdBy: "64f123456789abcd12345678"
  *                     aiReport:
  *                       reportUrl: "https://example.com/report.pdf"
  *                       status: "completed"
@@ -74,19 +84,27 @@
  *                   success: true
  *                   data:
  *                     _id: "64f123456789abcd12345679"
- *                     department: "transfer-investment-dept-1"
+ *                     department: "transfer-investment-dept-2"
  *                     name: "新型抗肿瘤药物研发"
  *                     projectType: "drug"
  *                     source: "科研处"
  *                     importance: "important"
  *                     status: "clinical-stage"
- *                     leader: "张医生"
+ *                     leader: "qinqingsong"
  *                     startDate: "2024-01-15"
  *                     indication: "肿瘤科"
- *                     followUpWeeks: 24
- *                     transformRequirement: "license-transfer"
+ *                     transformRequirement: "license"
+ *                     transformProgress: "contract-incomplete"
  *                     hospitalDoctor: "李教授"
+ *                     patent: "已申请PCT国际专利"
+ *                     clinicalData: "已完成II期临床试验"
+ *                     marketSize: "预计市场规模50亿元"
+ *                     competitorStatus: "全球有5款同靶点药物在研"
+ *                     conclusion: "项目进展顺利，预期2025年申报上市"
+ *                     attachments: []
  *                     createTime: "2024-02-01T10:00:00.000Z"
+ *                     updateTime: "2024-02-01T10:00:00.000Z"
+ *                     createdBy: "64f123456789abcd12345679"
  *                   message: "获取项目详情成功"
  *       400:
  *         description: 项目ID格式无效
@@ -106,7 +124,7 @@
  *       **注意事项：**
  *       - 不能修改项目类型(projectType)
  *       - 院内制剂的备案号必须唯一
- *       - 根据项目类型验证必填字段
+ *       - Schema会自动验证必填字段
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -125,24 +143,59 @@
  *           schema:
  *             type: object
  *             properties:
+ *               # 通用字段
  *               department:
  *                 type: string
- *                 enum: [transfer-investment-dept-1, transfer-investment-dept-2, innovation-center, ip-dept]
- *                 description: 部门名称
+ *                 enum: [transfer-investment-dept-1, transfer-investment-dept-2, transfer-investment-dept-3]
+ *                 description: 归属部门
  *               name:
  *                 type: string
  *                 description: 项目名称
  *               source:
  *                 type: string
- *                 description: 项目来源
+ *                 description: 医院来源
  *               importance:
  *                 type: string
- *                 enum: [very-important, important, normal, unimportant]
+ *                 enum: [very-important, important, normal, not-important]
  *                 description: 重要程度
  *               status:
  *                 type: string
  *                 enum: [early-stage, preclinical, clinical-stage, market-product]
- *                 description: 项目状态
+ *                 description: 项目进展状态
+ *               leader:
+ *                 type: string
+ *                 enum: [yangfeng, qinqingsong, haojingjing, chenlong, wangliyan, maoshiwei, xiaolanchuan, to-be-determined]
+ *                 description: 负责人（通用必填）
+ *               # 通用选填字段
+ *               indication:
+ *                 type: string
+ *                 description: 适应症/科室
+ *               transformRequirement:
+ *                 type: string
+ *                 enum: [license, transfer, company-operation, other]
+ *                 description: 转化需求
+ *               transformProgress:
+ *                 type: string
+ *                 enum: [contract-completed, contract-incomplete]
+ *                 description: 转化推进状态
+ *               hospitalDoctor:
+ *                 type: string
+ *                 description: 院端医生
+ *               patent:
+ *                 type: string
+ *                 description: 专利信息
+ *               clinicalData:
+ *                 type: string
+ *                 description: 临床数据
+ *               marketSize:
+ *                 type: string
+ *                 description: 市场规模
+ *               competitorStatus:
+ *                 type: string
+ *                 description: 竞品状态
+ *               conclusion:
+ *                 type: string
+ *                 description: 项目结论
  *               # 院内制剂特有字段
  *               composition:
  *                 type: string
@@ -152,68 +205,41 @@
  *                 description: 功能主治（院内制剂）
  *               specification:
  *                 type: string
- *                 description: 规格（院内制剂）
+ *                 description: 制剂规格（院内制剂）
  *               duration:
  *                 type: string
- *                 description: 有效期（院内制剂）
- *               dosage:
- *                 type: string
- *                 description: 用法用量（院内制剂）
+ *                 description: 使用年限（院内制剂）
  *               recordNumber:
  *                 type: string
  *                 description: 备案号（院内制剂）
- *               remarks:
- *                 type: string
- *                 description: 备注信息（院内制剂）
  *               # 其他类型特有字段
- *               leader:
- *                 type: string
- *                 description: 项目负责人（其他类型）
  *               startDate:
  *                 type: string
  *                 format: date
  *                 description: 开始日期（其他类型）
- *               indication:
- *                 type: string
- *                 description: 适应症/科室（其他类型）
- *               followUpWeeks:
- *                 type: integer
- *                 minimum: 1
- *                 maximum: 104
- *                 description: 跟进时间周数（其他类型）
- *               transformRequirement:
- *                 type: string
- *                 enum: [license-transfer, equity-investment, agent-holding, custodial-management, corporate-operation, license-transfer-cash, to-be-determined]
- *                 description: 转化需求（其他类型）
- *               hospitalDoctor:
- *                 type: string
- *                 description: 院端医生（其他类型）
- *               conclusion:
- *                 type: string
- *                 description: 项目结论（其他类型）
- *               # 通用字段
- *               patent:
- *                 type: string
- *                 description: 专利信息
  *           examples:
  *             update_internal_preparation:
  *               summary: 更新院内制剂项目
  *               value:
  *                 name: "清热解毒颗粒（改良版）"
+ *                 status: "clinical-stage"
+ *                 transformProgress: "contract-incomplete"
+ *                 conclusion: "临床试验完成，准备申请上市许可"
+ *                 marketSize: "预计年销售额800万元"
  *                 composition: "金银花15g、连翘12g、板蓝根10g、薄荷3g"
  *                 function: "清热解毒，抗病毒感染，清咽利喉"
  *                 specification: "12g/袋"
- *                 remarks: "临床试验完成，准备申请上市许可"
- *                 status: "clinical-stage"
  *             update_drug_research:
  *               summary: 更新药物研发项目
  *               value:
  *                 name: "新型抗肿瘤药物研发（二期）"
- *                 leader: "王医生"
- *                 followUpWeeks: 36
- *                 transformRequirement: "corporate-operation"
- *                 conclusion: "二期临床试验结果良好"
+ *                 leader: "wangliyan"
+ *                 transformRequirement: "company-operation"
+ *                 transformProgress: "contract-completed"
  *                 status: "clinical-stage"
+ *                 clinicalData: "II期临床试验入组患者300例"
+ *                 marketSize: "预计市场规模80亿元"
+ *                 conclusion: "二期临床试验结果良好"
  *     responses:
  *       200:
  *         description: 更新项目成功

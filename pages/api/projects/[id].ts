@@ -412,7 +412,7 @@ async function handleUpdateProject(
 
     // 根据现有项目类型验证更新数据
     const projectType = (existingProject as any).projectType
-    
+
     // 如果更新了关键字段，验证必填字段完整性
     const requiredFields = getRequiredFieldsForType(projectType)
     const hasRequiredFieldUpdates = requiredFields.some((field: string) => updateData.hasOwnProperty(field))
@@ -461,7 +461,7 @@ async function handleUpdateProject(
       updateTime: new Date()
     }
 
-    // 执行更新
+    // 执行更新（Schema会自动验证必填字段）
     const updatedProject = await UnifiedProject.findByIdAndUpdate(
       id,
       updatePayload,

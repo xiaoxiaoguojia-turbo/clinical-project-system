@@ -31,60 +31,66 @@ export interface UserResponse {
 
 // 统一项目类型定义
 export interface UnifiedProject {
-  _id?: string
+  _id?: string                                                                              // 项目ID
   
   // 通用必填字段
-  department: string // 归属部门，必填
-  name: string // 项目名称，必填
+  department: string                                                                        // 归属部门，必填
+  name: string                                                                              // 项目名称，必填
   projectType: 'internal-preparation' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other' // 项目分类型，必填
-  source: string // 医院来源，必填
-  importance: 'very-important' | 'important' | 'normal' | 'not-important' // 重要程度，必填
-  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product' // 项目进展状态，必填
-  leader: string // 负责人，必填
+  source: string                                                                            // 医院来源，必填
+  importance: 'very-important' | 'important' | 'normal' | 'not-important'                   // 重要程度，必填
+  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'               // 项目进展状态，必填
+  leader: string                                                                            // 负责人，必填
 
   // 通用选填字段
-  indication?: string // 适应症/科室，非必填
-  transformRequirement?: 'license' | 'transfer' | 'company-operation' | 'other' // 转化需求，非必填
-  transformProgress?: 'contract-completed' | 'contract-incomplete' // 转化推进状态，非必填
-  hospitalDoctor?: string // 院端医生，非必填
-  patent?: string // 专利信息，非必填
-  clinicalData?: string // 临床数据，非必填
-  marketSize?: string // 市场规模，非必填
-  competitorStatus?: string // 竞品状态，非必填
-  conclusion?: string // 项目结论，非必填
+  indication?: string                                                                       // 适应症/科室，非必填
+  transformRequirement?: 'license' | 'transfer' | 'company-operation' | 'other'             // 转化需求，非必填
+  transformProgress?: 'contract-completed' | 'contract-incomplete'                          // 转化推进状态，非必填
+  hospitalDoctor?: string                                                                   // 院端医生，非必填
+  patent?: string                                                                           // 专利信息，非必填
+  clinicalData?: string                                                                     // 临床数据，非必填
+  marketSize?: string                                                                       // 市场规模，非必填
+  competitorStatus?: string                                                                 // 竞品状态，非必填
+  conclusion?: string                                                                       // 项目结论，非必填
   
   // 院内制剂特有字段
 
   // 院内制剂必填字段
-  composition?: string // 组方，必填
-  function?: string // 功能，必填
+  composition?: string                                                                      // 组方，必填
+  function?: string                                                                         // 功能，必填
 
   // 院内制剂选填字段
-  specification?: string // 制剂规格，非必填
-  duration?: string // 使用年限，非必填
-  recordNumber?: string // 备案号，非必填
+  specification?: string                                                                    // 制剂规格，非必填
+  duration?: string                                                                         // 使用年限，非必填
+  recordNumber?: string                                                                     // 备案号，非必填
   
   // 其他类型特有字段
 
   // 其他类型必填字段
-  startDate?: string // 开始日期，必填
+  startDate?: string                                                                        // 开始日期，必填
   
   // 系统字段
-  attachments: string[] // 附件管理数组
-  createTime: string // 创建时间
-  updateTime: string // 更新时间
-  createdBy: string // 创建人
+  attachments: string[]                                                                     // 附件管理数组
+  createTime: string                                                                        // 创建时间
+  updateTime: string                                                                        // 更新时间
+  createdBy: string                                                                         // 创建人
   
   // AI报告
   aiReport?: {
-    reportUrl?: string
-    status: 'idle' | 'generating' | 'completed' | 'error'
-    firstGeneratedAt?: string
-    lastGeneratedAt?: string
+    reportUrl?: string                                                                      // AI报告URL
+    status: 'idle' | 'generating' | 'completed' | 'error'                                   // AI报告状态
+    firstGeneratedAt?: string                                                               // AI报告首次生成时间
+    lastGeneratedAt?: string                                                                // AI报告最后生成时间
   }
 }
 
 // 统一项目枚举类型
+export const UnifiedProjectDepartmentEnum = {
+  DEPT_ONE: 'transfer-investment-dept-1',
+  DEPT_TWO: 'transfer-investment-dept-2',
+  DEPT_THREE: 'transfer-investment-dept-3'
+} as const
+
 export const UnifiedProjectTypeEnum = {
   INTERNAL_PREPARATION: 'internal-preparation',
   AI_MEDICAL_RESEARCH: 'ai-medical-research',
@@ -110,18 +116,6 @@ export const UnifiedProjectStatusEnum = {
   MARKET_PRODUCT: 'market-product'
 } as const
 
-export const UnifiedProjectTransformRequirementEnum = {
-  LICENSE: 'license',
-  TRANSFER: 'transfer',
-  COMPANY_OPERATION: 'company-operation',
-  OTHER: 'other'
-} as const
-
-export const UnifiedProjectTransformProgressEnum = {
-  CONTRACT_COMPLETED: 'contract-completed',
-  CONTRACT_INCOMPLETE: 'contract-incomplete'
-} as const
-
 export const UnifiedProjectLeaderEnum = {
   YANGFENG: 'yangfeng',
   QINQINGSONG: 'qinqingsong',
@@ -133,10 +127,16 @@ export const UnifiedProjectLeaderEnum = {
   TO_BE_DETERMINED: 'to-be-determined'
 } as const
 
-export const UnifiedProjectDepartmentEnum = {
-  DEPT_ONE: 'transfer-investment-dept-1',
-  DEPT_TWO: 'transfer-investment-dept-2',
-  DEPT_THREE: 'transfer-investment-dept-3'
+export const UnifiedProjectTransformRequirementEnum = {
+  LICENSE: 'license',
+  TRANSFER: 'transfer',
+  COMPANY_OPERATION: 'company-operation',
+  OTHER: 'other'
+} as const
+
+export const UnifiedProjectTransformProgressEnum = {
+  CONTRACT_COMPLETED: 'contract-completed',
+  CONTRACT_INCOMPLETE: 'contract-incomplete'
 } as const
 
 // 总体项目类型

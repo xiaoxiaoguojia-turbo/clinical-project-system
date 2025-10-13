@@ -68,7 +68,7 @@
  *         name: department
  *         schema:
  *           type: string
- *           enum: [transfer-investment-dept-1, transfer-investment-dept-2, innovation-center, ip-dept]
+ *           enum: [transfer-investment-dept-1, transfer-investment-dept-2, transfer-investment-dept-3]
  *         description: 部门筛选
  *         example: "transfer-investment-dept-1"
  *       - in: query
@@ -110,19 +110,28 @@
  *                         source: "中医科"
  *                         importance: "very-important"
  *                         status: "early-stage"
+ *                         leader: "待定"
+ *                         indication: "清热解毒/流行病科室"
+ *                         transformRequirement: "公司化运营"
+ *                         transformProgress: "签约已完成"
+ *                         hospitalDoctor: "张医生"
+ *                         patent: "专利信息"
+ *                         clinicalData: "临床数据"
+ *                         marketSize: "市场规模"
+ *                         competitorStatus: "竞品状态"
+ *                         conclusion: "项目结论"
  *                         composition: "金银花、连翘、板蓝根"
  *                         function: "清热解毒，抗病毒"
- *                         createTime: "2024-01-15T08:30:00.000Z"
- *                       - _id: "64f123456789abcd12345679"
- *                         department: "transfer-investment-dept-1"
- *                         name: "新型抗肿瘤药物研发"
- *                         projectType: "drug"
- *                         source: "科研处"
- *                         importance: "important"
- *                         status: "clinical-stage"
- *                         leader: "张医生"
- *                         indication: "肿瘤科"
- *                         createTime: "2024-02-01T10:00:00.000Z"
+ *                         attachments: ["64f123456789abcd12345678", "64f123456789abcd12345679"]
+ *                         createTime: "2025-10-01T08:30:00.000Z"
+ *                         updateTime: "2025-10-01T08:30:00.000Z"
+ *                         createdBy: "张三"
+ *                         aiReport: {
+ *                           reportUrl: "https://example.com/report.pdf",
+ *                           status: "completed",
+ *                           firstGeneratedAt: "2025-10-01T08:30:00.000Z",
+ *                           lastGeneratedAt: "2025-10-01T08:30:00.000Z"
+ *                         }
  *                     pagination:
  *                       current: 1
  *                       pageSize: 10
@@ -469,19 +478,20 @@ async function handleCreateProject(
     const newProjectData = {
       ...projectData,
       department: projectData.department || 'transfer-investment-dept-1',
-      importance: projectData.importance || 'normal',
+      importance: projectData.importance || 'very-important',
       status: projectData.status || 'early-stage',
+      leader: projectData.leader || 'to-be-determined',
       createdBy: req.user.userId,
       createTime: new Date(),
       updateTime: new Date()
     }
 
-    // 根据项目类型设置默认的转化需求
-    if (!isInternalPreparationType(projectData.projectType)) {
-      newProjectData.transformRequirement = newProjectData.transformRequirement || 'to-be-determined'
+    // 设置默认的转化需求（可选字段）
+    if (projectData.transformRequirement === undefined) {
+      newProjectData.transformRequirement = 'other'
     }
 
-    // 保存到数据库
+    // 保存到数据库（Schema会自动验证必填字段）
     const newProject = new UnifiedProject(newProjectData)
     const savedProject = await newProject.save()
 

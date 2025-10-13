@@ -1,4 +1,5 @@
-import { UnifiedProject, UnifiedProjectTypeEnum, UnifiedProjectImportanceEnum, UnifiedProjectStatusEnum, UnifiedProjectTransformRequirementEnum, UnifiedProjectDepartmentEnum } from '@/types'
+import { LeaderEnum, TransformProgressEnum, TransformRequirementEnum } from '@/models/UnifiedProject'
+import { UnifiedProject, UnifiedProjectTypeEnum, UnifiedProjectImportanceEnum, UnifiedProjectStatusEnum, UnifiedProjectTransformRequirementEnum, UnifiedProjectDepartmentEnum, UnifiedProjectTransformProgressEnum, UnifiedProjectLeaderEnum } from '@/types'
 
 /* ------------------------------------------------------------------------------------------ */
 
@@ -10,24 +11,25 @@ export const isInternalPreparation = (projectType: string): boolean => {
 export const isInternalPreparationType = isInternalPreparation
 
 export const requiresLeader = (projectType: string): boolean => {
-  return !isInternalPreparation(projectType)
+  return true  // leader现在是通用必填字段，所有项目类型都需要
 }
 
 export const requiresStartDate = (projectType: string): boolean => {
   return !isInternalPreparation(projectType)
 }
 
-export const requiresFollowUpWeeks = (projectType: string): boolean => {
-  return !isInternalPreparation(projectType)
-}
-
-export const requiresTransformRequirement = (projectType: string): boolean => {
-  return !isInternalPreparation(projectType)
-}
-
 /* ------------------------------------------------------------------------------------------ */
 
 // 显示名称转换函数
+export const getDepartmentDisplayName = (department: string): string => {
+  const departmentMap: Record<string, string> = {
+    [UnifiedProjectDepartmentEnum.DEPT_ONE]: '转移转化与投资一部',
+    [UnifiedProjectDepartmentEnum.DEPT_TWO]: '转移转化与投资二部',
+    [UnifiedProjectDepartmentEnum.DEPT_THREE]: '转移转化与投资三部'
+  }
+  return departmentMap[department] || department
+}
+
 export const getProjectTypeDisplayName = (projectType: string): string => {
   const typeMap: Record<string, string> = {
     [UnifiedProjectTypeEnum.INTERNAL_PREPARATION]: '院内制剂',
@@ -62,26 +64,36 @@ export const getStatusDisplayName = (status: string): string => {
   return statusMap[status] || status
 }
 
+export const getLeaderDisplayName = (leader: string): string => {
+  const leaderMap: Record<string, string> = {
+    [UnifiedProjectLeaderEnum.YANGFENG]: '杨锋',                                // 杨锋
+    [UnifiedProjectLeaderEnum.QINQINGSONG]: '秦青松',                           // 秦青松
+    [UnifiedProjectLeaderEnum.HAOJINGJING]: '郝菁菁',                           // 郝菁菁
+    [UnifiedProjectLeaderEnum.CHENLONG]: '陈栊',                                // 陈栊
+    [UnifiedProjectLeaderEnum.WANGLIYAN]: '王立言',                             // 王立言
+    [UnifiedProjectLeaderEnum.MAOSHIWEI]: '毛世伟',                             // 毛世伟
+    [UnifiedProjectLeaderEnum.XIAOLANCHUAN]: '肖蓝川',                          // 肖蓝川
+    [UnifiedProjectLeaderEnum.TO_BE_DETERMINED]: '待定'                         // 待定
+  }
+  return leaderMap[leader] || leader
+}
+
 export const getTransformRequirementDisplayName = (requirement: string): string => {
   const requirementMap: Record<string, string> = {
-    [UnifiedProjectTransformRequirementEnum.LICENSE_TRANSFER]: '许可转让',
-    [UnifiedProjectTransformRequirementEnum.EQUITY_INVESTMENT]: '代价入股',
-    [UnifiedProjectTransformRequirementEnum.TRUST_HOLDING]: '代持',
-    [UnifiedProjectTransformRequirementEnum.TRUST_MANAGEMENT]: '代持托管',
+    [UnifiedProjectTransformRequirementEnum.LICENSE]: '许可',
+    [UnifiedProjectTransformRequirementEnum.TRANSFER]: '转让',
     [UnifiedProjectTransformRequirementEnum.COMPANY_OPERATION]: '公司化运营',
-    [UnifiedProjectTransformRequirementEnum.LICENSE_TRANSFER_CASH]: '许可转让现金',
-    [UnifiedProjectTransformRequirementEnum.TO_BE_DETERMINED]: '待定'
+    [UnifiedProjectTransformRequirementEnum.OTHER]: '其他'
   }
   return requirementMap[requirement] || requirement
 }
 
-export const getDepartmentDisplayName = (department: string): string => {
-  const departmentMap: Record<string, string> = {
-    [UnifiedProjectDepartmentEnum.DEPT_ONE]: '转移转化与投资一部',
-    [UnifiedProjectDepartmentEnum.DEPT_TWO]: '转移转化与投资二部',
-    [UnifiedProjectDepartmentEnum.DEPT_THREE]: '转移转化与投资三部'
+export const getTransformProgressDisplayName = (progress: string): string => {
+  const progressMap: Record<string, string> = {
+    [UnifiedProjectTransformProgressEnum.CONTRACT_COMPLETED]: '签约已完成',
+    [UnifiedProjectTransformProgressEnum.CONTRACT_INCOMPLETE]: '未完成'
   }
-  return departmentMap[department] || department
+  return progressMap[progress] || progress
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -109,6 +121,9 @@ export const validateProjectData = (project: Partial<UnifiedProject>): { isValid
   if (!project.status) {
     errors.push('项目状态为必填项')
   }
+  if (!project.leader?.trim()) {
+    errors.push('负责人为必填项')
+  }
   
   // 院内制剂特有字段验证
   if (project.projectType === UnifiedProjectTypeEnum.INTERNAL_PREPARATION) {
@@ -122,17 +137,8 @@ export const validateProjectData = (project: Partial<UnifiedProject>): { isValid
   
   // 其他类型特有字段验证
   if (project.projectType && project.projectType !== UnifiedProjectTypeEnum.INTERNAL_PREPARATION) {
-    if (!project.leader?.trim()) {
-      errors.push('该项目类型的负责人为必填项')
-    }
     if (!project.startDate) {
       errors.push('该项目类型的开始日期为必填项')
-    }
-    if (!project.followUpWeeks || project.followUpWeeks <= 0) {
-      errors.push('该项目类型的跟进时间为必填项且必须大于0')
-    }
-    if (!project.transformRequirement) {
-      errors.push('该项目类型的转化需求为必填项')
     }
   }
   
@@ -186,11 +192,11 @@ export const validateProjectDataForReport = (project: Partial<UnifiedProject>): 
 
 export const getRequiredFieldsForType = (projectType: string): string[] => {
   if (isInternalPreparation(projectType)) {
-    // 院内制剂必填字段
-    return ['composition', 'function', 'specification', 'duration', 'dosage', 'recordNumber']
+    // 院内制剂必填字段（移除了dosage）
+    return ['composition', 'function']
   } else {
-    // 其他类型项目必填字段
-    return ['leader', 'startDate', 'indication', 'followUpWeeks']
+    // 其他类型项目必填字段（移除了followUpWeeks）
+    return ['startDate']
   }
 }
 
@@ -199,55 +205,89 @@ export const getRequiredFieldsForType = (projectType: string): string[] => {
 // 数据迁移辅助函数
 export const convertInternalPreparationToUnified = (internalPrep: any): Partial<UnifiedProject> => {
   return {
+    // ID
+    // _id: internalPrep._id,
+
+    // 通用必填字段
     department: internalPrep.department || UnifiedProjectDepartmentEnum.DEPT_ONE,
     name: internalPrep.name,
     projectType: UnifiedProjectTypeEnum.INTERNAL_PREPARATION,
     source: internalPrep.source,
     importance: UnifiedProjectImportanceEnum.VERY_IMPORTANT, // 默认值
     status: mapInternalPrepStatus(internalPrep.status),
+    leader: LeaderEnum.TO_BE_DETERMINED,
+
+    // 通用选填字段
+    indication: internalPrep.indication || '',
+    transformRequirement: internalPrep.transformRequirement || TransformRequirementEnum.OTHER,
+    transformProgress: internalPrep.transformProgress || TransformProgressEnum.CONTRACT_INCOMPLETE,
+    hospitalDoctor: internalPrep.hospitalDoctor || '',
+    patent: internalPrep.patent || '',
+    clinicalData: internalPrep.clinicalData || '',
+    marketSize: internalPrep.dosage || '',
+    competitorStatus: internalPrep.competitorStatus || '',
+    conclusion: internalPrep.remarks || '',
     
     // 院内制剂特有字段
+
+    // 院内制剂必填字段
     composition: internalPrep.composition,
     function: internalPrep.function,
+
+    // 院内制剂选填字段
     specification: internalPrep.specification,
     duration: internalPrep.duration,
-    dosage: internalPrep.dosage,
     recordNumber: internalPrep.recordNumber,
-    remarks: internalPrep.remarks,
     
-    // 通用字段
-    patent: internalPrep.patent,
+    // 系统字段
     attachments: internalPrep.attachments || [],
     createTime: internalPrep.createTime,
     updateTime: internalPrep.updateTime,
     createdBy: internalPrep.createdBy,
+
+    // AI报告
     aiReport: internalPrep.aiReport
   }
 }
 
 export const convertType2ToUnified = (type2Project: any): Partial<UnifiedProject> => {
   return {
+    // ID
+    // _id: type2Project._id,
+
+    // 通用必填字段
     department: type2Project.department || UnifiedProjectDepartmentEnum.DEPT_ONE,
     name: type2Project.name,
     projectType: UnifiedProjectTypeEnum.OTHER, // 可根据实际分类调整
     source: type2Project.source,
     importance: mapType2Importance(type2Project.importance),
     status: mapType2Status(type2Project.status),
+    leader: LeaderEnum.TO_BE_DETERMINED,
+
+    // 通用选填字段
+    indication: type2Project.indication || '',
+    transformRequirement: mapTransformMethod(type2Project.transformMethod),
+    transformProgress: type2Project.transformProgress || TransformProgressEnum.CONTRACT_INCOMPLETE,
+    hospitalDoctor: type2Project.hospitalPI || '',
+    patent: type2Project.patent || '',
+    clinicalData: type2Project.clinicalData || '',
+    marketSize: type2Project.marketSize || '',
+    competitorStatus: type2Project.competitorStatus || '',
+    conclusion: type2Project.projectConclusion || '',
     
     // 其他类型特有字段
-    leader: type2Project.leader,
+
+    // 其他类型必填字段
     startDate: type2Project.startDate,
-    indication: type2Project.indication,
-    followUpWeeks: type2Project.followUpWeeks,
-    transformRequirement: mapTransformMethod(type2Project.transformMethod),
-    hospitalDoctor: type2Project.hospitalPI,
-    conclusion: type2Project.conclusion,
     
-    // 通用字段
+    // 系统字段
     attachments: type2Project.attachments || [],
     createTime: type2Project.createTime,
     updateTime: type2Project.updateTime,
-    createdBy: type2Project.createdBy
+    createdBy: type2Project.createdBy,
+
+    // AI报告
+    aiReport: type2Project.aiReport
   }
 }
 
@@ -281,9 +321,15 @@ const mapType2Importance = (oldImportance: string): 'very-important' | 'importan
   return importanceMap[oldImportance] || 'normal'
 }
 
-const mapTransformMethod = (oldMethod: string): 'license-transfer' | 'equity-investment' | 'trust-holding' | 'trust-management' | 'company-operation' | 'license-transfer-cash' | 'to-be-determined' => {
-  // 简化处理：默认选择"待定"
-  return 'to-be-determined'
+const mapTransformMethod = (oldMethod: string): 'license' | 'transfer' | 'company-operation' | 'other' => {
+  // 旧值到新值的映射
+  if (oldMethod === 'license-transfer' || oldMethod === '许可转让') return 'license'
+  if (oldMethod === 'equity-investment' || oldMethod === 'trust-holding' || 
+      oldMethod === 'trust-management' || oldMethod === 'license-transfer-cash' || 
+      oldMethod === '代价入股' || oldMethod === '代持' || 
+      oldMethod === '代持托管' || oldMethod === '许可转让现金') return 'transfer'
+  if (oldMethod === 'company-operation' || oldMethod === '公司化运营') return 'company-operation'
+  return 'other'  // to-be-determined 和其他未知值都映射为 other
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -291,55 +337,89 @@ const mapTransformMethod = (oldMethod: string): 'license-transfer' | 'equity-inv
 // 数据迁移相关函数
 export const migrateInternalPreparationData = async (internalPrepData: any[]): Promise<Partial<UnifiedProject>[]> => {
   return internalPrepData.map(item => ({
-    department: item.department || 'transfer-investment-dept-1',
-    name: item.name || '未命名项目',
-    projectType: 'internal-preparation' as const,
+    // ID
+    // _id: item._id,
+    
+    // 通用必填字段
+    department: item.department || UnifiedProjectDepartmentEnum.DEPT_ONE,
+    name: item.name || '未命名院内制剂项目',
+    projectType: UnifiedProjectTypeEnum.INTERNAL_PREPARATION,
     source: item.source || '未知来源',
-    importance: 'very-important' as const, // 默认值
+    importance: UnifiedProjectImportanceEnum.VERY_IMPORTANT, // 默认值
     status: mapInternalPrepStatus(item.status || 'active'),
+    leader: item.leader || LeaderEnum.TO_BE_DETERMINED,
+
+    // 通用选填字段
+    indication: item.indication || '',
+    transformRequirement: item.transformRequirement || TransformRequirementEnum.OTHER,
+    transformProgress: item.transformProgress || TransformProgressEnum.CONTRACT_INCOMPLETE,
+    hospitalDoctor: item.hospitalDoctor || '',
+    patent: item.patent || '',
+    clinicalData: item.clinicalData || '',
+    marketSize: item.dosage || '',
+    competitorStatus: item.competitorStatus || '',
+    conclusion: item.remarks || '',
     
     // 院内制剂特有字段
+
+    // 院内制剂必填字段
     composition: item.composition || '',
     function: item.function || '',
+
+    // 院内制剂选填字段
     specification: item.specification,
     duration: item.duration,
-    dosage: item.dosage,
     recordNumber: item.recordNumber,
-    remarks: item.remarks,
     
-    // 通用字段
-    patent: item.patent,
+    // 系统字段
     attachments: item.attachments || [],
     createTime: item.createTime || new Date().toISOString(),
     updateTime: item.updateTime || new Date().toISOString(),
     createdBy: item.createdBy || '',
+
+    // AI报告
     aiReport: item.aiReport
   }))
 }
 
 export const migrateType2ProjectData = async (type2Data: any[]): Promise<Partial<UnifiedProject>[]> => {
   return type2Data.map(item => ({
-    department: item.department || 'transfer-investment-dept-1',
-    name: item.name || '未命名项目',
-    projectType: 'other' as const, // 简化为"其他"类型
+    // ID
+    // _id: item._id,
+    
+    // 通用必填字段
+    department: item.department || UnifiedProjectDepartmentEnum.DEPT_ONE,
+    name: item.name || '未命名其他项目（除院内制剂）',
+    projectType: UnifiedProjectTypeEnum.OTHER, // 可根据实际分类调整
     source: item.source || '未知来源',
     importance: mapType2Importance(item.importance || 'normal'),
     status: mapType2Status(item.status || 'initial-assessment'),
+    leader: item.leader || LeaderEnum.TO_BE_DETERMINED,
+
+    // 通用选填字段
+    indication: item.indication || '',
+    transformRequirement: mapTransformMethod(item.transformMethod),
+    transformProgress: item.transformProgress || TransformProgressEnum.CONTRACT_INCOMPLETE,
+    hospitalDoctor: item.hospitalPI || '',
+    patent: item.patent || '',
+    clinicalData: item.clinicalData || '',
+    marketSize: item.marketSize || '',
+    competitorStatus: item.competitorStatus || '',
+    conclusion: item.projectConclusion || '',
     
     // 其他类型特有字段
-    leader: item.leader || '未指定',
+
+    // 其他类型必填字段
     startDate: item.startDate || new Date().toISOString(),
-    indication: item.indication,
-    followUpWeeks: item.followUpWeeks || 1,
-    transformRequirement: mapTransformMethod(item.transformMethod),
-    hospitalDoctor: item.hospitalPI,
-    conclusion: item.conclusion,
     
-    // 通用字段
+    // 系统字段
     attachments: item.attachments || [],
     createTime: item.createTime || new Date().toISOString(),
     updateTime: item.updateTime || new Date().toISOString(),
-    createdBy: item.createdBy || ''
+    createdBy: item.createdBy || '',
+
+    // AI报告
+    aiReport: item.aiReport
   }))
 }
 
@@ -348,12 +428,12 @@ export const migrateType2ProjectData = async (type2Data: any[]): Promise<Partial
 // 搜索和筛选辅助函数
 export const buildProjectSearchQuery = (filters: {
   search?: string
-  projectType?: string
   department?: string
+  projectType?: string
+  source?: string
   importance?: string
   status?: string
   leader?: string
-  source?: string  // 添加缺失的source参数
 }) => {
   const query: any = {}
   
@@ -367,14 +447,18 @@ export const buildProjectSearchQuery = (filters: {
     ]
   }
   
-  if (filters.projectType) {
-    query.projectType = filters.projectType
-  }
-  
   if (filters.department) {
     query.department = filters.department
   }
   
+  if (filters.projectType) {
+    query.projectType = filters.projectType
+  }
+
+  if (filters.source) {
+    query.source = { $regex: filters.source, $options: 'i' }
+  }
+
   if (filters.importance) {
     query.importance = filters.importance
   }
@@ -387,10 +471,6 @@ export const buildProjectSearchQuery = (filters: {
     query.leader = { $regex: filters.leader, $options: 'i' }
   }
   
-  if (filters.source) {
-    query.source = { $regex: filters.source, $options: 'i' }
-  }
-
   return query
 }
 
@@ -402,10 +482,10 @@ export const buildSearchQuery = buildProjectSearchQuery
 export const calculateProjectStatistics = (projects: UnifiedProject[]) => {
   const stats = {
     total: projects.length,
-    byType: {} as Record<string, number>,
-    byStatus: {} as Record<string, number>,
-    byImportance: {} as Record<string, number>,
     byDepartment: {} as Record<string, number>,
+    byType: {} as Record<string, number>,
+    byImportance: {} as Record<string, number>,
+    byStatus: {} as Record<string, number>,
     recentCreated: 0
   }
   
@@ -413,17 +493,17 @@ export const calculateProjectStatistics = (projects: UnifiedProject[]) => {
   oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
   
   projects.forEach(project => {
+    // 按部门统计
+    stats.byDepartment[project.department] = (stats.byDepartment[project.department] || 0) + 1
+    
     // 按类型统计
     stats.byType[project.projectType] = (stats.byType[project.projectType] || 0) + 1
-    
-    // 按状态统计
-    stats.byStatus[project.status] = (stats.byStatus[project.status] || 0) + 1
     
     // 按重要程度统计
     stats.byImportance[project.importance] = (stats.byImportance[project.importance] || 0) + 1
     
-    // 按部门统计
-    stats.byDepartment[project.department] = (stats.byDepartment[project.department] || 0) + 1
+    // 按状态统计
+    stats.byStatus[project.status] = (stats.byStatus[project.status] || 0) + 1
     
     // 近期创建统计
     if (new Date(project.createTime) > oneMonthAgo) {

@@ -3,6 +3,12 @@ import mongoose, { Schema, Document } from 'mongoose'
 /* ------------------------------------------------------------------------------------------ */
 
 // 枚举定义
+export const DepartmentEnum = {
+  DEPT_ONE: 'transfer-investment-dept-1',              // 转移转化与投资一部
+  DEPT_TWO: 'transfer-investment-dept-2',              // 转移转化与投资二部
+  DEPT_THREE: 'transfer-investment-dept-3'             // 转移转化与投资三部
+} as const
+
 export const ProjectTypeEnum = {
   INTERNAL_PREPARATION: 'internal-preparation',        // 院内制剂
   AI_MEDICAL_RESEARCH: 'ai-medical-research',          // AI医疗及系统研究
@@ -12,12 +18,6 @@ export const ProjectTypeEnum = {
   MEDICAL_DEVICE: 'medical-device',                    // 医疗器械
   MEDICAL_MATERIAL: 'medical-material',                // 医用材料
   OTHER: 'other'                                       // 其他
-} as const
-
-export const DepartmentEnum = {
-  DEPT_ONE: 'transfer-investment-dept-1',              // 转移转化与投资一部
-  DEPT_TWO: 'transfer-investment-dept-2',              // 转移转化与投资二部
-  DEPT_THREE: 'transfer-investment-dept-3'             // 转移转化与投资三部
 } as const
 
 export const ImportanceEnum = {
@@ -34,6 +34,17 @@ export const ProjectStatusEnum = {
   MARKET_PRODUCT: 'market-product'                     // 上市产品
 } as const
 
+export const LeaderEnum = {
+  YANGFENG: 'yangfeng',                                // 杨锋
+  QINQINGSONG: 'qinqingsong',                          // 秦青松
+  HAOJINGJING: 'haojingjing',                          // 郝菁菁
+  CHENLONG: 'chenlong',                                // 陈栊
+  WANGLIYAN: 'wangliyan',                              // 王立言
+  MAOSHIWEI: 'maoshiwei',                              // 毛世伟
+  XIAOLANCHUAN: 'xiaolanchuan',                        // 肖蓝川
+  TO_BE_DETERMINED: 'to-be-determined'                 // 待定
+} as const
+
 export const TransformRequirementEnum = {
   LICENSE: 'license',                                  // 许可
   TRANSFER: 'transfer',                                // 转让
@@ -46,22 +57,11 @@ export const TransformProgressEnum = {
   CONTRACT_INCOMPLETE: 'contract-incomplete'           // 未完成
 } as const
 
-export const LeaderEnum = {
-  YANGFENG: 'yangfeng',                                // 杨锋
-  QINQINGSONG: 'qinqingsong',                          // 秦青松
-  HAOJINGJING: 'haojingjing',                          // 郝菁菁
-  CHENLONG: 'chenlong',                                // 陈栊
-  WANGLIYAN: 'wangliyan',                              // 王立言
-  MAOSHIWEI: 'maoshiwei',                              // 毛世伟
-  XIAOLANCHUAN: 'xiaolanchuan',                        // 肖蓝川
-  TO_BE_DETERMINED: 'to-be-determined'                 // 待定
-} as const
-
 /* ------------------------------------------------------------------------------------------ */
 
 // 统一项目接口定义
 export interface IUnifiedProject {
-  _id?: string                             // ID
+  _id?: string                             // 项目ID
   
   // 通用必填字段
   department: string                       // 归属部门
@@ -397,8 +397,14 @@ UnifiedProjectSchema.methods.isInternalPreparation = function(): boolean {
   return this.projectType === ProjectTypeEnum.INTERNAL_PREPARATION
 }
 
-UnifiedProjectSchema.methods.canGenerateAIReport = function(): boolean {
-  return this.aiReport?.status !== 'generating'
+UnifiedProjectSchema.methods.getDisplayImportance = function(): string {
+  const importanceMap = {
+    [ImportanceEnum.VERY_IMPORTANT]: '非常重要',
+    [ImportanceEnum.IMPORTANT]: '重要',
+    [ImportanceEnum.NORMAL]: '一般',
+    [ImportanceEnum.NOT_IMPORTANT]: '不重要'
+  }
+  return importanceMap[this.importance as keyof typeof importanceMap] || this.importance
 }
 
 UnifiedProjectSchema.methods.getDisplayStatus = function(): string {
@@ -411,14 +417,8 @@ UnifiedProjectSchema.methods.getDisplayStatus = function(): string {
   return statusMap[this.status as keyof typeof statusMap] || this.status
 }
 
-UnifiedProjectSchema.methods.getDisplayImportance = function(): string {
-  const importanceMap = {
-    [ImportanceEnum.VERY_IMPORTANT]: '非常重要',
-    [ImportanceEnum.IMPORTANT]: '重要',
-    [ImportanceEnum.NORMAL]: '一般',
-    [ImportanceEnum.NOT_IMPORTANT]: '不重要'
-  }
-  return importanceMap[this.importance as keyof typeof importanceMap] || this.importance
+UnifiedProjectSchema.methods.canGenerateAIReport = function(): boolean {
+  return this.aiReport?.status !== 'generating'
 }
 
 // 静态方法

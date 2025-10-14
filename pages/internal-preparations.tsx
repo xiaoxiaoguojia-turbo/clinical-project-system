@@ -28,9 +28,10 @@ import {
 } from '@heroicons/react/24/outline'
 import { 
   ApiResponse, 
-  PaginatedResponse 
+  PaginatedResponse,
+  UnifiedProject
 } from '@/types'
-import { TokenManager } from '@/utils/auth'  // 添加TokenManager导入
+import { TokenManager } from '@/utils/auth'
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -58,29 +59,6 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
     </div>
   )
 })
-
-interface InternalPreparationProject {
-  _id: string
-  department: string
-  source: string
-  name: string
-  composition: string
-  function: string
-  specification: string
-  duration: string
-  dosage: string
-  recordNumber?: string
-  patent?: string
-  remarks?: string
-  status: 'active' | 'completed' | 'paused'
-  createTime: string
-  updateTime: string
-  createdBy?: string
-  aiReport?: {
-    status: 'idle' | 'generating' | 'completed' | 'error'
-    reportUrl?: string
-  }
-}
 
 interface PreparationStats {
   totalPreparations: number
@@ -120,12 +98,12 @@ export default function InternalPreparationsPage() {
     patentCount: 0
   })
   
-  const [preparations, setPreparations] = useState<InternalPreparationProject[]>([])
+  const [preparations, setPreparations] = useState<UnifiedProject[]>([])
   const [charts, setCharts] = useState<{[key: string]: any}>({})
 
   // 项目列表相关状态
   const [projectsLoading, setProjectsLoading] = useState(false)
-  const [projects, setProjects] = useState<InternalPreparationProject[]>([])
+  const [projects, setProjects] = useState<UnifiedProject[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [projectStatusFilter, setProjectStatusFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
@@ -136,37 +114,57 @@ export default function InternalPreparationsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
-  const [selectedProject, setSelectedProject] = useState<InternalPreparationProject | null>(null)
+  const [selectedProject, setSelectedProject] = useState<UnifiedProject | null>(null)
   const [sourceDepartments, setSourceDepartments] = useState<string[]>([])
 
   // 创建项目表单状态
   const [createFormData, setCreateFormData] = useState({
+    department: 'transfer-investment-dept-1',
     source: '',
     name: '',
+    importance: 'very-important',
+    status: 'early-stage',
+    leader: 'to-be-determined',
+    indication: '',
+    transformRequirement: 'other',
+    transformProgress: 'contract-incomplete',
+    hospitalDoctor: '',
+    patent: '',
+    clinicalData: '',
+    marketSize: '',
+    competitorStatus: '',
+    conclusion: '',
     composition: '',
     function: '',
     specification: '',
     duration: '',
-    dosage: '',
-    recordNumber: '',
-    patent: '',
-    remarks: ''
+    recordNumber: ''
   })
   const [createFormErrors, setCreateFormErrors] = useState<{[key: string]: string}>({})
   const [createFormLoading, setCreateFormLoading] = useState(false)
 
   // 编辑项目表单状态
   const [editFormData, setEditFormData] = useState({
+    department: 'transfer-investment-dept-1',
     source: '',
     name: '',
+    importance: 'very-important',
+    status: 'early-stage',
+    leader: 'to-be-determined',
+    indication: '',
+    transformRequirement: 'other',
+    transformProgress: 'contract-incomplete',
+    hospitalDoctor: '',
+    patent: '',
+    clinicalData: '',
+    marketSize: '',
+    competitorStatus: '',
+    conclusion: '',
     composition: '',
     function: '',
     specification: '',
     duration: '',
-    dosage: '',
-    recordNumber: '',
-    patent: '',
-    remarks: ''
+    recordNumber: ''
   })
   const [editFormErrors, setEditFormErrors] = useState<{[key: string]: string}>({})
   const [editFormLoading, setEditFormLoading] = useState(false)
@@ -227,14 +225,14 @@ export default function InternalPreparationsPage() {
       setLoading(true)
       
       // 获取所有院内制剂项目数据用于统计
-      const response = await fetch('/api/internal-preparation-projects?pageSize=100', {
+      const response = await fetch('/api/projects?projectType=internal-preparation&pageSize=100', {
         headers: {
           'Authorization': `Bearer ${TokenManager.getToken()}`,
           'Content-Type': 'application/json'
         }
       })
       
-      const data = await response.json() as ApiResponse<PaginatedResponse<InternalPreparationProject>>
+      const data = await response.json() as ApiResponse<PaginatedResponse<UnifiedProject>>
       
       if (data.success && data.data) {
         const projectsData = data.data.data || []
@@ -251,9 +249,9 @@ export default function InternalPreparationsPage() {
     }
   }
 
-  const calculateStats = (projects: InternalPreparationProject[]): PreparationStats => {
+  const calculateStats = (projects: UnifiedProject[]): PreparationStats => {
     const totalPreparations = projects.length
-    const activePreparations = projects.filter(p => p.status === 'active').length
+    const activePreparations = projects.filter(p => p.status === 'early-stage').length
     const completedPreparations = projects.filter(p => p.status === 'completed').length
     const pausedPreparations = projects.filter(p => p.status === 'paused').length
     const sourceDepartments = new Set(projects.map(p => p.source)).size
@@ -494,37 +492,47 @@ export default function InternalPreparationsPage() {
     setCurrentPage(page)
   }
 
-  const handleViewProject = (project: InternalPreparationProject) => {
+  const handleViewProject = (project: UnifiedProject) => {
     setSelectedProject(project)
     setShowDetailModal(true)
   }
 
-  const handleEditProject = (project: InternalPreparationProject) => {
+  const handleEditProject = (project: UnifiedProject) => {
     setSelectedProject(project)
     // 预填充编辑表单数据
     setEditFormData({
+      department: project.department,
       source: project.source,
       name: project.name,
+      importance: project.importance,
+      status: project.status,
+      leader: project.leader,
+      indication: project.indication,
+      transformRequirement: project.transformRequirement,
+      transformProgress: project.transformProgress,
+      hospitalDoctor: project.hospitalDoctor,
+      patent: project.patent,
+      clinicalData: project.clinicalData,
+      marketSize: project.marketSize,
+      competitorStatus: project.competitorStatus,
+      conclusion: project.conclusion,
       composition: project.composition,
       function: project.function,
       specification: project.specification,
       duration: project.duration,
-      dosage: project.dosage,
-      recordNumber: project.recordNumber || '',
-      patent: project.patent || '',
-      remarks: project.remarks || ''
+      recordNumber: project.recordNumber
     })
     setEditFormErrors({})
     setShowEditModal(true)
   }
 
-  const handleDeleteProject = async (project: InternalPreparationProject) => {
+  const handleDeleteProject = async (project: UnifiedProject) => {
     if (!window.confirm(`确定要删除项目"${project.name}"吗？`)) {
       return
     }
 
     try {
-      const response = await fetch(`/api/internal-preparation-projects/${project._id}`, {
+      const response = await fetch(`/api/projects/${project._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${TokenManager.getToken()}`,
@@ -548,16 +556,26 @@ export default function InternalPreparationsPage() {
   const handleCreateProject = () => {
     setSelectedProject(null)
     setCreateFormData({
+      department: 'transfer-investment-dept-1',
       source: '',
       name: '',
+      importance: 'very-important',
+      status: 'early-stage',
+      leader: 'to-be-determined',
+      indication: '',
+      transformRequirement: 'other',
+      transformProgress: 'contract-incomplete',
+      hospitalDoctor: '',
+      patent: '',
+      clinicalData: '',
+      marketSize: '',
+      competitorStatus: '',
+      conclusion: '',
       composition: '',
       function: '',
       specification: '',
       duration: '',
-      dosage: '',
-      recordNumber: '',
-      patent: '',
-      remarks: ''
+      recordNumber: ''
     })
     setCreateFormErrors({})
     setShowCreateModal(true)
@@ -583,17 +601,23 @@ export default function InternalPreparationsPage() {
     
     if (!createFormData.source.trim()) errors.source = '来源科室为必填项'
     if (!createFormData.name.trim()) errors.name = '项目名称为必填项'
+    if (!createFormData.importance.trim()) errors.importance = '重要性为必填项'
+    if (!createFormData.status.trim()) errors.status = '状态为必填项'
+    if (!createFormData.leader.trim()) errors.leader = '负责人为必填项'
+    if (!createFormData.indication.trim()) errors.indication = '适应症为必填项'
+    if (!createFormData.transformRequirement.trim()) errors.transformRequirement = '转化需求为必填项'
+    if (!createFormData.transformProgress.trim()) errors.transformProgress = '转化进展为必填项'
+    if (!createFormData.hospitalDoctor.trim()) errors.hospitalDoctor = '医院医生为必填项'
+    if (!createFormData.patent.trim()) errors.patent = '专利情况为必填项'
+    if (!createFormData.clinicalData.trim()) errors.clinicalData = '临床数据为必填项'
+    if (!createFormData.marketSize.trim()) errors.marketSize = '市场规模为必填项'
+    if (!createFormData.competitorStatus.trim()) errors.competitorStatus = '竞争对手状态为必填项'
+    if (!createFormData.conclusion.trim()) errors.conclusion = '结论为必填项'
     if (!createFormData.composition.trim()) errors.composition = '组方为必填项'
     if (!createFormData.function.trim()) errors.function = '功能为必填项'
     if (!createFormData.specification.trim()) errors.specification = '规格为必填项'
-    if (!createFormData.duration.trim()) errors.duration = '年限为必填项'
-    if (!createFormData.dosage.trim()) errors.dosage = '用量为必填项'
+    if (!createFormData.duration.trim()) errors.duration = '有效期为必填项'
     if (!createFormData.recordNumber.trim()) errors.recordNumber = '备案号为必填项'
-    
-    // 验证年限是否为数字
-    if (createFormData.duration && isNaN(Number(createFormData.duration))) {
-      errors.duration = '年限必须为数字'
-    }
     
     setCreateFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -607,7 +631,7 @@ export default function InternalPreparationsPage() {
     try {
       setCreateFormLoading(true)
       
-      const response = await fetch('/api/internal-preparation-projects', {
+      const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${TokenManager.getToken()}`,
@@ -616,7 +640,7 @@ export default function InternalPreparationsPage() {
         body: JSON.stringify(createFormData)
       })
       
-      const data = await response.json() as ApiResponse<InternalPreparationProject>
+      const data = await response.json() as ApiResponse<UnifiedProject>
       
       if (data.success) {
         setShowCreateModal(false)
@@ -636,16 +660,26 @@ export default function InternalPreparationsPage() {
   const handleCloseCreateModal = () => {
     setShowCreateModal(false)
     setCreateFormData({
+      department: 'transfer-investment-dept-1',
       source: '',
       name: '',
+      importance: 'very-important',
+      status: 'early-stage',
+      leader: 'to-be-determined',
+      indication: '',
+      transformRequirement: 'other',
+      transformProgress: 'contract-incomplete',
+      hospitalDoctor: '',
+      patent: '',
+      clinicalData: '',
+      marketSize: '',
+      competitorStatus: '',
+      conclusion: '',
       composition: '',
       function: '',
       specification: '',
       duration: '',
-      dosage: '',
-      recordNumber: '',
-      patent: '',
-      remarks: ''
+      recordNumber: ''
     })
     setCreateFormErrors({})
   }
@@ -674,6 +708,42 @@ export default function InternalPreparationsPage() {
     if (!editFormData.name.trim()) {
       errors.name = '项目名称不能为空'
     }
+    if (!editFormData.importance.trim()) {
+      errors.importance = '重要性不能为空'
+    }
+    if (!editFormData.status.trim()) {
+      errors.status = '状态不能为空'
+    }
+    if (!editFormData.leader.trim()) {
+      errors.leader = '负责人不能为空'
+    }
+    if (!editFormData.indication.trim()) {
+      errors.indication = '适应症不能为空'
+    }
+    if (!editFormData.transformRequirement.trim()) {
+      errors.transformRequirement = '转化需求不能为空'
+    }
+    if (!editFormData.transformProgress.trim()) {
+      errors.transformProgress = '转化进展不能为空'
+    }
+    if (!editFormData.hospitalDoctor.trim()) {
+      errors.hospitalDoctor = '医院医生不能为空'
+    }
+    if (!editFormData.patent.trim()) {
+      errors.patent = '专利情况不能为空'
+    }
+    if (!editFormData.clinicalData.trim()) {
+      errors.clinicalData = '临床数据不能为空'
+    }
+    if (!editFormData.marketSize.trim()) {
+      errors.marketSize = '市场规模不能为空'
+    }
+    if (!editFormData.competitorStatus.trim()) {
+      errors.competitorStatus = '竞争对手状态不能为空'
+    }
+    if (!editFormData.conclusion.trim()) {
+      errors.conclusion = '结论不能为空'
+    }
     if (!editFormData.composition.trim()) {
       errors.composition = '组方不能为空'
     }
@@ -687,9 +757,6 @@ export default function InternalPreparationsPage() {
       errors.duration = '有效期不能为空'
     } else if (isNaN(Number(editFormData.duration))) {
       errors.duration = '有效期必须为数字'
-    }
-    if (!editFormData.dosage.trim()) {
-      errors.dosage = '用量不能为空'
     }
     if (!editFormData.recordNumber.trim()) {
       errors.recordNumber = '备案号不能为空'
@@ -708,19 +775,29 @@ export default function InternalPreparationsPage() {
     
     try {
       const updateData = {
+        department: editFormData.department,
         source: editFormData.source.trim(),
         name: editFormData.name.trim(),
+        importance: editFormData.importance.trim(),
+        status: editFormData.status.trim(),
+        leader: editFormData.leader.trim(),
+        indication: editFormData.indication.trim(),
+        transformRequirement: editFormData.transformRequirement.trim(),
+        transformProgress: editFormData.transformProgress.trim(),
+        hospitalDoctor: editFormData.hospitalDoctor.trim(),
+        patent: editFormData.patent.trim(),
+        clinicalData: editFormData.clinicalData.trim(),
+        marketSize: editFormData.marketSize.trim(),
+        competitorStatus: editFormData.competitorStatus.trim(),
+        conclusion: editFormData.conclusion.trim(),
         composition: editFormData.composition.trim(),
         function: editFormData.function.trim(),
         specification: editFormData.specification.trim(),
         duration: editFormData.duration.trim(),
-        dosage: editFormData.dosage.trim(),
-        recordNumber: editFormData.recordNumber.trim(),
-        patent: editFormData.patent.trim(),
-        remarks: editFormData.remarks.trim()
+        recordNumber: editFormData.recordNumber.trim()
       }
 
-      const response = await fetch(`/api/internal-preparation-projects/${selectedProject._id}`, {
+      const response = await fetch(`/api/projects/${selectedProject._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${TokenManager.getToken()}`,
@@ -729,22 +806,32 @@ export default function InternalPreparationsPage() {
         body: JSON.stringify(updateData)
       })
       
-      const data = await response.json() as ApiResponse<InternalPreparationProject>
+      const data = await response.json() as ApiResponse<UnifiedProject>
       
       if (data.success) {
         setShowEditModal(false)
         setSelectedProject(null)
         setEditFormData({
+          department: 'transfer-investment-dept-1',
           source: '',
           name: '',
+          importance: 'very-important',
+          status: 'early-stage',
+          leader: 'to-be-determined',
+          indication: '',
+          transformRequirement: 'other',
+          transformProgress: 'contract-incomplete',
+          hospitalDoctor: '',
+          patent: '',
+          clinicalData: '',
+          marketSize: '',
+          competitorStatus: '',
+          conclusion: '',
           composition: '',
           function: '',
           specification: '',
           duration: '',
-          dosage: '',
-          recordNumber: '',
-          patent: '',
-          remarks: ''
+          recordNumber: ''
         })
         await loadProjectsList()
       } else {
@@ -762,16 +849,26 @@ export default function InternalPreparationsPage() {
     setShowEditModal(false)
     setSelectedProject(null)
     setEditFormData({
+      department: 'transfer-investment-dept-1',
       source: '',
       name: '',
+      importance: 'very-important',
+      status: 'early-stage',
+      leader: 'to-be-determined',
+      indication: '',
+      transformRequirement: 'other',
+      transformProgress: 'contract-incomplete',
+      hospitalDoctor: '',
+      patent: '',
+      clinicalData: '',
+      marketSize: '',
+      competitorStatus: '',
+      conclusion: '',
       composition: '',
       function: '',
       specification: '',
       duration: '',
-      dosage: '',
-      recordNumber: '',
-      patent: '',
-      remarks: ''
+      recordNumber: ''
     })
     setEditFormErrors({})
   }
@@ -783,7 +880,7 @@ export default function InternalPreparationsPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active': return '进行中'
+      case 'early-stage': return '进行中'
       case 'completed': return '已完成'
       case 'paused': return '已暂停'
       default: return status
@@ -792,14 +889,14 @@ export default function InternalPreparationsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'green'
+      case 'early-stage': return 'green'
       case 'completed': return 'blue'
       case 'paused': return 'yellow'
       default: return 'gray'
     }
   }
 
-  const handleAttachmentManagement = (project: InternalPreparationProject) => {
+  const handleAttachmentManagement = (project: UnifiedProject) => {
     console.log('=== 附件管理按钮点击调试信息 ===')
     console.log('点击的项目:', project)
     console.log('项目ID:', project._id)
@@ -829,7 +926,7 @@ export default function InternalPreparationsPage() {
     }
   }
 
-  const handleGenerateAIReport = async (project: InternalPreparationProject) => {
+  const handleGenerateAIReport = async (project: UnifiedProject) => {
     try {
       console.log('开始生成AI报告，项目:', project.name)
       
@@ -840,7 +937,7 @@ export default function InternalPreparationsPage() {
       }
 
       // 调用后端API生成报告
-      const response = await fetch(`/api/internal-preparations/${project._id}/generate-report`, {
+      const response = await fetch(`/api/projects/${project._id}/generate-report`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -876,7 +973,7 @@ export default function InternalPreparationsPage() {
     }
   }
 
-  const handleViewAIReport = (project: InternalPreparationProject) => {
+  const handleViewAIReport = (project: UnifiedProject) => {
     // 直接使用项目的aiReport字段
     const reportUrl = project.aiReport?.reportUrl
     
@@ -962,6 +1059,7 @@ export default function InternalPreparationsPage() {
       
       // 构建查询参数
       const params = new URLSearchParams({
+        projectType: 'internal-preparation',
         page: currentPage.toString(),
         pageSize: pageSize.toString()
       })
@@ -970,14 +1068,14 @@ export default function InternalPreparationsPage() {
       if (projectStatusFilter) params.append('status', projectStatusFilter)
       if (sourceFilter) params.append('source', sourceFilter)
       
-      const response = await fetch(`/api/internal-preparation-projects?${params}`, {
+      const response = await fetch(`/api/projects?${params}`, {
         headers: {
           'Authorization': `Bearer ${TokenManager.getToken()}`,
           'Content-Type': 'application/json'
         }
       })
       
-      const data = await response.json() as ApiResponse<PaginatedResponse<InternalPreparationProject>>
+      const data = await response.json() as ApiResponse<PaginatedResponse<UnifiedProject>>
       
       if (data.success && data.data) {
         setProjects(data.data.data || [])
@@ -1156,7 +1254,7 @@ export default function InternalPreparationsPage() {
                     className="filter-select"
                   >
                     <option value="">全部状态</option>
-                    <option value="active">进行中</option>
+                    <option value="early-stage">进行中</option>
                     <option value="completed">已完成</option>
                     <option value="paused">已暂停</option>
                   </select>
@@ -1468,18 +1566,6 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>用量 *</label>
-                    <input
-                      type="text"
-                      value={createFormData.dosage}
-                      onChange={(e) => handleCreateFormChange('dosage', e.target.value)}
-                      className={`form-input ${createFormErrors.dosage ? 'error' : ''}`}
-                      placeholder="请输入用量"
-                    />
-                    {createFormErrors.dosage && <span className="error-text">{createFormErrors.dosage}</span>}
-                  </div>
-
-                  <div className="form-group">
                     <label>备案号 *</label>
                     <input
                       type="text"
@@ -1615,18 +1701,6 @@ export default function InternalPreparationsPage() {
                       onChange={(e) => handleEditFormChange('duration', e.target.value)}
                     />
                     {editFormErrors.duration && <div className="error-text">{editFormErrors.duration}</div>}
-                  </div>
-
-                  <div className="form-group">
-                    <label>用量 *</label>
-                    <input
-                      type="text"
-                      className={`form-input ${editFormErrors.dosage ? 'error' : ''}`}
-                      placeholder="请输入用量"
-                      value={editFormData.dosage}
-                      onChange={(e) => handleEditFormChange('dosage', e.target.value)}
-                    />
-                    {editFormErrors.dosage && <div className="error-text">{editFormErrors.dosage}</div>}
                   </div>
 
                   <div className="form-group">
@@ -2427,8 +2501,8 @@ export default function InternalPreparationsPage() {
           }
 
           .action-btn.ai-generate-btn.loading {
-            background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-            animation: pulse 1s infinite;
+            color: #d97706;
+            background: #fef3c7;
           }
 
           .action-btn.ai-view-btn {

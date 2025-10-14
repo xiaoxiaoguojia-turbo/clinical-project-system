@@ -369,7 +369,8 @@ export default function InternalPreparationsPage() {
 
     // 5. 转化需求统计
     const transformReqData = preparations.reduce((acc, prep) => {
-      acc[prep.transformRequirement] = (acc[prep.transformRequirement] || 0) + 1
+      const key = prep.transformRequirement || 'other'
+      acc[key] = (acc[key] || 0) + 1
       return acc
     }, {} as {[key: string]: number})
     
@@ -386,7 +387,8 @@ export default function InternalPreparationsPage() {
 
     // 6. 转化推进状态统计
     const transformProgressData = preparations.reduce((acc, prep) => {
-      acc[prep.transformProgress] = (acc[prep.transformProgress] || 0) + 1
+      const key = prep.transformProgress || 'contract-incomplete'
+      acc[key] = (acc[key] || 0) + 1
       return acc
     }, {} as {[key: string]: number})
     
@@ -623,20 +625,20 @@ export default function InternalPreparationsPage() {
       importance: project.importance,
       status: project.status,
       leader: project.leader,
-      indication: project.indication,
-      transformRequirement: project.transformRequirement,
-      transformProgress: project.transformProgress,
-      hospitalDoctor: project.hospitalDoctor,
-      patent: project.patent,
-      clinicalData: project.clinicalData,
-      marketSize: project.marketSize,
-      competitorStatus: project.competitorStatus,
-      conclusion: project.conclusion,
-      composition: project.composition,
-      function: project.function,
-      specification: project.specification,
-      duration: project.duration,
-      recordNumber: project.recordNumber
+      indication: project.indication || '',
+      transformRequirement: project.transformRequirement || '',
+      transformProgress: project.transformProgress || '',
+      hospitalDoctor: project.hospitalDoctor || '',
+      patent: project.patent || '',
+      clinicalData: project.clinicalData || '',
+      marketSize: project.marketSize || '',
+      competitorStatus: project.competitorStatus || '',
+      conclusion: project.conclusion || '',
+      composition: project.composition || '',
+      function: project.function || '',
+      specification: project.specification || '',
+      duration: project.duration || '',
+      recordNumber: project.recordNumber || ''
     })
     setEditFormErrors({})
     setShowEditModal(true)
@@ -1715,17 +1717,6 @@ export default function InternalPreparationsPage() {
                       placeholder="请输入专利情况（可选）"
                     />
                   </div>
-
-                  <div className="form-group full-width">
-                    <label>备注</label>
-                    <textarea
-                      value={createFormData.remarks}
-                      onChange={(e) => handleCreateFormChange('remarks', e.target.value)}
-                      className="form-textarea"
-                      placeholder="请输入备注（可选）"
-                      rows={3}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -1852,16 +1843,6 @@ export default function InternalPreparationsPage() {
                       onChange={(e) => handleEditFormChange('patent', e.target.value)}
                     />
                   </div>
-
-                  <div className="form-group full-width">
-                    <label>备注</label>
-                    <textarea
-                      className="form-textarea"
-                      placeholder="请输入备注（可选）"
-                      value={editFormData.remarks}
-                      onChange={(e) => handleEditFormChange('remarks', e.target.value)}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -1944,32 +1925,20 @@ export default function InternalPreparationsPage() {
                         <div className="detail-value">{selectedProject.specification}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">用量</label>
-                        <div className="detail-value">{selectedProject.dosage}</div>
-                      </div>
-                      <div className="detail-item">
                         <label className="detail-label">有效期</label>
                         <div className="detail-value">{selectedProject.duration} 年</div>
                       </div>
                     </div>
                   </div>
 
-                  {(selectedProject.patent || selectedProject.remarks) && (
+                  {selectedProject.patent && (
                     <div className="detail-section">
                       <h3 className="detail-section-title">其他信息</h3>
                       <div className="detail-group">
-                        {selectedProject.patent && (
-                          <div className="detail-item full-width">
-                            <label className="detail-label">专利情况</label>
-                            <div className="detail-value detail-text">{selectedProject.patent}</div>
-                          </div>
-                        )}
-                        {selectedProject.remarks && (
-                          <div className="detail-item full-width">
-                            <label className="detail-label">备注</label>
-                            <div className="detail-value detail-text">{selectedProject.remarks}</div>
-                          </div>
-                        )}
+                        <div className="detail-item full-width">
+                          <label className="detail-label">专利情况</label>
+                          <div className="detail-value detail-text">{selectedProject.patent}</div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2207,7 +2176,7 @@ export default function InternalPreparationsPage() {
 
           .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           }
 
           .stat-card.loading {
@@ -2966,6 +2935,14 @@ export default function InternalPreparationsPage() {
             .detail-section {
               padding: 20px;
             }
+            
+            .detail-group {
+              gap: 12px;
+            }
+            
+            .detail-value {
+              padding: 10px 12px;
+            }
           }
 
           @media (max-width: 480px) {
@@ -3082,17 +3059,6 @@ export default function InternalPreparationsPage() {
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-          }
-
-          .report-indicator {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 6px;
-            height: 6px;
-            background: #10b981;
-            border-radius: 50%;
-            box-shadow: 0 0 0 1px white;
           }
 
           @keyframes spin {

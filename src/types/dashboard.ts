@@ -105,6 +105,17 @@ export const STATUS_LABELS: Record<string, string> = {
   'market-product': '上市产品'
 }
 
+export const LEADER_LABELS: Record<string, string> = {
+  'yangfeng': '杨锋',
+  'qinqingsong': '秦青松',
+  'haojingjing': '郝菁菁',
+  'chenlong': '陈栊',
+  'wangliyan': '王立言',
+  'maoshiwei': '毛世伟',
+  'xiaolanchuan': '肖蓝川',
+  'to-be-determined': '待定'
+}
+
 export const TRANSFORM_REQUIREMENT_LABELS: Record<string, string> = {
   'license': '许可',
   'transfer': '转让',
@@ -115,17 +126,6 @@ export const TRANSFORM_REQUIREMENT_LABELS: Record<string, string> = {
 export const TRANSFORM_PROGRESS_LABELS: Record<string, string> = {
   'contract-completed': '签约已完成',
   'contract-incomplete': '未完成'
-}
-
-export const LEADER_LABELS: Record<string, string> = {
-  'yangfeng': '杨锋',
-  'qinqingsong': '秦青松',
-  'haojingjing': '郝菁菁',
-  'chenlong': '陈栊',
-  'wangliyan': '王立言',
-  'maoshiwei': '毛世伟',
-  'xiaolanchuan': '肖蓝川',
-  'to-be-determined': '待定'
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -144,10 +144,45 @@ export const CHART_COLORS = {
     '#F97316', // 橙色 - 医用材料
     '#6B7280'  // 灰色 - 其他
   ],
+  source: [
+    '#3B82F6', // 蓝色
+    '#10B981', // 绿色
+    '#F59E0B', // 黄色
+    '#EF4444', // 红色
+    '#8B5CF6', // 紫色
+    '#06B6D4', // 青色
+    '#F97316', // 橙色
+    '#EC4899', // 粉色
+    '#6B7280', // 灰色
+    '#14B8A6'  // 青绿色
+  ],
   importance: ['#DC2626', '#EA580C', '#059669', '#6B7280'],
   status: ['#F59E0B', '#3B82F6', '#10B981', '#8B5CF6'],
-  transform: [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
-    '#8B5CF6', '#06B6D4', '#6B7280'
+  indication: [
+    '#3B82F6', // 蓝色
+    '#10B981', // 绿色
+    '#F59E0B', // 黄色
+    '#EF4444', // 红色
+    '#8B5CF6', // 紫色
+    '#06B6D4', // 青色
+    '#F97316', // 橙色
+    '#EC4899', // 粉色
+    '#6B7280', // 灰色
+    '#14B8A6', // 青绿色
+    '#F43F5E', // 玫红色
+    '#84CC16', // 青柠色
+    '#A855F7', // 紫罗兰
+    '#0EA5E9', // 天蓝色
+    '#22D3EE'  // 蓝绿色
+  ],
+  transformRequirement: [
+    '#3B82F6', // 蓝色 - 许可
+    '#10B981', // 绿色 - 转让
+    '#F59E0B', // 黄色 - 公司化运营
+    '#6B7280'  // 灰色 - 其他
+  ],
+  transformProgress: [
+    '#10B981', // 绿色 - 签约已完成
+    '#F59E0B'  // 黄色 - 未完成
   ]
 }

@@ -106,13 +106,6 @@ export default function Dashboard() {
   
   // 数据状态
   const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null)
-  
-  // 筛选状态  
-  const [filters, setFilters] = useState<DashboardFilters>({
-    timeRange: 'all',
-    projectTypes: [],
-    departments: []
-  })
 
   /* ------------------------------------------------------------------------------------------ */
 
@@ -134,16 +127,9 @@ export default function Dashboard() {
         window.location.href = '/login'
       }
     }
-
+    
     checkAuth()
   }, [])
-
-  // 筛选变化时重新加载数据
-  useEffect(() => {
-    if (isAuthenticated && mounted) {
-      loadDashboardData()
-    }
-  }, [filters, isAuthenticated, mounted])
 
   /* ------------------------------------------------------------------------------------------ */
 
@@ -152,20 +138,15 @@ export default function Dashboard() {
     try {
       console.log('🔄 开始加载Dashboard数据...')
       setLoading(true)
-      
-      const params = new URLSearchParams()
-      params.append('timeRange', filters.timeRange)
-      
-      if (filters.projectTypes && filters.projectTypes.length > 0) {
-        params.append('projectTypes', filters.projectTypes.join(','))
-      }
-      
-      if (filters.departments && filters.departments.length > 0) {
-        params.append('departments', filters.departments.join(','))
-      }
+      console.log('开始加载Dashboard数据...')
 
       const token = TokenManager.getToken()
-      const response = await fetch(`/api/dashboard/stats?${params.toString()}`, {
+      if (!token) {
+        throw new Error('未找到认证令牌')
+      }
+
+      const response = await fetch('/api/dashboard/stats', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -198,11 +179,6 @@ export default function Dashboard() {
   const handleRefresh = async () => {
     setRefreshing(true)
     await loadDashboardData()
-  }
-
-  // 处理筛选变化
-  const handleFilterChange = (newFilters: Partial<DashboardFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }))
   }
 
   /* ------------------------------------------------------------------------------------------ */
@@ -468,30 +444,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 筛选控制栏 */}
-        {/* <div className="filter-bar">
-          <div className="filter-section">
-            <div className="filter-item">
-              <CalendarIcon className="w-4 h-4 text-gray-400" />
-              <select
-                value={filters.timeRange}
-                onChange={(e) => handleFilterChange({ timeRange: e.target.value as any })}
-                className="filter-select"
-              >
-                <option value="all">全部时间</option>
-                <option value="thisYear">今年</option>
-                <option value="thisMonth">本月</option>
-                <option value="lastMonth">上月</option>
-              </select>
-            </div>
-
-            <div className="filter-item">
-              <FunnelIcon className="w-4 h-4 text-gray-400" />
-              <span className="filter-label">筛选条件</span>
-            </div>
-          </div>
-        </div> */}
-
         {loading ? (
           <div className="loading-container">
             <div className="loading-content">
@@ -640,54 +592,9 @@ export default function Dashboard() {
           box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
         }
 
-        .filter-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-          background: white;
-          padding: 20px 24px;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-section {
-          display: flex;
-          gap: 24px;
-          align-items: center;
-        }
-
-        .filter-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .filter-icon {
-          color: #64748b;
-        }
-
-        .filter-label {
-          font-size: 14px;
-          font-weight: 500;
-          color: #374151;
-          white-space: nowrap;
-        }
-
-        .filter-select {
-          padding: 6px 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 14px;
-          background: white;
-          cursor: pointer;
-          min-width: 120px;
-        }
-
-        .filter-select:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        .refresh-button:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
         }
 
         .stats-grid {
@@ -942,17 +849,6 @@ export default function Dashboard() {
             align-items: stretch;
           }
 
-          .filter-bar {
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-          }
-
-          .filter-section {
-            justify-content: center;
-            flex-wrap: wrap;
-          }
-
           .stats-grid {
             grid-template-columns: 1fr;
             gap: 16px;
@@ -1008,21 +904,6 @@ export default function Dashboard() {
 
           .page-subtitle {
             font-size: 14px;
-          }
-
-          .filter-bar {
-            padding: 16px;
-          }
-
-          .filter-item {
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-          }
-
-          .filter-select {
-            width: 100%;
-            min-width: 120px;
           }
 
           .stat-card {

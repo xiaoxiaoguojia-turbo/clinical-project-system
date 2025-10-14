@@ -118,8 +118,8 @@ export default function InternalPreparationsPage() {
   // 创建项目表单状态
   const [createFormData, setCreateFormData] = useState({
     department: 'transfer-investment-dept-1',
-    source: '',
     name: '',
+    source: '',
     importance: 'very-important',
     status: 'early-stage',
     leader: 'to-be-determined',
@@ -144,8 +144,8 @@ export default function InternalPreparationsPage() {
   // 编辑项目表单状态
   const [editFormData, setEditFormData] = useState({
     department: 'transfer-investment-dept-1',
-    source: '',
     name: '',
+    source: '',
     importance: 'very-important',
     status: 'early-stage',
     leader: 'to-be-determined',
@@ -272,7 +272,7 @@ export default function InternalPreparationsPage() {
       const Chart = (await import('chart.js/auto')).default
       
       // 先清理所有现有的图表实例
-      const chartIds = ['statusChart', 'sourceDeptChart', 'monthlyTrendChart', 'durationChart']
+      const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart', 'transformRequirementChart', 'transformProgressChart']
       chartIds.forEach(chartId => {
         const existingChart = Chart.getChart(chartId)
         if (existingChart) {
@@ -308,52 +308,106 @@ export default function InternalPreparationsPage() {
   }
 
   const getChartConfigs = () => {
-    // 计算图表数据
-    const statusDistribution = [
-      preparationStats.veryImportantCount,
-      preparationStats.marketProductCount,
-      preparationStats.contractCompletedCount,
-      preparationStats.contractIncompleteCount
-    ]
+    // 1. 归属部门统计
+    const departmentData = preparations.reduce((acc, prep) => {
+      acc[prep.department] = (acc[prep.department] || 0) + 1
+      return acc
+    }, {} as {[key: string]: number})
+    
+    const departmentLabels = Object.keys(departmentData).map(key => {
+      const labels: {[key: string]: string} = {
+        'transfer-investment-dept-1': '转移转化与投资一部',
+        'transfer-investment-dept-2': '转移转化与投资二部',
+        'transfer-investment-dept-3': '转移转化与投资三部'
+      }
+      return labels[key] || key
+    })
+    const departmentValues = Object.values(departmentData)
 
-    const sourceDeptData = preparations.reduce((acc, prep) => {
+    // 2. 医院来源统计
+    const sourceData = preparations.reduce((acc, prep) => {
       acc[prep.source] = (acc[prep.source] || 0) + 1
       return acc
     }, {} as {[key: string]: number})
+    
+    const sourceLabels = Object.keys(sourceData).slice(0, 10)
+    const sourceValues = sourceLabels.map(label => sourceData[label])
 
-    const sourceLabels = Object.keys(sourceDeptData).slice(0, 6) // 显示前6个科室
-    const sourceData = sourceLabels.map(label => sourceDeptData[label])
+    // 3. 重要程度统计
+    const importanceData = preparations.reduce((acc, prep) => {
+      acc[prep.importance] = (acc[prep.importance] || 0) + 1
+      return acc
+    }, {} as {[key: string]: number})
+    
+    const importanceLabels = Object.keys(importanceData).map(key => {
+      const labels: {[key: string]: string} = {
+        'very-important': '非常重要',
+        'important': '重要',
+        'normal': '一般',
+        'not-important': '不重要'
+      }
+      return labels[key] || key
+    })
+    const importanceValues = Object.values(importanceData)
+
+    // 4. 项目进展状态统计
+    const statusData = preparations.reduce((acc, prep) => {
+      acc[prep.status] = (acc[prep.status] || 0) + 1
+      return acc
+    }, {} as {[key: string]: number})
+    
+    const statusLabels = Object.keys(statusData).map(key => {
+      const labels: {[key: string]: string} = {
+        'early-stage': '早期',
+        'preclinical': '临床前',
+        'clinical-stage': '临床阶段',
+        'market-product': '上市产品'
+      }
+      return labels[key] || key
+    })
+    const statusValues = Object.values(statusData)
+
+    // 5. 转化需求统计
+    const transformReqData = preparations.reduce((acc, prep) => {
+      acc[prep.transformRequirement] = (acc[prep.transformRequirement] || 0) + 1
+      return acc
+    }, {} as {[key: string]: number})
+    
+    const transformReqLabels = Object.keys(transformReqData).map(key => {
+      const labels: {[key: string]: string} = {
+        'license': '许可',
+        'transfer': '转让',
+        'company-operation': '公司化运营',
+        'other': '其他'
+      }
+      return labels[key] || key
+    })
+    const transformReqValues = Object.values(transformReqData)
+
+    // 6. 转化推进状态统计
+    const transformProgressData = preparations.reduce((acc, prep) => {
+      acc[prep.transformProgress] = (acc[prep.transformProgress] || 0) + 1
+      return acc
+    }, {} as {[key: string]: number})
+    
+    const transformProgressLabels = Object.keys(transformProgressData).map(key => {
+      const labels: {[key: string]: string} = {
+        'contract-completed': '签约已完成',
+        'contract-incomplete': '未完成'
+      }
+      return labels[key] || key
+    })
+    const transformProgressValues = Object.values(transformProgressData)
 
     return {
-      statusChart: {
-        type: 'doughnut' as const,
-        data: {
-          labels: ['进行中', '已完成', '已暂停'],
-          datasets: [{
-            data: statusDistribution,
-            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
-            borderWidth: 0,
-            cutout: '60%'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom' as const,
-              labels: { padding: 20, usePointStyle: true }
-            }
-          }
-        }
-      },
-      sourceDeptChart: {
+      // 1. 归属部门 - 柱状图
+      departmentChart: {
         type: 'bar' as const,
         data: {
-          labels: sourceLabels,
+          labels: departmentLabels,
           datasets: [{
-            label: '制剂数量',
-            data: sourceData,
+            label: '项目数量',
+            data: departmentValues,
             backgroundColor: '#3b82f6',
             borderRadius: 6,
             borderSkipped: false
@@ -373,47 +427,16 @@ export default function InternalPreparationsPage() {
           }
         }
       },
-      monthlyTrendChart: {
-        type: 'line' as const,
-        data: {
-          labels: ['4月', '5月', '6月', '7月', '8月', '9月'],
-          datasets: [{
-            label: '新增制剂',
-            data: [2, 3, 1, 4, 2, 12],
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
-      },
-      durationChart: {
+
+      // 2. 医院来源 - 柱状图
+      sourceChart: {
         type: 'bar' as const,
         data: {
-          labels: ['1-2年', '3-5年', '6-10年', '10年以上'],
+          labels: sourceLabels,
           datasets: [{
-            label: '制剂数量',
-            data: [
-              preparations.filter(p => parseInt(p.duration) <= 2).length,
-              preparations.filter(p => parseInt(p.duration) >= 3 && parseInt(p.duration) <= 5).length,
-              preparations.filter(p => parseInt(p.duration) >= 6 && parseInt(p.duration) <= 10).length,
-              preparations.filter(p => parseInt(p.duration) > 10).length
-            ],
-            backgroundColor: '#8b5cf6',
+            label: '项目数量',
+            data: sourceValues,
+            backgroundColor: '#10b981',
             borderRadius: 6,
             borderSkipped: false
           }]
@@ -431,6 +454,102 @@ export default function InternalPreparationsPage() {
             }
           }
         }
+      },
+
+      // 3. 重要程度 - 饼图
+      importanceChart: {
+        type: 'pie' as const,
+        data: {
+          labels: importanceLabels,
+          datasets: [{
+            data: importanceValues,
+            backgroundColor: ['#dc2626', '#ea580c', '#059669', '#6b7280'],
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom' as const,
+              labels: { padding: 15, usePointStyle: true }
+            }
+          }
+        }
+      },
+
+      // 4. 项目进展状态 - 环形图
+      statusChart: {
+        type: 'doughnut' as const,
+        data: {
+          labels: statusLabels,
+          datasets: [{
+            data: statusValues,
+            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6'],
+            borderWidth: 0,
+            cutout: '60%'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom' as const,
+              labels: { padding: 15, usePointStyle: true }
+            }
+          }
+        }
+      },
+
+      // 5. 转化需求 - 饼图
+      transformRequirementChart: {
+        type: 'pie' as const,
+        data: {
+          labels: transformReqLabels,
+          datasets: [{
+            data: transformReqValues,
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6b7280'],
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom' as const,
+              labels: { padding: 15, usePointStyle: true }
+            }
+          }
+        }
+      },
+
+      // 6. 转化推进状态 - 环形图
+      transformProgressChart: {
+        type: 'doughnut' as const,
+        data: {
+          labels: transformProgressLabels,
+          datasets: [{
+            data: transformProgressValues,
+            backgroundColor: ['#10b981', '#f59e0b'],
+            borderWidth: 0,
+            cutout: '60%'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom' as const,
+              labels: { padding: 15, usePointStyle: true }
+            }
+          }
+        }
       }
     }
   }
@@ -445,7 +564,7 @@ export default function InternalPreparationsPage() {
     const destroyCharts = async () => {
       try {
         const Chart = (await import('chart.js/auto')).default
-        const chartIds = ['statusChart', 'sourceDeptChart', 'monthlyTrendChart', 'durationChart']
+        const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart', 'transformRequirementChart', 'transformProgressChart']
         
         chartIds.forEach(chartId => {
           const existingChart = Chart.getChart(chartId)
@@ -1164,7 +1283,43 @@ export default function InternalPreparationsPage() {
             <div className="charts-grid">
               <div className="chart-card">
                 <div className="chart-header">
-                  <h3>制剂状态分布</h3>
+                  <h3>归属部门分布</h3>
+                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
+                    <EllipsisVerticalIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <canvas id="departmentChart"></canvas>
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>医院来源分布</h3>
+                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
+                    <EllipsisVerticalIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <canvas id="sourceChart"></canvas>
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>重要程度分布</h3>
+                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
+                    <EllipsisVerticalIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <canvas id="importanceChart"></canvas>
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>项目进展状态</h3>
                   <button className="chart-menu" onClick={() => console.log('Chart menu')}>
                     <EllipsisVerticalIcon className="w-4 h-4" />
                   </button>
@@ -1176,37 +1331,25 @@ export default function InternalPreparationsPage() {
 
               <div className="chart-card">
                 <div className="chart-header">
-                  <h3>来源科室分布</h3>
+                  <h3>转化需求分布</h3>
                   <button className="chart-menu" onClick={() => console.log('Chart menu')}>
                     <EllipsisVerticalIcon className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="chart-container">
-                  <canvas id="sourceDeptChart"></canvas>
+                  <canvas id="transformRequirementChart"></canvas>
                 </div>
               </div>
 
               <div className="chart-card">
                 <div className="chart-header">
-                  <h3>制剂创建趋势</h3>
+                  <h3>转化推进状态</h3>
                   <button className="chart-menu" onClick={() => console.log('Chart menu')}>
                     <EllipsisVerticalIcon className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="chart-container">
-                  <canvas id="monthlyTrendChart"></canvas>
-                </div>
-              </div>
-
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h3>有效期分布</h3>
-                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
-                    <EllipsisVerticalIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="chart-container">
-                  <canvas id="durationChart"></canvas>
+                  <canvas id="transformProgressChart"></canvas>
                 </div>
               </div>
             </div>
@@ -1836,11 +1979,11 @@ export default function InternalPreparationsPage() {
                     <div className="detail-group">
                       <div className="detail-item">
                         <label className="detail-label">创建时间</label>
-                        <div className="detail-value">{new Date(selectedProject.createTime).toLocaleString()}</div>
+                        <div className="detail-value">{new Date(selectedProject.createTime).toLocaleDateString()}</div>
                       </div>
                       <div className="detail-item">
                         <label className="detail-label">更新时间</label>
-                        <div className="detail-value">{new Date(selectedProject.updateTime).toLocaleString()}</div>
+                        <div className="detail-value">{new Date(selectedProject.updateTime).toLocaleDateString()}</div>
                       </div>
                       {selectedProject.createdBy && (
                         <div className="detail-item">
@@ -2149,7 +2292,6 @@ export default function InternalPreparationsPage() {
             border-radius: 12px;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            transition: all 0.2s ease;
           }
 
           .chart-card:hover {
@@ -2261,203 +2403,78 @@ export default function InternalPreparationsPage() {
             }
           }
 
-          /* 动画 */
-          @keyframes spin {
-            to { transform: rotate(360deg); }
+          @media (max-width: 480px) {
+            .detail-grid {
+              gap: 24px;
+            }
+            
+            .detail-section {
+              padding: 16px;
+            }
+            
+            .detail-group {
+              gap: 12px;
+            }
+            
+            .detail-value {
+              padding: 10px 12px;
+            }
           }
 
-          /* 项目列表样式 */
-          .projects-section {
+          .actions-cell {
+            padding: 16px 20px;
+            text-align: center;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          }
-
-          .search-section {
-            flex: 1;
-            max-width: 400px;
-          }
-
-          .search-input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-          }
-
-          .search-icon {
-            color: #6b7280;
-          }
-
-          .search-input {
-            width: 100%;
-            padding: 12px 12px 12px 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            color: #374151;
-            cursor: pointer;
-            transition: border-color 0.2s ease;
-          }
-
-          .search-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-          }
-
-          .create-button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-            margin-top: 17px;
-          }
-
-          .create-button:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-          }
-
-          .project-table-container {
-            overflow-x: auto;
-          }
-
-          .project-table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-
-          .project-table th {
-            background: #f8fafc;
-            padding: 16px;
-            text-align: left;
-            font-weight: 600;
-            color: #374151;
-            border-bottom: 1px solid #e5e7eb;
-          }
-
-          .project-table td {
-            padding: 16px;
             border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-          }
-
-          .project-row:hover {
-            background: #f8fafc;
-          }
-
-          .project-name {
-            font-weight: 600;
-            color: #1e293b;
-          }
-
-          .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-          }
-
-          .status-badge.green {
-            background: #dcfce7;
-            color: #16a34a;
-          }
-
-          .status-badge.blue {
-            background: #dbeafe;
-            color: #2563eb;
-          }
-
-          .status-badge.yellow {
-            background: #fef3c7;
-            color: #d97706;
-          }
-
-          .status-badge.gray {
-            background: #f1f5f9;
-            color: #64748b;
           }
 
           .action-buttons {
             display: flex;
-            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+          }
+
+          .action-group {
+            display: flex;
+            gap: 6px;
+            padding: 4px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+          }
+
+          .primary-actions {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+          }
+
+          .extended-actions {
+            background: #fef7ff;
+            border-color: #e9d5ff;
           }
 
           .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 32px;
             height: 32px;
             border: none;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
-          }
-
-          .action-btn.view-btn {
-            color: #3b82f6;
-          }
-
-          .action-btn.view-btn:hover {
-            background: #dbeafe;
-            color: #1d4ed8;
-          }
-
-          .action-btn.edit-btn {
-            color: #10b981;
-          }
-
-          .action-btn.edit-btn:hover {
-            background: #d1fae5;
-            color: #047857;
-          }
-
-          .action-btn.delete-btn {
-            color: #ef4444;
-          }
-
-          .action-btn.delete-btn:hover {
-            background: #fee2e2;
-            color: #dc2626;
-          }
-
-          .action-btn.attachment-btn {
-            color: #8b5cf6;
-          }
-
-          .action-btn.attachment-btn:hover {
-            background: #ede9fe;
-            color: #7c3aed;
+            background: transparent;
           }
 
           .action-btn.ai-generate-btn {
             color: #f59e0b;
             position: relative;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
           }
 
           .action-btn.ai-generate-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4);
+            background: #fef3c7;
+            color: #d97706;
           }
 
           .action-btn.ai-generate-btn:disabled {

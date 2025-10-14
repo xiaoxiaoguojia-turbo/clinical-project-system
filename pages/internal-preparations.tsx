@@ -24,7 +24,9 @@ import {
   SparklesIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  StarIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline'
 import { 
   ApiResponse, 
@@ -62,11 +64,10 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
 
 interface PreparationStats {
   totalPreparations: number
-  activePreparations: number
-  completedPreparations: number
-  pausedPreparations: number
-  sourceDepartments: number
-  patentCount: number
+  veryImportantCount: number
+  marketProductCount: number
+  contractCompletedCount: number
+  contractIncompleteCount: number
 }
 
 interface StatCard {
@@ -75,8 +76,6 @@ interface StatCard {
   unit: string
   icon: React.ComponentType<any>
   color: string
-  trend: string
-  trendLabel: string
 }
 
 export default function InternalPreparationsPage() {
@@ -91,11 +90,10 @@ export default function InternalPreparationsPage() {
   
   const [preparationStats, setPreparationStats] = useState<PreparationStats>({
     totalPreparations: 0,
-    activePreparations: 0,
-    completedPreparations: 0,
-    pausedPreparations: 0,
-    sourceDepartments: 0,
-    patentCount: 0
+    veryImportantCount: 0,
+    marketProductCount: 0,
+    contractCompletedCount: 0,
+    contractIncompleteCount: 0
   })
   
   const [preparations, setPreparations] = useState<UnifiedProject[]>([])
@@ -251,19 +249,17 @@ export default function InternalPreparationsPage() {
 
   const calculateStats = (projects: UnifiedProject[]): PreparationStats => {
     const totalPreparations = projects.length
-    const activePreparations = projects.filter(p => p.status === 'early-stage').length
-    const completedPreparations = projects.filter(p => p.status === 'completed').length
-    const pausedPreparations = projects.filter(p => p.status === 'paused').length
-    const sourceDepartments = new Set(projects.map(p => p.source)).size
-    const patentCount = projects.filter(p => p.patent && p.patent !== '无').length
+    const veryImportantCount = projects.filter(p => p.importance === 'very-important').length
+    const marketProductCount = projects.filter(p => p.status === 'market-product').length
+    const contractCompletedCount = projects.filter(p => p.transformProgress === 'contract-completed').length
+    const contractIncompleteCount = projects.filter(p => p.transformProgress === 'contract-incomplete').length
 
     return {
       totalPreparations,
-      activePreparations,
-      completedPreparations,
-      pausedPreparations,
-      sourceDepartments,
-      patentCount
+      veryImportantCount,
+      marketProductCount,
+      contractCompletedCount,
+      contractIncompleteCount
     }
   }
   /* ------------------------------------------------------------------------------------------ */
@@ -314,9 +310,10 @@ export default function InternalPreparationsPage() {
   const getChartConfigs = () => {
     // 计算图表数据
     const statusDistribution = [
-      preparationStats.activePreparations,
-      preparationStats.completedPreparations,
-      preparationStats.pausedPreparations
+      preparationStats.veryImportantCount,
+      preparationStats.marketProductCount,
+      preparationStats.contractCompletedCount,
+      preparationStats.contractIncompleteCount
     ]
 
     const sourceDeptData = preparations.reduce((acc, prep) => {
@@ -1002,54 +999,35 @@ export default function InternalPreparationsPage() {
       value: preparationStats.totalPreparations,
       unit: '个',
       icon: BeakerIcon,
-      color: 'blue',
-      trend: '+2',
-      trendLabel: '较上月'
+      color: 'blue'
     },
     {
-      title: '进行中',
-      value: preparationStats.activePreparations,
+      title: '非常重要',
+      value: preparationStats.veryImportantCount,
+      unit: '个',
+      icon: StarIcon,
+      color: 'red'
+    },
+    {
+      title: '上市产品',
+      value: preparationStats.marketProductCount,
       unit: '个',
       icon: CheckCircleIcon,
-      color: 'green',
-      trend: '+1',
-      trendLabel: '较上月'
+      color: 'green'
     },
     {
-      title: '已完成',
-      value: preparationStats.completedPreparations,
+      title: '签约已完成',
+      value: preparationStats.contractCompletedCount,
       unit: '个',
       icon: ClipboardDocumentListIcon,
-      color: 'purple',
-      trend: '+1',
-      trendLabel: '较上月'
+      color: 'emerald'
     },
     {
-      title: '已暂停',
-      value: preparationStats.pausedPreparations,
+      title: '签约未完成',
+      value: preparationStats.contractIncompleteCount,
       unit: '个',
-      icon: PauseCircleIcon,
-      color: 'yellow',
-      trend: '0',
-      trendLabel: '较上月'
-    },
-    {
-      title: '来源科室',
-      value: preparationStats.sourceDepartments,
-      unit: '个',
-      icon: BuildingOffice2Icon,
-      color: 'indigo',
-      trend: '+1',
-      trendLabel: '较上月'
-    },
-    {
-      title: '专利申请',
-      value: preparationStats.patentCount,
-      unit: '个',
-      icon: ChartBarIcon,
-      color: 'pink',
-      trend: '+2',
-      trendLabel: '较上月'
+      icon: ClockIcon,
+      color: 'amber'
     }
   ]
   
@@ -1162,12 +1140,6 @@ export default function InternalPreparationsPage() {
                         <div className="stat-icon">
                           <card.icon className="w-8 h-8" />
                         </div>
-                      </div>
-                      <div className="stat-trend">
-                        <span className={`trend ${card.trend.startsWith('+') ? 'positive' : card.trend === '0' ? 'neutral' : 'negative'}`}>
-                          {card.trend}
-                        </span>
-                        <span className="trend-label">{card.trendLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -2051,11 +2023,12 @@ export default function InternalPreparationsPage() {
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
           }
 
           .refresh-button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
           }
 
           /* 统计卡片网格 */
@@ -2151,27 +2124,6 @@ export default function InternalPreparationsPage() {
           .stat-card.indigo .stat-icon { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
           .stat-card.pink .stat-icon { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
 
-          .stat-trend {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-          }
-
-          .trend {
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
-          }
-
-          .trend.positive { background: #dcfce7; color: #16a34a; }
-          .trend.neutral { background: #f1f5f9; color: #64748b; }
-          .trend.negative { background: #fef2f2; color: #dc2626; }
-
-          .trend-label {
-            color: #64748b;
-          }
-
           /* 图表网格 */
           .charts-grid {
             display: grid;
@@ -2197,6 +2149,7 @@ export default function InternalPreparationsPage() {
             align-items: center;
             padding: 20px 24px 16px 24px;
             border-bottom: 1px solid #f1f5f9;
+            background: #fafbfc;
           }
 
           .chart-header h3 {

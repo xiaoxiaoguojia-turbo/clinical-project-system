@@ -11,7 +11,8 @@ import {
   StarIcon,
   ClockIcon,
   ArrowTrendingUpIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -92,11 +93,6 @@ interface StatCard {
   unit: string
   icon: React.ComponentType<any>
   color: string
-  trend?: {
-    value: number
-    isPositive: boolean
-    label: string
-  }
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -215,7 +211,7 @@ export default function Dashboard() {
   const getStatCards = (): StatCard[] => {
     if (!dashboardData) return []
 
-    const { overview, otherProjects, trends } = dashboardData
+    const { overview } = dashboardData
 
     return [
       {
@@ -223,33 +219,28 @@ export default function Dashboard() {
         value: overview.totalProjects,
         unit: '个',
         icon: CubeIcon,
-        color: 'blue',
-        trend: {
-          value: trends.growth.totalGrowth,
-          isPositive: trends.growth.totalGrowth >= 0,
-          label: '年度增长'
-        }
+        color: 'blue'
       },
       {
         title: '院内制剂',
-        value: overview.byProjectType.find(item => item.label === '院内制剂')?.value || 0,
+        value: overview.internalPreparationCount,
         unit: '个',
         icon: BuildingOfficeIcon,
         color: 'green'
       },
       {
-        title: '其他项目',
-        value: otherProjects.totalOtherProjects,
+        title: '签约已完成',
+        value: overview.contractCompletedCount,
         unit: '个',
-        icon: ChartBarIcon,
-        color: 'purple'
+        icon: CheckCircleIcon,
+        color: 'emerald'
       },
       {
-        title: '平均跟进',
-        value: otherProjects.averageFollowUpWeeks || 0,
-        unit: '周',
+        title: '签约未完成',
+        value: overview.contractIncompleteCount,
+        unit: '个',
         icon: ClockIcon,
-        color: 'orange'
+        color: 'amber'
       }
     ]
   }
@@ -279,7 +270,24 @@ export default function Dashboard() {
     }
 
     return {
-      // 项目类型分布 - 柱状图
+      // 1. 部门分布 - 环形图
+      departments: {
+        data: {
+          labels: overview.byDepartment.map(item => item.label),
+          datasets: [{
+            data: overview.byDepartment.map(item => item.value),
+            backgroundColor: CHART_COLORS.department.slice(0, overview.byDepartment.length),
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          ...baseOptions,
+          cutout: '50%'
+        }
+      },
+
+      // 2. 项目类型分布 - 柱状图
       projectTypes: {
         data: {
           labels: overview.byProjectType.map(item => item.label),
@@ -306,24 +314,48 @@ export default function Dashboard() {
         }
       },
 
-      // 部门分布 - 环形图
-      departments: {
+      // 3. 来源分布 - 柱状图
+      sources: {
         data: {
-          labels: overview.byDepartment.map(item => item.label),
+          labels: overview.bySource.map(item => item.label),
           datasets: [{
-            data: overview.byDepartment.map(item => item.value),
-            backgroundColor: CHART_COLORS.department.slice(0, overview.byDepartment.length),
-            borderColor: '#ffffff',
-            borderWidth: 2,
+            label: '项目数量',
+            data: overview.bySource.map(item => item.value),
+            backgroundColor: CHART_COLORS.source.slice(0, overview.bySource.length),
+            borderWidth: 1,
+            borderRadius: 4,
           }]
         },
         options: {
           ...baseOptions,
-          cutout: '50%'
+          plugins: {
+            ...baseOptions.plugins,
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
         }
       },
 
-      // 项目状态分布 - 柱状图
+      // 4. 重要程度分布 - 饼图
+      importance: {
+        data: {
+          labels: overview.byImportance.map(item => item.label),
+          datasets: [{
+            data: overview.byImportance.map(item => item.value),
+            backgroundColor: CHART_COLORS.importance.slice(0, overview.byImportance.length),
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          }]
+        },
+        options: baseOptions
+      },
+
+      // 5. 项目状态分布 - 柱状图
       status: {
         data: {
           labels: overview.byStatus.map(item => item.label),
@@ -350,13 +382,54 @@ export default function Dashboard() {
         }
       },
 
-      // 重要程度分布 - 饼图
-      importance: {
+      // 6. 转化需求分布 - 饼图
+      transformRequirement: {
         data: {
-          labels: overview.byImportance.map(item => item.label),
+          labels: overview.byTransformRequirement.map(item => item.label),
           datasets: [{
-            data: overview.byImportance.map(item => item.value),
-            backgroundColor: CHART_COLORS.importance.slice(0, overview.byImportance.length),
+            data: overview.byTransformRequirement.map(item => item.value),
+            backgroundColor: CHART_COLORS.transformRequirement.slice(0, overview.byTransformRequirement.length),
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          }]
+        },
+        options: baseOptions
+      },
+
+      // 7. 适应症分布 - 柱状图
+      indication: {
+        data: {
+          labels: overview.byIndication.map(item => item.label),
+          datasets: [{
+            label: '项目数量',
+            data: overview.byIndication.map(item => item.value),
+            backgroundColor: CHART_COLORS.indication.slice(0, overview.byIndication.length),
+            borderWidth: 1,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          ...baseOptions,
+          plugins: {
+            ...baseOptions.plugins,
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      },
+
+      // 8. 转化推进状态 - 饼图
+      transformProgress: {
+        data: {
+          labels: overview.byTransformProgress.map(item => item.label),
+          datasets: [{
+            data: overview.byTransformProgress.map(item => item.value),
+            backgroundColor: CHART_COLORS.transformProgress.slice(0, overview.byTransformProgress.length),
             borderColor: '#ffffff',
             borderWidth: 2,
           }]
@@ -443,12 +516,6 @@ export default function Dashboard() {
                       <span className="value">{card.value}</span>
                       <span className="unit">{card.unit}</span>
                     </div>
-                    {/* {card.trend && (
-                      <div className={`card-trend ${card.trend.isPositive ? 'positive' : 'negative'}`}>
-                        <ArrowTrendingUpIcon className="w-4 h-4" />
-                        <span>{card.trend.value}% {card.trend.label}</span>
-                      </div>
-                    )} */}
                   </div>
                 </div>
               ))}
@@ -459,20 +526,36 @@ export default function Dashboard() {
               {getChartConfigs && (
                 <>
                   <div className="chart-item" style={{ height: '350px' }}>
+                    <h3 className="chart-title">部门分布</h3>
+                    <Doughnut data={getChartConfigs.departments.data} options={getChartConfigs.departments.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">项目类型分布</h3>
                     <Bar data={getChartConfigs.projectTypes.data} options={getChartConfigs.projectTypes.options} />
                   </div>
                   <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">部门分布</h3>
-                    <Doughnut data={getChartConfigs.departments.data} options={getChartConfigs.departments.options} />
+                    <h3 className="chart-title">来源分布</h3>
+                    <Bar data={getChartConfigs.sources.data} options={getChartConfigs.sources.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '350px' }}>
+                    <h3 className="chart-title">重要程度分布</h3>
+                    <Pie data={getChartConfigs.importance.data} options={getChartConfigs.importance.options} />
                   </div>
                   <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">项目状态分布</h3>
                     <Bar data={getChartConfigs.status.data} options={getChartConfigs.status.options} />
                   </div>
                   <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">重要程度分布</h3>
-                    <Pie data={getChartConfigs.importance.data} options={getChartConfigs.importance.options} />
+                    <h3 className="chart-title">转化需求分布</h3>
+                    <Pie data={getChartConfigs.transformRequirement.data} options={getChartConfigs.transformRequirement.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '350px' }}>
+                    <h3 className="chart-title">适应症分布</h3>
+                    <Bar data={getChartConfigs.indication.data} options={getChartConfigs.indication.options} />
+                  </div>
+                  <div className="chart-item" style={{ height: '350px' }}>
+                    <h3 className="chart-title">转化推进状态</h3>
+                    <Pie data={getChartConfigs.transformProgress.data} options={getChartConfigs.transformProgress.options} />
                   </div>
                 </>
               )}
@@ -671,21 +754,6 @@ export default function Dashboard() {
           font-weight: 500;
         }
 
-        .card-trend {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          margin-top: 8px;
-        }
-
-        .card-trend.positive {
-          color: #10b981;
-        }
-
-        .card-trend.negative {
-          color: #ef4444;
-        }
-
         .charts-container {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -832,38 +900,22 @@ export default function Dashboard() {
           color: #064e3b;
         }
 
-        .stat-card.purple {
-          background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
-          border: 2px solid #c4b5fd;
+        .stat-card.emerald {
+          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+          border-color: #6ee7b7;
         }
 
-        .stat-card.purple .card-title {
-          color: #6b21a8;
+        .stat-card.emerald .card-icon {
+          color: #10b981;
         }
 
-        .stat-card.purple .card-header svg {
-          color: #8b5cf6;
+        .stat-card.amber {
+          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+          border-color: #fcd34d;
         }
 
-        .stat-card.purple .value {
-          color: #581c87;
-        }
-
-        .stat-card.orange {
-          background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-          border: 2px solid #fdba74;
-        }
-
-        .stat-card.orange .card-title {
-          color: #c2410c;
-        }
-
-        .stat-card.orange .card-header svg {
-          color: #f97316;
-        }
-
-        .stat-card.orange .value {
-          color: #9a3412;
+        .stat-card.amber .card-icon {
+          color: #f59e0b;
         }
 
         /* 响应式设计 */
@@ -987,16 +1039,6 @@ export default function Dashboard() {
 
           .value {
             font-size: 24px;
-          }
-
-          .card-trend {
-            font-size: 12px;
-          }
-
-          .refresh-button,
-          .retry-button {
-            padding: 10px 20px;
-            font-size: 13px;
           }
 
           .chart-item {

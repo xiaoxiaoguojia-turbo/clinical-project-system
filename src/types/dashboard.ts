@@ -12,7 +12,7 @@ export interface StatItem {
 
 // 项目总体统计
 export interface ProjectOverviewStats {
-  totalProjects: number
+  totalProjects: number                   // 项目总数
   internalPreparationCount: number        // 院内制剂数量
   contractCompletedCount: number          // 签约已完成数量
   contractIncompleteCount: number         // 签约未完成数量

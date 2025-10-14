@@ -499,8 +499,8 @@ export default function InternalPreparationsPage() {
     // 预填充编辑表单数据
     setEditFormData({
       department: project.department,
-      source: project.source,
       name: project.name,
+      source: project.source,
       importance: project.importance,
       status: project.status,
       leader: project.leader,
@@ -596,24 +596,34 @@ export default function InternalPreparationsPage() {
   const validateCreateForm = () => {
     const errors: {[key: string]: string} = {}
     
-    if (!createFormData.source.trim()) errors.source = '来源科室为必填项'
+    // 通用必填字段
+    if (!createFormData.department.trim()) errors.department = '归属部门为必填项'
     if (!createFormData.name.trim()) errors.name = '项目名称为必填项'
-    if (!createFormData.importance.trim()) errors.importance = '重要性为必填项'
-    if (!createFormData.status.trim()) errors.status = '状态为必填项'
+    if (!createFormData.source.trim()) errors.source = '医院来源为必填项'
+    if (!createFormData.importance.trim()) errors.importance = '重要程度为必填项'
+    if (!createFormData.status.trim()) errors.status = '项目进展状态为必填项'
     if (!createFormData.leader.trim()) errors.leader = '负责人为必填项'
-    if (!createFormData.indication.trim()) errors.indication = '适应症为必填项'
+
+    // 通用选填字段
+    if (!createFormData.indication.trim()) errors.indication = '适应症/科室为必填项'
     if (!createFormData.transformRequirement.trim()) errors.transformRequirement = '转化需求为必填项'
-    if (!createFormData.transformProgress.trim()) errors.transformProgress = '转化进展为必填项'
-    if (!createFormData.hospitalDoctor.trim()) errors.hospitalDoctor = '医院医生为必填项'
-    if (!createFormData.patent.trim()) errors.patent = '专利情况为必填项'
+    if (!createFormData.transformProgress.trim()) errors.transformProgress = '转化推进状态为必填项'
+    if (!createFormData.hospitalDoctor.trim()) errors.hospitalDoctor = '院端医生为必填项'
+    if (!createFormData.patent.trim()) errors.patent = '专利信息为必填项'
     if (!createFormData.clinicalData.trim()) errors.clinicalData = '临床数据为必填项'
     if (!createFormData.marketSize.trim()) errors.marketSize = '市场规模为必填项'
-    if (!createFormData.competitorStatus.trim()) errors.competitorStatus = '竞争对手状态为必填项'
-    if (!createFormData.conclusion.trim()) errors.conclusion = '结论为必填项'
+    if (!createFormData.competitorStatus.trim()) errors.competitorStatus = '竞品状态为必填项'
+    if (!createFormData.conclusion.trim()) errors.conclusion = '项目结论为必填项'
+
+    // 院内制剂特有字段
+
+    // 院内制剂必填字段
     if (!createFormData.composition.trim()) errors.composition = '组方为必填项'
     if (!createFormData.function.trim()) errors.function = '功能为必填项'
-    if (!createFormData.specification.trim()) errors.specification = '规格为必填项'
-    if (!createFormData.duration.trim()) errors.duration = '有效期为必填项'
+
+    // 院内制剂选填字段
+    if (!createFormData.specification.trim()) errors.specification = '制剂规格为必填项'
+    if (!createFormData.duration.trim()) errors.duration = '使用年限为必填项'
     if (!createFormData.recordNumber.trim()) errors.recordNumber = '备案号为必填项'
     
     setCreateFormErrors(errors)
@@ -658,8 +668,8 @@ export default function InternalPreparationsPage() {
     setShowCreateModal(false)
     setCreateFormData({
       department: 'transfer-investment-dept-1',
-      source: '',
       name: '',
+      source: '',
       importance: 'very-important',
       status: 'early-stage',
       leader: 'to-be-determined',
@@ -699,35 +709,38 @@ export default function InternalPreparationsPage() {
   const validateEditForm = () => {
     const errors: {[key: string]: string} = {}
     
-    if (!editFormData.source.trim()) {
-      errors.source = '来源科室不能为空'
+    if (!editFormData.department.trim()) {
+      errors.department = '归属部门不能为空'
     }
     if (!editFormData.name.trim()) {
       errors.name = '项目名称不能为空'
     }
+    if (!editFormData.source.trim()) {
+      errors.source = '医院来源不能为空'
+    }
     if (!editFormData.importance.trim()) {
-      errors.importance = '重要性不能为空'
+      errors.importance = '重要程度不能为空'
     }
     if (!editFormData.status.trim()) {
-      errors.status = '状态不能为空'
+      errors.status = '项目进展状态不能为空'
     }
     if (!editFormData.leader.trim()) {
       errors.leader = '负责人不能为空'
     }
     if (!editFormData.indication.trim()) {
-      errors.indication = '适应症不能为空'
+      errors.indication = '适应症/科室不能为空'
     }
     if (!editFormData.transformRequirement.trim()) {
       errors.transformRequirement = '转化需求不能为空'
     }
     if (!editFormData.transformProgress.trim()) {
-      errors.transformProgress = '转化进展不能为空'
+      errors.transformProgress = '转化推进状态不能为空'
     }
     if (!editFormData.hospitalDoctor.trim()) {
-      errors.hospitalDoctor = '医院医生不能为空'
+      errors.hospitalDoctor = '院端医生不能为空'
     }
     if (!editFormData.patent.trim()) {
-      errors.patent = '专利情况不能为空'
+      errors.patent = '专利信息不能为空'
     }
     if (!editFormData.clinicalData.trim()) {
       errors.clinicalData = '临床数据不能为空'
@@ -736,10 +749,10 @@ export default function InternalPreparationsPage() {
       errors.marketSize = '市场规模不能为空'
     }
     if (!editFormData.competitorStatus.trim()) {
-      errors.competitorStatus = '竞争对手状态不能为空'
+      errors.competitorStatus = '竞品状态不能为空'
     }
     if (!editFormData.conclusion.trim()) {
-      errors.conclusion = '结论不能为空'
+      errors.conclusion = '项目结论不能为空'
     }
     if (!editFormData.composition.trim()) {
       errors.composition = '组方不能为空'
@@ -748,12 +761,12 @@ export default function InternalPreparationsPage() {
       errors.function = '功能不能为空'
     }
     if (!editFormData.specification.trim()) {
-      errors.specification = '规格不能为空'
+      errors.specification = '制剂规格不能为空'
     }
     if (!editFormData.duration.trim()) {
-      errors.duration = '有效期不能为空'
+      errors.duration = '使用年限不能为空'
     } else if (isNaN(Number(editFormData.duration))) {
-      errors.duration = '有效期必须为数字'
+      errors.duration = '使用年限必须为数字'
     }
     if (!editFormData.recordNumber.trim()) {
       errors.recordNumber = '备案号不能为空'
@@ -810,8 +823,8 @@ export default function InternalPreparationsPage() {
         setSelectedProject(null)
         setEditFormData({
           department: 'transfer-investment-dept-1',
-          source: '',
           name: '',
+          source: '',
           importance: 'very-important',
           status: 'early-stage',
           leader: 'to-be-determined',

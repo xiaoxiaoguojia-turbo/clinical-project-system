@@ -675,8 +675,8 @@ export default function InternalPreparationsPage() {
     setSelectedProject(null)
     setCreateFormData({
       department: 'transfer-investment-dept-1',
-      source: '',
       name: '',
+      source: '',
       importance: 'very-important',
       status: 'early-stage',
       leader: 'to-be-determined',
@@ -907,8 +907,8 @@ export default function InternalPreparationsPage() {
     try {
       const updateData = {
         department: editFormData.department,
-        source: editFormData.source.trim(),
         name: editFormData.name.trim(),
+        source: editFormData.source.trim(),
         importance: editFormData.importance.trim(),
         status: editFormData.status.trim(),
         leader: editFormData.leader.trim(),

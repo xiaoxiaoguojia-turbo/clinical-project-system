@@ -2134,8 +2134,17 @@ export default function InternalPreparationsPage() {
               <div className="modal-body">
                 <div className="detail-grid">
                   <div className="detail-section">
-                    <h3 className="detail-section-title">基本信息</h3>
+                    <h3 className="detail-section-title">项目管理信息</h3>
                     <div className="detail-group">
+                      <div className="detail-item">
+                        <label className="detail-label">归属部门</label>
+                        <div className="detail-value">
+                          {selectedProject.department === 'transfer-investment-dept-1' ? '转移转化与投资一部' :
+                           selectedProject.department === 'transfer-investment-dept-2' ? '转移转化与投资二部' :
+                           selectedProject.department === 'transfer-investment-dept-3' ? '转移转化与投资三部' :
+                           selectedProject.department}
+                        </div>
+                      </div>
                       <div className="detail-item">
                         <label className="detail-label">项目名称</label>
                         <div className="detail-value">{selectedProject.name}</div>
@@ -2145,11 +2154,21 @@ export default function InternalPreparationsPage() {
                         <div className="detail-value">{selectedProject.source}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">备案号</label>
-                        <div className="detail-value">{selectedProject.recordNumber || '-'}</div>
+                        <label className="detail-label">负责人</label>
+                        <div className="detail-value">{selectedProject.leader}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">项目状态</label>
+                        <label className="detail-label">重要程度</label>
+                        <div className="detail-value">
+                          {selectedProject.importance === 'very-important' ? '非常重要' :
+                           selectedProject.importance === 'important' ? '重要' :
+                           selectedProject.importance === 'normal' ? '一般' :
+                           selectedProject.importance === 'not-important' ? '不重要' :
+                           selectedProject.importance}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">项目进展状态</label>
                         <div className="detail-value">
                           <span className={`status-badge ${selectedProject.status}`}>
                             {getStatusText(selectedProject.status)}
@@ -2172,23 +2191,85 @@ export default function InternalPreparationsPage() {
                       </div>
                       <div className="detail-item">
                         <label className="detail-label">制剂规格</label>
-                        <div className="detail-value">{selectedProject.specification}</div>
+                        <div className="detail-value">{selectedProject.specification || '-'}</div>
                       </div>
                       <div className="detail-item">
                         <label className="detail-label">使用年限</label>
-                        <div className="detail-value">{selectedProject.duration} 年</div>
+                        <div className="detail-value">{selectedProject.duration ? `${selectedProject.duration} 年` : '-'}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">备案号</label>
+                        <div className="detail-value">{selectedProject.recordNumber || '-'}</div>
                       </div>
                     </div>
                   </div>
 
-                  {selectedProject.patent && (
-                    <div className="detail-section">
-                      <h3 className="detail-section-title">其他信息</h3>
-                      <div className="detail-group">
-                        <div className="detail-item full-width">
-                          <label className="detail-label">专利情况</label>
-                          <div className="detail-value detail-text">{selectedProject.patent}</div>
+                  <div className="detail-section">
+                    <h3 className="detail-section-title">转化信息</h3>
+                    <div className="detail-group">
+                      <div className="detail-item">
+                        <label className="detail-label">适应症/科室</label>
+                        <div className="detail-value">{selectedProject.indication || '-'}</div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">转化需求</label>
+                        <div className="detail-value">
+                          {selectedProject.transformRequirement === 'license' ? '许可' :
+                           selectedProject.transformRequirement === 'transfer' ? '转让' :
+                           selectedProject.transformRequirement === 'company-operation' ? '公司化运营' :
+                           selectedProject.transformRequirement === 'other' ? '其他' :
+                           selectedProject.transformRequirement || '-'}
                         </div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">转化推进状态</label>
+                        <div className="detail-value">
+                          {selectedProject.transformProgress === 'contract-completed' ? '签约已完成' :
+                           selectedProject.transformProgress === 'contract-incomplete' ? '签约未完成' :
+                           selectedProject.transformProgress || '-'}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <label className="detail-label">院端医生</label>
+                        <div className="detail-value">{selectedProject.hospitalDoctor || '-'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {(selectedProject.clinicalData || selectedProject.marketSize || selectedProject.competitorStatus || selectedProject.conclusion || selectedProject.patent) && (
+                    <div className="detail-section">
+                      <h3 className="detail-section-title">数据分析</h3>
+                      <div className="detail-group">
+                        {selectedProject.clinicalData && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">临床数据</label>
+                            <div className="detail-value detail-text">{selectedProject.clinicalData}</div>
+                          </div>
+                        )}
+                        {selectedProject.marketSize && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">市场规模</label>
+                            <div className="detail-value detail-text">{selectedProject.marketSize}</div>
+                          </div>
+                        )}
+                        {selectedProject.competitorStatus && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">竞品状态</label>
+                            <div className="detail-value detail-text">{selectedProject.competitorStatus}</div>
+                          </div>
+                        )}
+                        {selectedProject.conclusion && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">项目结论</label>
+                            <div className="detail-value detail-text">{selectedProject.conclusion}</div>
+                          </div>
+                        )}
+                        {selectedProject.patent && (
+                          <div className="detail-item full-width">
+                            <label className="detail-label">专利情况</label>
+                            <div className="detail-value detail-text">{selectedProject.patent}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -2327,7 +2408,7 @@ export default function InternalPreparationsPage() {
             font-weight: 500;
             color: #6b7280;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             border-bottom: 2px solid transparent;
           }
 

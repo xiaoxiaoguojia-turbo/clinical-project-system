@@ -2395,6 +2395,28 @@ export default function InternalPreparationsPage() {
             box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
           }
 
+          .create-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            margin-top: 17px;
+          }
+
+          .create-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+          }
+
           /* 标签栏 */
           .tab-bar {
             display: flex;

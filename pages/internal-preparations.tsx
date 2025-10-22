@@ -1572,13 +1572,13 @@ export default function InternalPreparationsPage() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>来源科室 *</label>
+                    <label>医院来源 *</label>
                     <input
                       type="text"
                       value={createFormData.source}
                       onChange={(e) => handleCreateFormChange('source', e.target.value)}
                       className={`form-input ${createFormErrors.source ? 'error' : ''}`}
-                      placeholder="请输入来源科室"
+                      placeholder="请输入医院来源"
                     />
                     {createFormErrors.source && <span className="error-text">{createFormErrors.source}</span>}
                   </div>
@@ -1620,38 +1620,38 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>规格 *</label>
+                    <label>制剂规格</label>
                     <input
                       type="text"
                       value={createFormData.specification}
                       onChange={(e) => handleCreateFormChange('specification', e.target.value)}
                       className={`form-input ${createFormErrors.specification ? 'error' : ''}`}
-                      placeholder="请输入规格"
+                      placeholder="请输入制剂规格（可选）"
                     />
                     {createFormErrors.specification && <span className="error-text">{createFormErrors.specification}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label>有效期（年） *</label>
+                    <label>使用年限（年）</label>
                     <input
                       type="number"
                       value={createFormData.duration}
                       onChange={(e) => handleCreateFormChange('duration', e.target.value)}
                       className={`form-input ${createFormErrors.duration ? 'error' : ''}`}
-                      placeholder="请输入有效期"
+                      placeholder="请输入使用年限（可选）"
                       min="1"
                     />
                     {createFormErrors.duration && <span className="error-text">{createFormErrors.duration}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label>备案号 *</label>
+                    <label>备案号</label>
                     <input
                       type="text"
                       value={createFormData.recordNumber}
                       onChange={(e) => handleCreateFormChange('recordNumber', e.target.value)}
                       className={`form-input ${createFormErrors.recordNumber ? 'error' : ''}`}
-                      placeholder="请输入备案号"
+                      placeholder="请输入备案号（可选）"
                     />
                     {createFormErrors.recordNumber && <span className="error-text">{createFormErrors.recordNumber}</span>}
                   </div>
@@ -1702,11 +1702,11 @@ export default function InternalPreparationsPage() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>来源科室 *</label>
+                    <label>医院来源 *</label>
                     <input
                       type="text"
                       className={`form-input ${editFormErrors.source ? 'error' : ''}`}
-                      placeholder="请输入来源科室"
+                      placeholder="请输入医院来源"
                       value={editFormData.source}
                       onChange={(e) => handleEditFormChange('source', e.target.value)}
                     />
@@ -1748,11 +1748,11 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>规格 *</label>
+                    <label>制剂规格</label>
                     <input
                       type="text"
                       className={`form-input ${editFormErrors.specification ? 'error' : ''}`}
-                      placeholder="请输入规格"
+                      placeholder="请输入制剂规格（可选）"
                       value={editFormData.specification}
                       onChange={(e) => handleEditFormChange('specification', e.target.value)}
                     />
@@ -1760,11 +1760,11 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>有效期（年）*</label>
+                    <label>使用年限（年）</label>
                     <input
                       type="text"
                       className={`form-input ${editFormErrors.duration ? 'error' : ''}`}
-                      placeholder="请输入有效期"
+                      placeholder="请输入使用年限（可选）"
                       value={editFormData.duration}
                       onChange={(e) => handleEditFormChange('duration', e.target.value)}
                     />
@@ -1772,11 +1772,11 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>备案号 *</label>
+                    <label>备案号</label>
                     <input
                       type="text"
                       className={`form-input ${editFormErrors.recordNumber ? 'error' : ''}`}
-                      placeholder="请输入备案号"
+                      placeholder="请输入备案号（可选）"
                       value={editFormData.recordNumber}
                       onChange={(e) => handleEditFormChange('recordNumber', e.target.value)}
                     />
@@ -1840,7 +1840,7 @@ export default function InternalPreparationsPage() {
                         <div className="detail-value">{selectedProject.name}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">来源科室</label>
+                        <label className="detail-label">医院来源</label>
                         <div className="detail-value">{selectedProject.source}</div>
                       </div>
                       <div className="detail-item">
@@ -1870,11 +1870,11 @@ export default function InternalPreparationsPage() {
                         <div className="detail-value detail-text">{selectedProject.function}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">规格</label>
+                        <label className="detail-label">制剂规格</label>
                         <div className="detail-value">{selectedProject.specification}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">有效期</label>
+                        <label className="detail-label">使用年限</label>
                         <div className="detail-value">{selectedProject.duration} 年</div>
                       </div>
                     </div>

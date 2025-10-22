@@ -1713,13 +1713,107 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>专利情况</label>
+                    <label>适应症/科室</label>
                     <input
                       type="text"
+                      value={createFormData.indication}
+                      onChange={(e) => handleCreateFormChange('indication', e.target.value)}
+                      className="form-input"
+                      placeholder="请输入适应症/科室（可选）"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>转化需求</label>
+                    <select
+                      value={createFormData.transformRequirement}
+                      onChange={(e) => handleCreateFormChange('transformRequirement', e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">请选择</option>
+                      <option value="license">许可</option>
+                      <option value="transfer">转让</option>
+                      <option value="company-operation">公司化运营</option>
+                      <option value="other">其他</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>转化推进状态</label>
+                    <select
+                      value={createFormData.transformProgress}
+                      onChange={(e) => handleCreateFormChange('transformProgress', e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">请选择</option>
+                      <option value="contract-completed">签约已完成</option>
+                      <option value="contract-incomplete">签约未完成</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>院端医生</label>
+                    <input
+                      type="text"
+                      value={createFormData.hospitalDoctor}
+                      onChange={(e) => handleCreateFormChange('hospitalDoctor', e.target.value)}
+                      className="form-input"
+                      placeholder="请输入院端医生（可选）"
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>临床数据</label>
+                    <textarea
+                      value={createFormData.clinicalData}
+                      onChange={(e) => handleCreateFormChange('clinicalData', e.target.value)}
+                      className="form-textarea"
+                      placeholder="请输入临床数据（可选）"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>市场规模</label>
+                    <textarea
+                      value={createFormData.marketSize}
+                      onChange={(e) => handleCreateFormChange('marketSize', e.target.value)}
+                      className="form-textarea"
+                      placeholder="请输入市场规模（可选）"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>竞品状态</label>
+                    <textarea
+                      value={createFormData.competitorStatus}
+                      onChange={(e) => handleCreateFormChange('competitorStatus', e.target.value)}
+                      className="form-textarea"
+                      placeholder="请输入竞品状态（可选）"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>项目结论</label>
+                    <textarea
+                      value={createFormData.conclusion}
+                      onChange={(e) => handleCreateFormChange('conclusion', e.target.value)}
+                      className="form-textarea"
+                      placeholder="请输入项目结论（可选）"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>专利情况</label>
+                    <textarea
                       value={createFormData.patent}
                       onChange={(e) => handleCreateFormChange('patent', e.target.value)}
-                      className="form-input"
+                      className="form-textarea"
                       placeholder="请输入专利情况（可选）"
+                      rows={2}
                     />
                   </div>
                 </div>
@@ -1895,6 +1989,100 @@ export default function InternalPreparationsPage() {
                     {editFormErrors.recordNumber && <div className="error-text">{editFormErrors.recordNumber}</div>}
                   </div>
 
+                  <div className="form-group">
+                    <label>适应症/科室</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="请输入适应症/科室（可选）"
+                      value={editFormData.indication}
+                      onChange={(e) => handleEditFormChange('indication', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>转化需求</label>
+                    <select
+                      value={editFormData.transformRequirement}
+                      onChange={(e) => handleEditFormChange('transformRequirement', e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">请选择</option>
+                      <option value="license">许可</option>
+                      <option value="transfer">转让</option>
+                      <option value="company-operation">公司化运营</option>
+                      <option value="other">其他</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>转化推进状态</label>
+                    <select
+                      value={editFormData.transformProgress}
+                      onChange={(e) => handleEditFormChange('transformProgress', e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">请选择</option>
+                      <option value="contract-completed">签约已完成</option>
+                      <option value="contract-incomplete">签约未完成</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>院端医生</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="请输入院端医生（可选）"
+                      value={editFormData.hospitalDoctor}
+                      onChange={(e) => handleEditFormChange('hospitalDoctor', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>临床数据</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="请输入临床数据（可选）"
+                      value={editFormData.clinicalData}
+                      onChange={(e) => handleEditFormChange('clinicalData', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>市场规模</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="请输入市场规模（可选）"
+                      value={editFormData.marketSize}
+                      onChange={(e) => handleEditFormChange('marketSize', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>竞品状态</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="请输入竞品状态（可选）"
+                      value={editFormData.competitorStatus}
+                      onChange={(e) => handleEditFormChange('competitorStatus', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>项目结论</label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="请输入项目结论（可选）"
+                      value={editFormData.conclusion}
+                      onChange={(e) => handleEditFormChange('conclusion', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
                   <div className="form-group full-width">
                     <label>专利情况</label>
                     <textarea
@@ -1902,6 +2090,7 @@ export default function InternalPreparationsPage() {
                       placeholder="请输入专利情况（可选）"
                       value={editFormData.patent}
                       onChange={(e) => handleEditFormChange('patent', e.target.value)}
+                      rows={2}
                     />
                   </div>
                 </div>

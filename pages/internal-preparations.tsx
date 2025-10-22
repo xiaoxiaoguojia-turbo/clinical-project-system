@@ -118,6 +118,7 @@ export default function InternalPreparationsPage() {
   // 创建项目表单状态
   const [createFormData, setCreateFormData] = useState({
     department: 'transfer-investment-dept-1',
+    projectType: 'internal-preparation',
     name: '',
     source: '',
     importance: 'very-important',
@@ -144,6 +145,7 @@ export default function InternalPreparationsPage() {
   // 编辑项目表单状态
   const [editFormData, setEditFormData] = useState({
     department: 'transfer-investment-dept-1',
+    projectType: 'internal-preparation',
     name: '',
     source: '',
     importance: 'very-important',
@@ -620,6 +622,7 @@ export default function InternalPreparationsPage() {
     // 预填充编辑表单数据
     setEditFormData({
       department: project.department,
+      projectType: 'internal-preparation',
       name: project.name,
       source: project.source,
       importance: project.importance,
@@ -675,6 +678,7 @@ export default function InternalPreparationsPage() {
     setSelectedProject(null)
     setCreateFormData({
       department: 'transfer-investment-dept-1',
+      projectType: 'internal-preparation',
       name: '',
       source: '',
       importance: 'very-important',
@@ -771,6 +775,7 @@ export default function InternalPreparationsPage() {
     setShowCreateModal(false)
     setCreateFormData({
       department: 'transfer-investment-dept-1',
+      projectType: 'internal-preparation',
       name: '',
       source: '',
       importance: 'very-important',
@@ -853,6 +858,7 @@ export default function InternalPreparationsPage() {
     try {
       const updateData = {
         department: editFormData.department,
+        projectType: 'internal-preparation',
         name: editFormData.name.trim(),
         source: editFormData.source.trim(),
         importance: editFormData.importance.trim(),
@@ -890,6 +896,7 @@ export default function InternalPreparationsPage() {
         setSelectedProject(null)
         setEditFormData({
           department: 'transfer-investment-dept-1',
+          projectType: 'internal-preparation',
           name: '',
           source: '',
           importance: 'very-important',
@@ -927,6 +934,7 @@ export default function InternalPreparationsPage() {
     setSelectedProject(null)
     setEditFormData({
       department: 'transfer-investment-dept-1',
+      projectType: 'internal-preparation',
       source: '',
       name: '',
       importance: 'very-important',
@@ -957,7 +965,7 @@ export default function InternalPreparationsPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'early-stage': return '进行中'
+      case 'early-stage': return '早期'
       case 'preclinical': return '临床前'
       case 'clinical-stage': return '临床阶段'
       case 'market-product': return '上市产品'
@@ -1332,7 +1340,7 @@ export default function InternalPreparationsPage() {
                     className="filter-select"
                   >
                     <option value="">全部状态</option>
-                    <option value="early-stage">进行中</option>
+                    <option value="early-stage">早期</option>
                     <option value="preclinical">临床前</option>
                     <option value="clinical-stage">临床阶段</option>
                     <option value="market-product">上市产品</option>
@@ -2170,7 +2178,7 @@ export default function InternalPreparationsPage() {
                       <div className="detail-item">
                         <label className="detail-label">项目进展状态</label>
                         <div className="detail-value">
-                          <span className={`status-badge ${selectedProject.status}`}>
+                          <span className={`status-badge ${getStatusColor(selectedProject.status)}`}>
                             {getStatusText(selectedProject.status)}
                           </span>
                         </div>

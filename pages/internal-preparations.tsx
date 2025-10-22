@@ -725,27 +725,9 @@ export default function InternalPreparationsPage() {
     if (!createFormData.status.trim()) errors.status = '项目进展状态为必填项'
     if (!createFormData.leader.trim()) errors.leader = '负责人为必填项'
 
-    // 通用选填字段
-    if (!createFormData.indication.trim()) errors.indication = '适应症/科室为必填项'
-    if (!createFormData.transformRequirement.trim()) errors.transformRequirement = '转化需求为必填项'
-    if (!createFormData.transformProgress.trim()) errors.transformProgress = '转化推进状态为必填项'
-    if (!createFormData.hospitalDoctor.trim()) errors.hospitalDoctor = '院端医生为必填项'
-    if (!createFormData.patent.trim()) errors.patent = '专利信息为必填项'
-    if (!createFormData.clinicalData.trim()) errors.clinicalData = '临床数据为必填项'
-    if (!createFormData.marketSize.trim()) errors.marketSize = '市场规模为必填项'
-    if (!createFormData.competitorStatus.trim()) errors.competitorStatus = '竞品状态为必填项'
-    if (!createFormData.conclusion.trim()) errors.conclusion = '项目结论为必填项'
-
-    // 院内制剂特有字段
-
     // 院内制剂必填字段
     if (!createFormData.composition.trim()) errors.composition = '组方为必填项'
     if (!createFormData.function.trim()) errors.function = '功能为必填项'
-
-    // 院内制剂选填字段
-    if (!createFormData.specification.trim()) errors.specification = '制剂规格为必填项'
-    if (!createFormData.duration.trim()) errors.duration = '使用年限为必填项'
-    if (!createFormData.recordNumber.trim()) errors.recordNumber = '备案号为必填项'
     
     setCreateFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -848,49 +830,13 @@ export default function InternalPreparationsPage() {
     if (!editFormData.leader.trim()) {
       errors.leader = '负责人不能为空'
     }
-    if (!editFormData.indication.trim()) {
-      errors.indication = '适应症/科室不能为空'
-    }
-    if (!editFormData.transformRequirement.trim()) {
-      errors.transformRequirement = '转化需求不能为空'
-    }
-    if (!editFormData.transformProgress.trim()) {
-      errors.transformProgress = '转化推进状态不能为空'
-    }
-    if (!editFormData.hospitalDoctor.trim()) {
-      errors.hospitalDoctor = '院端医生不能为空'
-    }
-    if (!editFormData.patent.trim()) {
-      errors.patent = '专利信息不能为空'
-    }
-    if (!editFormData.clinicalData.trim()) {
-      errors.clinicalData = '临床数据不能为空'
-    }
-    if (!editFormData.marketSize.trim()) {
-      errors.marketSize = '市场规模不能为空'
-    }
-    if (!editFormData.competitorStatus.trim()) {
-      errors.competitorStatus = '竞品状态不能为空'
-    }
-    if (!editFormData.conclusion.trim()) {
-      errors.conclusion = '项目结论不能为空'
-    }
+
+    // 院内制剂必填字段
     if (!editFormData.composition.trim()) {
       errors.composition = '组方不能为空'
     }
     if (!editFormData.function.trim()) {
       errors.function = '功能不能为空'
-    }
-    if (!editFormData.specification.trim()) {
-      errors.specification = '制剂规格不能为空'
-    }
-    if (!editFormData.duration.trim()) {
-      errors.duration = '使用年限不能为空'
-    } else if (isNaN(Number(editFormData.duration))) {
-      errors.duration = '使用年限必须为数字'
-    }
-    if (!editFormData.recordNumber.trim()) {
-      errors.recordNumber = '备案号不能为空'
     }
     
     setEditFormErrors(errors)
@@ -1012,17 +958,19 @@ export default function InternalPreparationsPage() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'early-stage': return '进行中'
-      case 'completed': return '已完成'
-      case 'paused': return '已暂停'
+      case 'preclinical': return '临床前'
+      case 'clinical-stage': return '临床阶段'
+      case 'market-product': return '上市产品'
       default: return status
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'early-stage': return 'green'
-      case 'completed': return 'blue'
-      case 'paused': return 'yellow'
+      case 'early-stage': return 'yellow'
+      case 'preclinical': return 'blue'
+      case 'clinical-stage': return 'green'
+      case 'market-product': return 'purple'
       default: return 'gray'
     }
   }
@@ -1385,8 +1333,9 @@ export default function InternalPreparationsPage() {
                   >
                     <option value="">全部状态</option>
                     <option value="early-stage">进行中</option>
-                    <option value="completed">已完成</option>
-                    <option value="paused">已暂停</option>
+                    <option value="preclinical">临床前</option>
+                    <option value="clinical-stage">临床阶段</option>
+                    <option value="market-product">上市产品</option>
                   </select>
                 </div>
                 <div className="filter-item">

@@ -1572,15 +1572,17 @@ export default function InternalPreparationsPage() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>医院来源 *</label>
-                    <input
-                      type="text"
-                      value={createFormData.source}
-                      onChange={(e) => handleCreateFormChange('source', e.target.value)}
-                      className={`form-input ${createFormErrors.source ? 'error' : ''}`}
-                      placeholder="请输入医院来源"
-                    />
-                    {createFormErrors.source && <span className="error-text">{createFormErrors.source}</span>}
+                    <label>归属部门 *</label>
+                    <select
+                      value={createFormData.department}
+                      onChange={(e) => handleCreateFormChange('department', e.target.value)}
+                      className={`form-input ${createFormErrors.department ? 'error' : ''}`}
+                    >
+                      <option value="transfer-investment-dept-1">转移转化与投资一部</option>
+                      <option value="transfer-investment-dept-2">转移转化与投资二部</option>
+                      <option value="transfer-investment-dept-3">转移转化与投资三部</option>
+                    </select>
+                    {createFormErrors.department && <span className="error-text">{createFormErrors.department}</span>}
                   </div>
 
                   <div className="form-group">
@@ -1593,6 +1595,60 @@ export default function InternalPreparationsPage() {
                       placeholder="请输入项目名称"
                     />
                     {createFormErrors.name && <span className="error-text">{createFormErrors.name}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>医院来源 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.source}
+                      onChange={(e) => handleCreateFormChange('source', e.target.value)}
+                      className={`form-input ${createFormErrors.source ? 'error' : ''}`}
+                      placeholder="请输入医院来源"
+                    />
+                    {createFormErrors.source && <span className="error-text">{createFormErrors.source}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>负责人 *</label>
+                    <input
+                      type="text"
+                      value={createFormData.leader}
+                      onChange={(e) => handleCreateFormChange('leader', e.target.value)}
+                      className={`form-input ${createFormErrors.leader ? 'error' : ''}`}
+                      placeholder="请输入负责人"
+                    />
+                    {createFormErrors.leader && <span className="error-text">{createFormErrors.leader}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>重要程度 *</label>
+                    <select
+                      value={createFormData.importance}
+                      onChange={(e) => handleCreateFormChange('importance', e.target.value)}
+                      className={`form-input ${createFormErrors.importance ? 'error' : ''}`}
+                    >
+                      <option value="very-important">非常重要</option>
+                      <option value="important">重要</option>
+                      <option value="normal">一般</option>
+                      <option value="not-important">不重要</option>
+                    </select>
+                    {createFormErrors.importance && <span className="error-text">{createFormErrors.importance}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>项目进展状态 *</label>
+                    <select
+                      value={createFormData.status}
+                      onChange={(e) => handleCreateFormChange('status', e.target.value)}
+                      className={`form-input ${createFormErrors.status ? 'error' : ''}`}
+                    >
+                      <option value="early-stage">早期</option>
+                      <option value="preclinical">临床前</option>
+                      <option value="clinical-stage">临床阶段</option>
+                      <option value="market-product">上市产品</option>
+                    </select>
+                    {createFormErrors.status && <span className="error-text">{createFormErrors.status}</span>}
                   </div>
 
                   <div className="form-group full-width">
@@ -1702,15 +1758,17 @@ export default function InternalPreparationsPage() {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>医院来源 *</label>
-                    <input
-                      type="text"
-                      className={`form-input ${editFormErrors.source ? 'error' : ''}`}
-                      placeholder="请输入医院来源"
-                      value={editFormData.source}
-                      onChange={(e) => handleEditFormChange('source', e.target.value)}
-                    />
-                    {editFormErrors.source && <div className="error-text">{editFormErrors.source}</div>}
+                    <label>归属部门 *</label>
+                    <select
+                      value={editFormData.department}
+                      onChange={(e) => handleEditFormChange('department', e.target.value)}
+                      className={`form-input ${editFormErrors.department ? 'error' : ''}`}
+                    >
+                      <option value="transfer-investment-dept-1">转移转化与投资一部</option>
+                      <option value="transfer-investment-dept-2">转移转化与投资二部</option>
+                      <option value="transfer-investment-dept-3">转移转化与投资三部</option>
+                    </select>
+                    {editFormErrors.department && <div className="error-text">{editFormErrors.department}</div>}
                   </div>
 
                   <div className="form-group">
@@ -1723,6 +1781,60 @@ export default function InternalPreparationsPage() {
                       onChange={(e) => handleEditFormChange('name', e.target.value)}
                     />
                     {editFormErrors.name && <div className="error-text">{editFormErrors.name}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>医院来源 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.source ? 'error' : ''}`}
+                      placeholder="请输入医院来源"
+                      value={editFormData.source}
+                      onChange={(e) => handleEditFormChange('source', e.target.value)}
+                    />
+                    {editFormErrors.source && <div className="error-text">{editFormErrors.source}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>负责人 *</label>
+                    <input
+                      type="text"
+                      className={`form-input ${editFormErrors.leader ? 'error' : ''}`}
+                      placeholder="请输入负责人"
+                      value={editFormData.leader}
+                      onChange={(e) => handleEditFormChange('leader', e.target.value)}
+                    />
+                    {editFormErrors.leader && <div className="error-text">{editFormErrors.leader}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>重要程度 *</label>
+                    <select
+                      value={editFormData.importance}
+                      onChange={(e) => handleEditFormChange('importance', e.target.value)}
+                      className={`form-input ${editFormErrors.importance ? 'error' : ''}`}
+                    >
+                      <option value="very-important">非常重要</option>
+                      <option value="important">重要</option>
+                      <option value="normal">一般</option>
+                      <option value="not-important">不重要</option>
+                    </select>
+                    {editFormErrors.importance && <div className="error-text">{editFormErrors.importance}</div>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>项目进展状态 *</label>
+                    <select
+                      value={editFormData.status}
+                      onChange={(e) => handleEditFormChange('status', e.target.value)}
+                      className={`form-input ${editFormErrors.status ? 'error' : ''}`}
+                    >
+                      <option value="early-stage">早期</option>
+                      <option value="preclinical">临床前</option>
+                      <option value="clinical-stage">临床阶段</option>
+                      <option value="market-product">上市产品</option>
+                    </select>
+                    {editFormErrors.status && <div className="error-text">{editFormErrors.status}</div>}
                   </div>
 
                   <div className="form-group full-width">

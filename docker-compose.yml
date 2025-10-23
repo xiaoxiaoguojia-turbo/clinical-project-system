@@ -16,7 +16,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme123}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-clinical_project_system}
     volumes:
-      # 持久化数据存储
+      # 持久化数据存储 - 指定到 D 盘
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
       # 初始化脚本（可选）
@@ -87,14 +87,28 @@ networks:
       config:
         - subnet: 172.20.0.0/16
 
-# ===== 数据卷配置 =====
+# ===== 数据卷配置 - 指定到 D 盘 =====
 volumes:
   mongodb_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: 'D:\Docker\clinical_data\mongodb_data'
     name: clinical_mongodb_data
+  
   mongodb_config:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: 'D:\Docker\clinical_data\mongodb_config'
     name: clinical_mongodb_config
+  
   uploads_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: 'D:\Docker\clinical_data\uploads'
     name: clinical_uploads_data

@@ -1287,18 +1287,6 @@ export default function InternalPreparationsPage() {
             <div className="charts-grid">
               <div className="chart-card">
                 <div className="chart-header">
-                  <h3>归属部门分布</h3>
-                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
-                    <EllipsisVerticalIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="chart-container">
-                  <canvas id="departmentChart"></canvas>
-                </div>
-              </div>
-
-              <div className="chart-card">
-                <div className="chart-header">
                   <h3>医院来源分布</h3>
                   <button className="chart-menu" onClick={() => console.log('Chart menu')}>
                     <EllipsisVerticalIcon className="w-4 h-4" />
@@ -1417,150 +1405,150 @@ export default function InternalPreparationsPage() {
             </div>
 
             {/* 项目表格 */}
-            <div className="project-table-container">
-              <table className="project-table">
-                <thead>
-                  <tr>
-                    <th>项目名称</th>
-                    <th>归属部门</th>
-                    <th>医院来源</th>
-                    <th>负责人</th>
-                    <th>重要程度</th>
-                    <th>项目进展状态</th>
-                    <th>创建时间</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {projectsLoading ? (
-                    // 加载状态
-                    Array.from({ length: pageSize }).map((_, index) => (
-                      <tr key={index} className="loading-row">
-                        <td colSpan={8}>
-                          <div className="loading-shimmer"></div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : projects.length > 0 ? (
-                    projects.map((project) => (
-                      <tr key={project._id} className="project-row">
-                        <td className="project-name">{project.name}</td>
-                        <td className="project-department">{getDepartmentText(project.department)}</td>
-                        <td className="project-source">{project.source}</td>
-                        <td className="project-leader">{getLeaderText(project.leader)}</td>
-                        <td className="project-importance">
-                          <span className={`importance-badge ${project.importance}`}>
-                            {getImportanceText(project.importance)}
-                          </span>
-                        </td>
-                        <td className="project-status">
-                          <span className={`status-badge ${getStatusColor(project.status)}`}>
-                            {getStatusText(project.status)}
-                          </span>
-                        </td>
-                        <td className="project-date">
-                          {new Date(project.createTime).toLocaleDateString('zh-CN')}
-                        </td>
-                        <td className="actions-cell">
-                          <div className="action-buttons">
-                            <div className="action-group primary-actions">
-                              <button
-                                onClick={() => handleViewProject(project)}
-                                className="action-btn view-btn"
-                                title="查看详情"
-                              >
-                                <EyeIcon className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleEditProject(project)}
-                                className="action-btn edit-btn"
-                                title="编辑项目"
-                              >
-                                <PencilIcon className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProject(project)}
-                                className="action-btn delete-btn"
-                                title="删除项目"
-                              >
-                                <TrashIcon className="w-4 h-4" />
-                              </button>
+            <div className="table-scroll-container">
+              <div className="table-wrapper">
+                <table className="project-table">
+                  <thead>
+                    <tr>
+                      <th>项目名称</th>
+                      <th>医院来源</th>
+                      <th>负责人</th>
+                      <th>重要程度</th>
+                      <th>项目进展状态</th>
+                      <th>创建时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projectsLoading ? (
+                      // 加载状态
+                      Array.from({ length: pageSize }).map((_, index) => (
+                        <tr key={index} className="loading-row">
+                          <td colSpan={7}>
+                            <div className="loading-shimmer"></div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : projects.length > 0 ? (
+                      projects.map((project) => (
+                        <tr key={project._id} className="project-row">
+                          <td className="project-name">{project.name}</td>
+                          <td className="project-source">{project.source}</td>
+                          <td className="project-leader">{getLeaderText(project.leader)}</td>
+                          <td className="project-importance">
+                            <span className={`importance-badge ${project.importance}`}>
+                              {getImportanceText(project.importance)}
+                            </span>
+                          </td>
+                          <td className="project-status">
+                            <span className={`status-badge ${getStatusColor(project.status)}`}>
+                              {getStatusText(project.status)}
+                            </span>
+                          </td>
+                          <td className="project-date">
+                            {new Date(project.createTime).toLocaleDateString('zh-CN')}
+                          </td>
+                          <td className="actions-cell">
+                            <div className="action-buttons">
+                              <div className="action-group primary-actions">
+                                <button
+                                  onClick={() => handleViewProject(project)}
+                                  className="action-btn view-btn"
+                                  title="查看详情"
+                                >
+                                  <EyeIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleEditProject(project)}
+                                  className="action-btn edit-btn"
+                                  title="编辑项目"
+                                >
+                                  <PencilIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProject(project)}
+                                  className="action-btn delete-btn"
+                                  title="删除项目"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              <div className="action-group extended-actions">
+                                <button
+                                  onClick={() => handleAttachmentManagement(project)}
+                                  className="action-btn attachment-btn"
+                                  title="附件管理"
+                                >
+                                  <PaperClipIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleGenerateAIReport(project)}
+                                  className={`action-btn ai-generate-btn ${
+                                    project.aiReport?.status === 'generating' ? 'loading' : ''
+                                  } ${
+                                    project.aiReport?.status === 'error' ? 'error' : ''
+                                  }`}
+                                  title={
+                                    project.aiReport?.status === 'generating' 
+                                      ? '正在生成AI报告，请耐心等待...' 
+                                      : project.aiReport?.status === 'completed'
+                                      ? '重新生成AI报告'
+                                      : project.aiReport?.status === 'error'
+                                      ? `生成失败：${project.aiReport?.status || '未知错误'} - 点击重试`
+                                      : '生成AI报告'
+                                  }
+                                  disabled={project.aiReport?.status === 'generating'}
+                                >
+                                  {project.aiReport?.status === 'generating' ? (
+                                    <>
+                                      <div className="w-6 h-6 animate-spin rounded-full border-b-2 border-current"></div>
+                                      <span className="ml-1 text-xs">生成中</span>
+                                    </>
+                                  ) : project.aiReport?.status === 'error' ? (
+                                    <>
+                                      <ExclamationTriangleIcon className="w-4 h-4" />
+                                      <span className="ml-1 text-xs">重试</span>
+                                    </>
+                                  ) : (
+                                    <SparklesIcon className="w-4 h-4" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleViewAIReport(project)}
+                                  className={`action-btn ai-view-btn ${
+                                    project.aiReport?.status === 'completed' ? 'has-report' : ''
+                                  }`}
+                                  title={
+                                    project.aiReport?.status === 'completed'
+                                      ? '查看AI报告'
+                                      : '该项目还没有生成AI报告'
+                                  }
+                                  disabled={project.aiReport?.status !== 'completed'}
+                                >
+                                  <DocumentTextIcon className="w-4 h-4" />
+                                  {project.aiReport?.status === 'completed' && (
+                                    <span className="ml-1 text-xs">查看</span>
+                                  )}
+                                </button>
+                              </div>
                             </div>
-                            
-                            <div className="action-group extended-actions">
-                              <button
-                                onClick={() => handleAttachmentManagement(project)}
-                                className="action-btn attachment-btn"
-                                title="附件管理"
-                              >
-                                <PaperClipIcon className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleGenerateAIReport(project)}
-                                className={`action-btn ai-generate-btn ${
-                                  project.aiReport?.status === 'generating' ? 'loading' : ''
-                                } ${
-                                  project.aiReport?.status === 'error' ? 'error' : ''
-                                }`}
-                                title={
-                                  project.aiReport?.status === 'generating' 
-                                    ? '正在生成AI报告，请耐心等待...' 
-                                    : project.aiReport?.status === 'completed'
-                                    ? '重新生成AI报告'
-                                    : project.aiReport?.status === 'error'
-                                    ? `生成失败：${project.aiReport?.status || '未知错误'} - 点击重试`
-                                    : '生成AI报告'
-                                }
-                                disabled={project.aiReport?.status === 'generating'}
-                              >
-                                {project.aiReport?.status === 'generating' ? (
-                                  <>
-                                    <div className="w-6 h-6 animate-spin rounded-full border-b-2 border-current"></div>
-                                    <span className="ml-1 text-xs">生成中</span>
-                                  </>
-                                ) : project.aiReport?.status === 'error' ? (
-                                  <>
-                                    <ExclamationTriangleIcon className="w-4 h-4" />
-                                    <span className="ml-1 text-xs">重试</span>
-                                  </>
-                                ) : (
-                                  <SparklesIcon className="w-4 h-4" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleViewAIReport(project)}
-                                className={`action-btn ai-view-btn ${
-                                  project.aiReport?.status === 'completed' ? 'has-report' : ''
-                                }`}
-                                title={
-                                  project.aiReport?.status === 'completed'
-                                    ? '查看AI报告'
-                                    : '该项目还没有生成AI报告'
-                                }
-                                disabled={project.aiReport?.status !== 'completed'}
-                              >
-                                <DocumentTextIcon className="w-4 h-4" />
-                                {project.aiReport?.status === 'completed' && (
-                                  <span className="ml-1 text-xs">查看</span>
-                                )}
-                              </button>
-                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="no-data">
+                          <div className="no-data-content">
+                            <BeakerIcon className="w-12 h-12 no-data-icon" />
+                            <p>暂无项目数据</p>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="no-data">
-                        <div className="no-data-content">
-                          <BeakerIcon className="w-12 h-12 no-data-icon" />
-                          <p>暂无项目数据</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* 分页控制 */}
@@ -2607,12 +2595,12 @@ export default function InternalPreparationsPage() {
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
           }
 
           .refresh-button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 6px 10px -1px rgba(59, 130, 246, 0.4);
           }
 
           /* 统计卡片网格 */
@@ -3811,6 +3799,68 @@ export default function InternalPreparationsPage() {
           .ai-view-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+          }
+
+          /* 表格横向滚动容器 */
+          .table-scroll-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          }
+
+          .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          /* 美化滚动条 */
+          .table-wrapper::-webkit-scrollbar {
+            height: 8px;
+          }
+
+          .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+          }
+
+          .table-wrapper::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+          }
+
+          .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+
+          /* 滚动提示阴影 */
+          .table-scroll-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+
+          .table-wrapper:not(:hover)::-webkit-scrollbar-thumb {
+            background: transparent;
+          }
+
+          /* 项目表格 */
+          .projects-table {
+            width: 100%;
+            min-width: 1000px;
+            border-collapse: collapse;
           }
         `}</style>
       </div>

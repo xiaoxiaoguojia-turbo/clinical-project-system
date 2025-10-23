@@ -997,6 +997,19 @@ export default function InternalPreparationsPage() {
     }
   }
 
+  const getCreatedByText = (createdBy: any) => {
+    // 处理createdBy可能是对象或字符串的情况
+    if (!createdBy) return '-'
+    
+    // 如果是对象（populated），尝试获取用户名或email
+    if (typeof createdBy === 'object') {
+      return createdBy.name || createdBy.realName || createdBy.username || createdBy.email || createdBy._id || '-'
+    }
+    
+    // 如果是字符串，直接返回
+    return createdBy
+  }
+
   const handleAttachmentManagement = (project: UnifiedProject) => {
     console.log('=== 附件管理按钮点击调试信息 ===')
     console.log('点击的项目:', project)
@@ -2324,7 +2337,7 @@ export default function InternalPreparationsPage() {
                       {selectedProject.createdBy && (
                         <div className="detail-item">
                           <label className="detail-label">创建人</label>
-                          <div className="detail-value">{selectedProject.createdBy}</div>
+                          <div className="detail-value">{getCreatedByText(selectedProject.createdBy)}</div>
                         </div>
                       )}
                     </div>
@@ -3287,7 +3300,6 @@ export default function InternalPreparationsPage() {
           .btn-primary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
           }
 
           /* 响应式设计 */

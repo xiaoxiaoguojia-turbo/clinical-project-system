@@ -2452,6 +2452,45 @@ export default function InternalPreparationsPage() {
             border-bottom-color: #3b82f6;
           }
 
+          .search-section {
+            flex: 1;
+            max-width: 500px;
+          }
+
+          .search-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+          }
+
+          .search-icon {
+            position: absolute;
+            left: 14px;
+            color: #9ca3af;
+            pointer-events: none;
+          }
+
+          .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 44px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.2s ease;
+          }
+
+          .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+
+          .search-input::placeholder {
+            color: #9ca3af;
+          }
+
           /* 筛选控制栏 */
           .filter-bar {
             display: flex;
@@ -2667,6 +2706,102 @@ export default function InternalPreparationsPage() {
             padding: 24px;
             height: 300px;
             position: relative;
+          }
+
+          /* 项目表格 */
+          .projects-table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
+          .projects-table thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+          }
+
+          .projects-table th {
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+
+          .projects-table tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+          }
+
+          .projects-table tbody tr:hover {
+            background-color: #f8fafc;
+          }
+
+          .projects-table td {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: #1e293b;
+            vertical-align: middle;
+          }
+
+          .project-name {
+            font-weight: 600;
+            color: #1e293b;
+          }
+
+          .project-text {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          /* 状态徽章颜色 */
+          .status-badge.yellow {
+            background: #fef3c7;
+            color: #92400e;
+          }
+
+          .status-badge.blue {
+            background: #dbeafe;
+            color: #1e40af;
+          }
+
+          .status-badge.green {
+            background: #d1fae5;
+            color: #065f46;
+          }
+
+          .status-badge.purple {
+            background: #e9d5ff;
+            color: #6b21a8;
+          }
+
+          .status-badge.gray {
+            background: #f1f5f9;
+            color: #475569;
+          }
+
+          /* 操作按钮样式 */
+          .action-btn.view-btn:hover {
+            background: #dbeafe;
+            color: #2563eb;
+          }
+
+          .action-btn.edit-btn:hover {
+            background: #fef3c7;
+            color: #d97706;
+          }
+
+          .action-btn.delete-btn:hover {
+            background: #fee2e2;
+            color: #dc2626;
+          }
+
+          .action-btn.attach-btn:hover {
+            background: #f3e8ff;
+            color: #9333ea;
           }
 
           /* 项目列表占位 */

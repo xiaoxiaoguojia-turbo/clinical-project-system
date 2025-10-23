@@ -2806,7 +2806,23 @@ export default function InternalPreparationsPage() {
 
           .project-name {
             font-weight: 600;
-            color: #1e293b;
+            color: #0f172a;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: all 0.3s ease;
+          }
+
+          .project-name:hover {
+            transform: translateX(2px);
+          }
+
+          .project-department,
+          .project-source,
+          .project-leader {
+            color: #475569;
+            font-size: 14px;
           }
 
           .project-text {
@@ -2817,29 +2833,147 @@ export default function InternalPreparationsPage() {
           }
 
           /* 状态徽章颜色 */
+          .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+          }
+
+          .status-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+          }
+
+          .status-badge:hover::before {
+            left: 100%;
+          }
+
+          .status-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+
           .status-badge.yellow {
-            background: #fef3c7;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             color: #92400e;
+            border: 1px solid #fbbf24;
           }
 
           .status-badge.blue {
-            background: #dbeafe;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             color: #1e40af;
+            border: 1px solid #60a5fa;
           }
 
           .status-badge.green {
-            background: #d1fae5;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             color: #065f46;
+            border: 1px solid #34d399;
           }
 
           .status-badge.purple {
-            background: #e9d5ff;
+            background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
             color: #6b21a8;
+            border: 1px solid #a855f7;
           }
 
           .status-badge.gray {
-            background: #f1f5f9;
-            color: #475569;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+          }
+
+          /* 重要程度徽章 - 科技感设计 */
+          .importance-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+          }
+
+          .importance-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+          }
+
+          .importance-badge:hover::before {
+            left: 100%;
+          }
+
+          .importance-badge:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+          }
+
+          .importance-badge.very-important {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 1px solid #f87171;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+          }
+
+          .importance-badge.very-important:hover {
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+          }
+
+          .importance-badge.important {
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+            color: #9a3412;
+            border: 1px solid #fb923c;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+          }
+
+          .importance-badge.important:hover {
+            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.4);
+          }
+
+          .importance-badge.normal {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border: 1px solid #60a5fa;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+          }
+
+          .importance-badge.normal:hover {
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+          }
+
+          .importance-badge.not-important {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 2px 6px rgba(100, 116, 139, 0.15);
+          }
+
+          .importance-badge.not-important:hover {
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25);
           }
 
           /* 操作按钮样式 */

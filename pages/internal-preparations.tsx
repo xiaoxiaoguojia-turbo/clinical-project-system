@@ -1010,6 +1010,25 @@ export default function InternalPreparationsPage() {
     return createdBy
   }
 
+  const getDepartmentText = (department: string) => {
+    switch (department) {
+      case 'transfer-investment-dept-1': return '转移转化与投资一部'
+      case 'transfer-investment-dept-2': return '转移转化与投资二部'
+      case 'transfer-investment-dept-3': return '转移转化与投资三部'
+      default: return department
+    }
+  }
+
+  const getImportanceText = (importance: string) => {
+    switch (importance) {
+      case 'very-important': return '非常重要'
+      case 'important': return '重要'
+      case 'normal': return '一般'
+      case 'not-important': return '不重要'
+      default: return importance
+    }
+  }
+
   const handleAttachmentManagement = (project: UnifiedProject) => {
     console.log('=== 附件管理按钮点击调试信息 ===')
     console.log('点击的项目:', project)
@@ -1403,10 +1422,11 @@ export default function InternalPreparationsPage() {
                 <thead>
                   <tr>
                     <th>项目名称</th>
-                    <th>来源科室</th>
-                    <th>备案号</th>
-                    <th>状态</th>
-                    <th>有效期</th>
+                    <th>归属部门</th>
+                    <th>医院来源</th>
+                    <th>负责人</th>
+                    <th>重要程度</th>
+                    <th>项目进展状态</th>
                     <th>创建时间</th>
                     <th>操作</th>
                   </tr>
@@ -1416,7 +1436,7 @@ export default function InternalPreparationsPage() {
                     // 加载状态
                     Array.from({ length: pageSize }).map((_, index) => (
                       <tr key={index} className="loading-row">
-                        <td colSpan={7}>
+                        <td colSpan={8}>
                           <div className="loading-shimmer"></div>
                         </td>
                       </tr>
@@ -1425,14 +1445,19 @@ export default function InternalPreparationsPage() {
                     projects.map((project) => (
                       <tr key={project._id} className="project-row">
                         <td className="project-name">{project.name}</td>
+                        <td className="project-department">{getDepartmentText(project.department)}</td>
                         <td className="project-source">{project.source}</td>
-                        <td className="project-record">{project.recordNumber}</td>
-                        <td>
+                        <td className="project-leader">{getLeaderText(project.leader)}</td>
+                        <td className="project-importance">
+                          <span className={`importance-badge ${project.importance}`}>
+                            {getImportanceText(project.importance)}
+                          </span>
+                        </td>
+                        <td className="project-status">
                           <span className={`status-badge ${getStatusColor(project.status)}`}>
                             {getStatusText(project.status)}
                           </span>
                         </td>
-                        <td className="project-duration">{project.duration}年</td>
                         <td className="project-date">
                           {new Date(project.createTime).toLocaleDateString('zh-CN')}
                         </td>
@@ -1526,7 +1551,7 @@ export default function InternalPreparationsPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="no-data">
+                      <td colSpan={8} className="no-data">
                         <div className="no-data-content">
                           <BeakerIcon className="w-12 h-12 no-data-icon" />
                           <p>暂无项目数据</p>
@@ -2188,10 +2213,7 @@ export default function InternalPreparationsPage() {
                       <div className="detail-item">
                         <label className="detail-label">归属部门</label>
                         <div className="detail-value">
-                          {selectedProject.department === 'transfer-investment-dept-1' ? '转移转化与投资一部' :
-                           selectedProject.department === 'transfer-investment-dept-2' ? '转移转化与投资二部' :
-                           selectedProject.department === 'transfer-investment-dept-3' ? '转移转化与投资三部' :
-                           selectedProject.department}
+                          {getDepartmentText(selectedProject.department)}
                         </div>
                       </div>
                       <div className="detail-item">
@@ -2209,11 +2231,7 @@ export default function InternalPreparationsPage() {
                       <div className="detail-item">
                         <label className="detail-label">重要程度</label>
                         <div className="detail-value">
-                          {selectedProject.importance === 'very-important' ? '非常重要' :
-                           selectedProject.importance === 'important' ? '重要' :
-                           selectedProject.importance === 'normal' ? '一般' :
-                           selectedProject.importance === 'not-important' ? '不重要' :
-                           selectedProject.importance}
+                          {getImportanceText(selectedProject.importance)}
                         </div>
                       </div>
                       <div className="detail-item">

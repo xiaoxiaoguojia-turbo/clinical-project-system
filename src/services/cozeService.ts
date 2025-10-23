@@ -6,11 +6,38 @@
 import { CozeAPI, COZE_CN_BASE_URL } from '@coze/api'
 import { InternalPreparationProject } from '@/types'
 
-// Coze工作流配置
+// 从环境变量读取Coze配置（不再硬编码）
 const COZE_CONFIG = {
-  token: 'sat_wdiLBGPfC1CJJ6k9vuNRabHI4XQg5zO4aPr1XI7q489pVuVKUV1BjJmWSfdNjgII',
-  workflowId: '7547613197532938275',
+  token: process.env.COZE_API_KEY || '',
+  workflowId: process.env.COZE_WORKFLOW_ID || '',
   baseURL: COZE_CN_BASE_URL
+}
+
+// 配置验证函数
+function validateCozeConfig(): { valid: boolean; error?: string } {
+  if (!COZE_CONFIG.token) {
+    return { 
+      valid: false, 
+      error: 'COZE_API_KEY 环境变量未配置' 
+    }
+  }
+  
+  if (!COZE_CONFIG.workflowId) {
+    return { 
+      valid: false, 
+      error: 'COZE_WORKFLOW_ID 环境变量未配置' 
+    }
+  }
+  
+  return { valid: true }
+}
+
+// 开发环境日志
+if (process.env.NODE_ENV === 'development') {
+  console.log(' Coze Service 配置状态:')
+  console.log('  - API Key:', COZE_CONFIG.token ? ' 已配置' : ' 未配置')
+  console.log('  - Workflow ID:', COZE_CONFIG.workflowId ? ' 已配置' : ' 未配置')
+  console.log('  - Base URL:', COZE_CONFIG.baseURL)
 }
 
 // Coze工作流参数接口 - 添加索引签名以兼容API
@@ -58,6 +85,12 @@ export class CozeService {
   private cozeClient: CozeAPI
 
   constructor() {
+    // 配置验证
+    const configValidation = validateCozeConfig()
+    if (!configValidation.valid) {
+      throw new Error(`Coze配置错误：${configValidation.error}`)
+    }
+
     // 初始化Coze API客户端
     this.cozeClient = new CozeAPI({
       token: COZE_CONFIG.token,

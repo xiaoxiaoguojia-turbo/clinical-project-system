@@ -983,6 +983,20 @@ export default function InternalPreparationsPage() {
     }
   }
 
+  const getLeaderText = (leader: string) => {
+    switch (leader) {
+      case 'yangfeng': return '杨锋'
+      case 'qinqingsong': return '秦青松'
+      case 'haojingjing': return '郝菁菁'
+      case 'chenlong': return '陈栊'
+      case 'wangliyan': return '王立言'
+      case 'maoshiwei': return '毛世伟'
+      case 'xiaolanchuan': return '肖蓝川'
+      case 'to-be-determined': return '待定'
+      default: return leader
+    }
+  }
+
   const handleAttachmentManagement = (project: UnifiedProject) => {
     console.log('=== 附件管理按钮点击调试信息 ===')
     console.log('点击的项目:', project)
@@ -1619,13 +1633,20 @@ export default function InternalPreparationsPage() {
 
                   <div className="form-group">
                     <label>负责人 *</label>
-                    <input
-                      type="text"
+                    <select
                       value={createFormData.leader}
                       onChange={(e) => handleCreateFormChange('leader', e.target.value)}
                       className={`form-input ${createFormErrors.leader ? 'error' : ''}`}
-                      placeholder="请输入负责人"
-                    />
+                    >
+                      <option value="yangfeng">杨锋</option>
+                      <option value="qinqingsong">秦青松</option>
+                      <option value="haojingjing">郝菁菁</option>
+                      <option value="chenlong">陈栊</option>
+                      <option value="wangliyan">王立言</option>
+                      <option value="maoshiwei">毛世伟</option>
+                      <option value="xiaolanchuan">肖蓝川</option>
+                      <option value="to-be-determined">待定</option>
+                    </select>
                     {createFormErrors.leader && <span className="error-text">{createFormErrors.leader}</span>}
                   </div>
 
@@ -1899,13 +1920,20 @@ export default function InternalPreparationsPage() {
 
                   <div className="form-group">
                     <label>负责人 *</label>
-                    <input
-                      type="text"
-                      className={`form-input ${editFormErrors.leader ? 'error' : ''}`}
-                      placeholder="请输入负责人"
+                    <select
                       value={editFormData.leader}
                       onChange={(e) => handleEditFormChange('leader', e.target.value)}
-                    />
+                      className={`form-input ${editFormErrors.leader ? 'error' : ''}`}
+                    >
+                      <option value="yangfeng">杨锋</option>
+                      <option value="qinqingsong">秦青松</option>
+                      <option value="haojingjing">郝菁菁</option>
+                      <option value="chenlong">陈栊</option>
+                      <option value="wangliyan">王立言</option>
+                      <option value="maoshiwei">毛世伟</option>
+                      <option value="xiaolanchuan">肖蓝川</option>
+                      <option value="to-be-determined">待定</option>
+                    </select>
                     {editFormErrors.leader && <div className="error-text">{editFormErrors.leader}</div>}
                   </div>
 
@@ -2163,7 +2191,7 @@ export default function InternalPreparationsPage() {
                       </div>
                       <div className="detail-item">
                         <label className="detail-label">负责人</label>
-                        <div className="detail-value">{selectedProject.leader}</div>
+                        <div className="detail-value">{getLeaderText(selectedProject.leader)}</div>
                       </div>
                       <div className="detail-item">
                         <label className="detail-label">重要程度</label>
@@ -2473,7 +2501,7 @@ export default function InternalPreparationsPage() {
 
           .search-input {
             width: 100%;
-            padding: 10px 16px 10px 44px;
+            padding: 10px 16px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 14px;

@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
+  // Docker部署：启用standalone输出模式
+  output: 'standalone',
+  
   // 环境变量配置 - 移除NODE_ENV（Next.js自动管理）
   env: {
     MONGODB_URI: process.env.MONGODB_URI,
@@ -36,6 +39,20 @@ const nextConfig = {
   experimental: {
     // 移除已过时的 appDir 配置
     serverComponentsExternalPackages: ['mongoose'],
+  },
+  
+  // 生产环境优化
+  productionBrowserSourceMaps: false,
+  
+  // 压缩
+  compress: true,
+  
+  // 自定义服务器配置
+  serverRuntimeConfig: {
+    // 服务器端环境变量
+  },
+  publicRuntimeConfig: {
+    // 客户端可访问的环境变量
   },
 }
 

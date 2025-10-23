@@ -1,0 +1,76 @@
+# ============================================
+# Docker 忽略文件配置
+# 排除不需要打包进镜像的文件
+# ============================================
+
+# Node.js 相关
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js 构建文件
+.next
+out
+build
+dist
+
+# 环境变量文件（敏感信息）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 测试文件
+coverage
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+__tests__
+
+# IDE 配置
+.vscode
+.idea
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Git 相关
+.git
+.gitignore
+.gitattributes
+
+# 文档和示例
+docs
+Demo_example
+Example
+*.md
+!README.md
+
+# 日志文件
+logs
+*.log
+
+# 临时文件
+tmp
+temp
+*.tmp
+
+# 上传文件（生产环境使用Docker卷）
+uploads/*
+test-uploads/*
+
+# 数据库文件
+*.db
+*.sqlite
+
+# 其他
+.prettierrc
+.eslintrc
+.editorconfig
+Claude_Sonnet_4_回复结果.md
+上海临转院.md
+rules.md

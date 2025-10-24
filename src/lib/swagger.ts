@@ -470,20 +470,58 @@ const options: swaggerJsdoc.Options = {
     ],
   },
   apis: [
-    // 使用绝对路径，确保能正确找到API文件
+    // 开发环境路径（TypeScript源文件）
     path.join(process.cwd(), 'pages', 'api', '**', '*.ts'),
     path.join(process.cwd(), 'pages', 'api', '*.ts'),
+    
+    // 生产环境路径（编译后的JavaScript文件）
+    path.join(process.cwd(), '.next', 'server', 'pages', 'api', '**', '*.js'),
+    path.join(process.cwd(), '.next', 'server', 'pages', 'api', '*.js'),
+    
+    // Standalone模式路径（Docker部署）
+    path.join(process.cwd(), 'server', 'pages', 'api', '**', '*.js'),
+    path.join(process.cwd(), 'server', 'pages', 'api', '*.js'),
+    
+    // 备用路径
+    './pages/api/**/*.ts',
+    './pages/api/*.ts',
+    './.next/server/pages/api/**/*.js',
+    './.next/server/pages/api/*.js',
   ],
 }
 
 // 生成swagger规范并指定类型
 const specs = swaggerJsdoc(options) as SwaggerSpec
 
-// 添加调试信息（修复后的版本）
-if (process.env.NODE_ENV === 'development') {
-  console.log('Swagger API paths:', options.apis)
-  console.log('Generated swagger spec keys:', Object.keys(specs))
-  console.log('Generated paths count:', specs.paths ? Object.keys(specs.paths).length : 0)
+// 添加详细的调试信息
+if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SWAGGER === 'true') {
+  console.log('='.repeat(80))
+  console.log('🔍 Swagger Configuration Debug Info')
+  console.log('='.repeat(80))
+  console.log('📁 Current Working Directory:', process.cwd())
+  console.log('🌍 Node Environment:', process.env.NODE_ENV)
+  console.log('📂 API Scan Paths:', options.apis)
+  console.log('📊 Generated Spec Keys:', Object.keys(specs))
+  console.log('🔢 Total Paths Found:', specs.paths ? Object.keys(specs.paths).length : 0)
+  
+  if (specs.paths) {
+    console.log('📋 API Endpoints Found:')
+    Object.keys(specs.paths).forEach((path, index) => {
+      const methods = Object.keys(specs.paths![path])
+      console.log(`  ${index + 1}. ${path} [${methods.join(', ').toUpperCase()}]`)
+    })
+  } else {
+    console.log('⚠️  No API paths found! Check the following:')
+    console.log('   1. API files exist in pages/api/')
+    console.log('   2. API files have @swagger JSDoc comments')
+    console.log('   3. File paths are correct for current environment')
+  }
+  
+  if (specs.components?.schemas) {
+    console.log('📦 Schemas Found:', Object.keys(specs.components.schemas).length)
+    console.log('   -', Object.keys(specs.components.schemas).join(', '))
+  }
+  console.log('='.repeat(80))
 }
 
 export default specs

@@ -169,7 +169,6 @@ interface ProjectFormData {
   leader: string
   startDate: string
   indication: string
-  followUpWeeks: string
   importance: 'very-important' | 'important' | 'normal' | 'not-important'
   status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'
   transformRequirement: string
@@ -231,7 +230,6 @@ const OtherProjectsPage: React.FC = () => {
       leader: '',
       startDate: '',
       indication: '',
-      followUpWeeks: '12',
       importance: 'normal',
       status: 'early-stage',
       transformRequirement: '',
@@ -506,7 +504,6 @@ const OtherProjectsPage: React.FC = () => {
           leader: '',
           startDate: '',
           indication: '',
-          followUpWeeks: '12',
           importance: 'normal',
           status: 'early-stage',
           transformRequirement: '',
@@ -530,7 +527,6 @@ const OtherProjectsPage: React.FC = () => {
           leader: project.leader || '',
           startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
           indication: project.indication || '',
-          followUpWeeks: project.followUpWeeks?.toString() || '12',
           importance: project.importance || 'normal',
           status: project.status || 'early-stage',
           transformRequirement: project.transformRequirement || '',
@@ -611,7 +607,6 @@ const OtherProjectsPage: React.FC = () => {
 
         const submitData = {
           ...formData,
-          followUpWeeks: parseInt(formData.followUpWeeks) || 12,
           projectType: currentProjectType.key
         }
 
@@ -650,7 +645,6 @@ const OtherProjectsPage: React.FC = () => {
 
         const submitData = {
           ...formData,
-          followUpWeeks: parseInt(formData.followUpWeeks) || 12,
           projectType: currentProjectType.key
         }
 
@@ -1076,7 +1070,6 @@ const OtherProjectsPage: React.FC = () => {
                               <th>状态</th>
                               <th>重要程度</th>
                               <th>开始日期</th>
-                              <th>跟进周期</th>
                               <th>院端医生</th>
                               <th>操作</th>
                             </tr>
@@ -1121,11 +1114,6 @@ const OtherProjectsPage: React.FC = () => {
                                 </td>
                                 <td>
                                   {project.startDate ? new Date(project.startDate).toLocaleDateString('zh-CN') : '-'}
-                                </td>
-                                <td>
-                                  <span className="follow-up-weeks">
-                                    {project.followUpWeeks || 0}周
-                                  </span>
                                 </td>
                                 <td>
                                   {project.hospitalDoctor || '-'}
@@ -1330,17 +1318,6 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>跟进时间(周)</label>
-                    <input
-                      type="number"
-                      value={formData.followUpWeeks}
-                      onChange={(e) => setFormData(prev => ({ ...prev, followUpWeeks: e.target.value }))}
-                      placeholder="请输入跟进周数"
-                      min="0"
-                    />
-                  </div>
-
-                  <div className="form-group">
                     <label>重要程度 *</label>
                     <select
                       value={formData.importance}
@@ -1375,13 +1352,10 @@ const OtherProjectsPage: React.FC = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, transformRequirement: e.target.value }))}
                     >
                       <option value="">请选择转化需求</option>
-                      <option value="license-transfer">许可转让</option>
-                      <option value="equity-investment">代价入股</option>
-                      <option value="trust-holding">代持</option>
-                      <option value="trust-management">代持托管</option>
+                      <option value="license">许可</option>
+                      <option value="transfer">转让</option>
                       <option value="company-operation">公司化运营</option>
-                      <option value="license-transfer-cash">许可转让现金</option>
-                      <option value="to-be-determined">待定</option>
+                      <option value="other">其他</option>
                     </select>
                   </div>
 
@@ -1481,11 +1455,6 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>跟进时间(周)</label>
-                    <div className="readonly-field">{viewingProject.followUpWeeks || '-'}</div>
-                  </div>
-
-                  <div className="form-group">
                     <label>重要程度</label>
                     <div className="readonly-field">
                       {viewingProject.importance === 'very-important' ? '非常重要' :
@@ -1508,13 +1477,10 @@ const OtherProjectsPage: React.FC = () => {
                   <div className="form-group">
                     <label>转化需求</label>
                     <div className="readonly-field">
-                      {viewingProject.transformRequirement === 'license-transfer' ? '许可转让' :
-                       viewingProject.transformRequirement === 'equity-investment' ? '代价入股' :
-                       viewingProject.transformRequirement === 'trust-holding' ? '代持' :
-                       viewingProject.transformRequirement === 'trust-management' ? '代持托管' :
+                      {viewingProject.transformRequirement === 'license' ? '许可' :
+                       viewingProject.transformRequirement === 'transfer' ? '转让' :
                        viewingProject.transformRequirement === 'company-operation' ? '公司化运营' :
-                       viewingProject.transformRequirement === 'license-transfer-cash' ? '许可转让现金' :
-                       viewingProject.transformRequirement === 'to-be-determined' ? '待定' : '-'}
+                       viewingProject.transformRequirement === 'other' ? '其他' : '-'}
                     </div>
                   </div>
 
@@ -2196,11 +2162,6 @@ const OtherProjectsPage: React.FC = () => {
 
         .importance-badge.not-important {
           color: #a3a3a3;
-        }
-
-        .follow-up-weeks {
-          font-size: 14px;
-          color: #374151;
         }
 
         .actions-cell {

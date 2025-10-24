@@ -1066,121 +1066,118 @@ const OtherProjectsPage: React.FC = () => {
 
                   {/* 项目列表 */}
                   {projects.length > 0 ? (
-                    <div className="projects-table-container">
-                      <table className="projects-table">
-                        <thead>
-                          <tr>
-                            <th>项目名称</th>
-                            <th>负责人</th>
-                            <th>状态</th>
-                            <th>重要程度</th>
-                            <th>开始日期</th>
-                            <th>跟进周期</th>
-                            <th>院端医生</th>
-                            <th>操作</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {projects.map((project) => (
-                            <tr key={project._id} className="project-row">
-                              <td className="project-name">
-                                <div className="name-content">
-                                  <h4>{project.name}</h4>
-                                  {project.department && (
-                                    <span className="department">{project.department}</span>
-                                  )}
-                                </div>
-                              </td>
-                              <td>
-                                <div className="leader-info">
-                                  <UserIcon className="w-4 h-4" />
-                                  <span>{project.leader}</span>
-                                </div>
-                              </td>
-                              <td>
-                                <span className={`status-badge ${project.status}`}>
-                                  {project.status === 'early-stage' && '早期'}
-                                  {project.status === 'preclinical' && '临床前'}
-                                  {project.status === 'clinical-stage' && '临床阶段'}
-                                  {project.status === 'market-product' && '上市产品'}
-                                </span>
-                              </td>
-                              <td>
-                                <span className={`importance-badge ${project.importance}`}>
-                                  {project.importance === 'very-important' && (
-                                    <>
-                                      <StarIcon className="w-4 h-4" />
-                                      非常重要
-                                    </>
-                                  )}
-                                  {project.importance === 'important' && (
-                                    <>
-                                      <StarIcon className="w-4 h-4" />
-                                      重要
-                                    </>
-                                  )}
-                                  {project.importance === 'normal' && '一般'}
-                                  {project.importance === 'not-important' && '不重要'}
-                                </span>
-                              </td>
-                              <td>
-                                {project.startDate ? new Date(project.startDate).toLocaleDateString('zh-CN') : '-'}
-                              </td>
-                              <td>
-                                <span className="follow-up-weeks">
-                                  {project.followUpWeeks || 0}周
-                                </span>
-                              </td>
-                              <td>
-                                {project.hospitalDoctor || '-'}
-                              </td>
-                              <td className="actions-cell">
-                                <div className="action-buttons-group">
-                                  <button
-                                    onClick={() => handleViewProject(project)}
-                                    className="action-btn view"
-                                    title="查看详情"
-                                  >
-                                    <EyeIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleEditProject(project)}
-                                    className="action-btn edit"
-                                    title="编辑项目"
-                                    disabled={!project._id}
-                                  >
-                                    <PencilIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => project._id && handleAttachments(project._id, project.name)}
-                                    className="action-btn attachments"
-                                    title="附件管理"
-                                    disabled={!project._id}
-                                  >
-                                    <PaperClipIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => project._id && handleGenerateReport(project._id)}
-                                    className="action-btn report"
-                                    title="AI报告(暂未开放)"
-                                    disabled
-                                  >
-                                    <DocumentTextIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => project._id && handleDeleteProject(project._id)}
-                                    className="action-btn delete"
-                                    title="删除项目"
-                                    disabled={!project._id}
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </td>
+                    <div className="table-scroll-container">
+                      <div className="table-wrapper">
+                        <table className="projects-table">
+                          <thead>
+                            <tr>
+                              <th>项目名称</th>
+                              <th>负责人</th>
+                              <th>状态</th>
+                              <th>重要程度</th>
+                              <th>开始日期</th>
+                              <th>跟进周期</th>
+                              <th>院端医生</th>
+                              <th>操作</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {projects.map((project) => (
+                              <tr key={project._id} className="project-row">
+                                <td className="project-name">
+                                  <h4>{project.name}</h4>
+                                </td>
+                                <td>
+                                  <div className="leader-info">
+                                    <UserIcon className="w-4 h-4" />
+                                    <span>{project.leader}</span>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className={`status-badge ${project.status}`}>
+                                    {project.status === 'early-stage' && '早期'}
+                                    {project.status === 'preclinical' && '临床前'}
+                                    {project.status === 'clinical-stage' && '临床阶段'}
+                                    {project.status === 'market-product' && '上市产品'}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className={`importance-badge ${project.importance}`}>
+                                    {project.importance === 'very-important' && (
+                                      <>
+                                        <StarIcon className="w-4 h-4" />
+                                        非常重要
+                                      </>
+                                    )}
+                                    {project.importance === 'important' && (
+                                      <>
+                                        <StarIcon className="w-4 h-4" />
+                                        重要
+                                      </>
+                                    )}
+                                    {project.importance === 'normal' && '一般'}
+                                    {project.importance === 'not-important' && '不重要'}
+                                  </span>
+                                </td>
+                                <td>
+                                  {project.startDate ? new Date(project.startDate).toLocaleDateString('zh-CN') : '-'}
+                                </td>
+                                <td>
+                                  <span className="follow-up-weeks">
+                                    {project.followUpWeeks || 0}周
+                                  </span>
+                                </td>
+                                <td>
+                                  {project.hospitalDoctor || '-'}
+                                </td>
+                                <td className="actions-cell">
+                                  <div className="action-buttons-group">
+                                    <button
+                                      onClick={() => handleViewProject(project)}
+                                      className="action-btn view"
+                                      title="查看详情"
+                                    >
+                                      <EyeIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleEditProject(project)}
+                                      className="action-btn edit"
+                                      title="编辑项目"
+                                      disabled={!project._id}
+                                    >
+                                      <PencilIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => project._id && handleAttachments(project._id, project.name)}
+                                      className="action-btn attachments"
+                                      title="附件管理"
+                                      disabled={!project._id}
+                                    >
+                                      <PaperClipIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => project._id && handleGenerateReport(project._id)}
+                                      className="action-btn report"
+                                      title="AI报告(暂未开放)"
+                                      disabled
+                                    >
+                                      <DocumentTextIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => project._id && handleDeleteProject(project._id)}
+                                      className="action-btn delete"
+                                      title="删除项目"
+                                      disabled={!project._id}
+                                    >
+                                      <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   ) : (
                     <div className="empty-state">
@@ -1990,7 +1987,7 @@ const OtherProjectsPage: React.FC = () => {
           transition: width 0.3s ease;
         }
 
-        /* 月度趋势图 */
+        /* 月度趋势 */
         .trend-section {
           margin-top: 32px;
         }
@@ -2835,6 +2832,108 @@ const OtherProjectsPage: React.FC = () => {
           padding-top: 0.75rem;
           white-space: pre-wrap;
           word-break: break-word;
+        }
+
+        /* 表格横向滚动容器 */
+        .table-scroll-container {
+          position: relative;
+          width: 100%;
+          overflow: hidden;
+          border-radius: 12px;
+          background: white;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          margin-top: 24px;
+        }
+
+        .table-wrapper {
+          width: 100%;
+          overflow-x: auto;
+          overflow-y: visible;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* 美化滚动条 */
+        .table-wrapper::-webkit-scrollbar {
+          height: 8px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+          transition: background 0.2s ease;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+
+        /* 滚动提示阴影 */
+        .table-scroll-container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 40px;
+          background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .table-wrapper:not(:hover)::-webkit-scrollbar-thumb {
+          background: transparent;
+        }
+
+        /* 项目表格 */
+        .projects-table {
+          width: 100%;
+          min-width: 1000px;
+          border-collapse: collapse;
+        }
+
+        .projects-table thead {
+          background: #f8fafc;
+          border-bottom: 2px solid #e2e8f0;
+        }
+
+        .projects-table th {
+          padding: 16px 20px;
+          text-align: left;
+          font-size: 13px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          white-space: nowrap;
+        }
+
+        .projects-table tbody tr {
+          border-bottom: 1px solid #f1f5f9;
+          transition: background-color 0.2s ease;
+        }
+
+        .projects-table tbody tr:hover {
+          background-color: #f8fafc;
+        }
+
+        .projects-table td {
+          padding: 16px 20px;
+          font-size: 14px;
+          color: #1e293b;
+          vertical-align: middle;
+        }
+
+        .projects-table .project-name h4 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #1e293b;
         }
       `}</style>
     </DashboardLayout>

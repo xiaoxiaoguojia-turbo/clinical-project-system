@@ -478,15 +478,19 @@ const options: swaggerJsdoc.Options = {
     path.join(process.cwd(), '.next', 'server', 'pages', 'api', '**', '*.js'),
     path.join(process.cwd(), '.next', 'server', 'pages', 'api', '*.js'),
     
-    // Standalone模式路径（Docker部署）
+    // Standalone模式路径（Docker部署 - 多种可能的位置）
     path.join(process.cwd(), 'server', 'pages', 'api', '**', '*.js'),
     path.join(process.cwd(), 'server', 'pages', 'api', '*.js'),
+    path.join(process.cwd(), '.next', 'standalone', 'server', 'pages', 'api', '**', '*.js'),
+    path.join(process.cwd(), '.next', 'standalone', 'server', 'pages', 'api', '*.js'),
     
-    // 备用路径
+    // 备用相对路径
     './pages/api/**/*.ts',
     './pages/api/*.ts',
     './.next/server/pages/api/**/*.js',
     './.next/server/pages/api/*.js',
+    './server/pages/api/**/*.js',
+    './server/pages/api/*.js',
   ],
 }
 
@@ -495,27 +499,62 @@ const specs = swaggerJsdoc(options) as SwaggerSpec
 
 // 添加详细的调试信息
 if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SWAGGER === 'true') {
+  const fs = require('fs')
+  
   console.log('='.repeat(80))
   console.log('🔍 Swagger Configuration Debug Info')
   console.log('='.repeat(80))
   console.log('📁 Current Working Directory:', process.cwd())
   console.log('🌍 Node Environment:', process.env.NODE_ENV)
-  console.log('📂 API Scan Paths:', options.apis)
+  console.log('')
+  
+  // 检查目录是否存在
+  console.log('📂 Directory Check:')
+  const dirsToCheck = [
+    'pages/api',
+    '.next/server/pages/api',
+    'server/pages/api',
+    '.next/standalone/server/pages/api'
+  ]
+  
+  dirsToCheck.forEach(dir => {
+    const fullPath = path.join(process.cwd(), dir)
+    const exists = fs.existsSync(fullPath)
+    console.log(`  ${exists ? '✅' : '❌'} ${dir} ${exists ? '(exists)' : '(not found)'}`)
+    
+    if (exists) {
+      try {
+        const files = fs.readdirSync(fullPath, { recursive: true })
+        const apiFiles = files.filter((f: string) => f.endsWith('.js') || f.endsWith('.ts'))
+        console.log(`     └─ Found ${apiFiles.length} API files`)
+        if (apiFiles.length > 0 && apiFiles.length <= 5) {
+          apiFiles.forEach((f: string) => console.log(`        - ${f}`))
+        }
+      } catch (e) {
+        console.log(`     └─ Error reading directory: ${e}`)
+      }
+    }
+  })
+  
+  console.log('')
   console.log('📊 Generated Spec Keys:', Object.keys(specs))
   console.log('🔢 Total Paths Found:', specs.paths ? Object.keys(specs.paths).length : 0)
+  console.log('')
   
-  if (specs.paths) {
+  if (specs.paths && Object.keys(specs.paths).length > 0) {
     console.log('📋 API Endpoints Found:')
-    Object.keys(specs.paths).forEach((path, index) => {
-      const methods = Object.keys(specs.paths![path])
-      console.log(`  ${index + 1}. ${path} [${methods.join(', ').toUpperCase()}]`)
+    Object.keys(specs.paths).forEach((apiPath, index) => {
+      const methods = Object.keys(specs.paths![apiPath])
+      console.log(`  ${index + 1}. ${apiPath} [${methods.join(', ').toUpperCase()}]`)
     })
   } else {
-    console.log('⚠️  No API paths found! Check the following:')
-    console.log('   1. API files exist in pages/api/')
-    console.log('   2. API files have @swagger JSDoc comments')
-    console.log('   3. File paths are correct for current environment')
+    console.log('⚠️  No API paths found! Troubleshooting:')
+    console.log('   1. Check if API files exist in any of the directories above')
+    console.log('   2. Verify API files have @swagger JSDoc comments')
+    console.log('   3. Check file permissions in Docker container')
+    console.log('   4. Try: docker exec -it clinical-nextjs ls -la server/pages/api/')
   }
+  console.log('')
   
   if (specs.components?.schemas) {
     console.log('📦 Schemas Found:', Object.keys(specs.components.schemas).length)

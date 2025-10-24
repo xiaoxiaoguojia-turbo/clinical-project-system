@@ -189,6 +189,7 @@ MONGO_ROOT_PASSWORD=生成的强密码
 JWT_SECRET=生成的32位密钥
 COZE_API_KEY=实际的API密钥
 API_BASE_URL=http://服务器IP:3000
+ifconfig ssh（看到他们的服务器ip地址）
 ```
 
 ### **Step 4: 启动服务**
@@ -198,6 +199,7 @@ API_BASE_URL=http://服务器IP:3000
 docker compose build --no-cache
 
 # 启动服务（后台运行）
+docker compose up
 docker compose up -d
 
 # 查看启动日志

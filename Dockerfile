@@ -54,11 +54,37 @@ RUN mkdir -p /app/uploads && \
     mkdir -p /app/.next && \
     chown -R nextjs:nodejs /app
 
-# 复制必要文件
+# 复制必要文件（Standalone模式）
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/package.json ./package.json
+
+# ===== 🔥 新增：复制所有源代码文件 =====
+# 1. 复制页面和API源代码（包含JSDoc注释）
+COPY --from=builder /app/pages ./pages
+
+# 2. 复制src目录（完整的源代码结构）
+COPY --from=builder /app/src ./src
+
+# 3. 复制样式文件
+COPY --from=builder /app/styles ./styles
+
+# 4. 复制脚本文件（数据库迁移、初始化等）
+COPY --from=builder /app/scripts ./scripts
+
+# 5. 复制文档文件
+COPY --from=builder /app/docs ./docs
+
+# 6. 复制配置文件
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/next-env.d.ts ./next-env.d.ts
+COPY --from=builder /app/next.config.js ./next.config.js
+COPY --from=builder /app/tailwind.config.js ./tailwind.config.js
+COPY --from=builder /app/postcss.config.js ./postcss.config.js
+
+# 7. 复制环境配置示例（可选）
+COPY --from=builder /app/.env.production.example ./.env.production.example
 
 # 复制启动脚本
 COPY docker-entrypoint.sh ./

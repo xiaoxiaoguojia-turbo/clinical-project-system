@@ -12,8 +12,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme123}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin_gjx}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-Clinical_2025_admin_hhzn}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-clinical_project_system}
     volumes:
       # 持久化数据存储 - 指定到 D 盘
@@ -47,7 +47,7 @@ services:
       DEBUG_SWAGGER: "true"
       
       # MongoDB连接（内部网络）
-      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-changeme123}@mongodb:27017/${MONGO_DATABASE:-clinical_project_system}?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin_gjx}:${MONGO_ROOT_PASSWORD:-Clinical_2025_admin_hhzn}@mongodb:27017/${MONGO_DATABASE:-clinical_project_system}?authSource=admin_gjx
       
       # JWT密钥
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}

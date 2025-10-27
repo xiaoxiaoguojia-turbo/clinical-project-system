@@ -13,8 +13,8 @@ print('========================================');
 // 创建应用用户（只读/读写权限）
 try {
   db.createUser({
-    user: 'clinical_app',
-    pwd: 'changeme456',  // 生产环境请修改
+    user: 'admin_gjx',
+    pwd: 'Clinical_2025_admin_hhzn',  // 生产环境请修改
     roles: [
       { role: 'readWrite', db: 'clinical_project_system' }
     ]

@@ -232,7 +232,7 @@ export interface Attachment {
   filePath?: string
   gridfsId?: string
   projectId: string
-  projectType: 'overall' | 'internal-preparation' | 'type2'
+  projectType: 'overall' | 'internal-preparation' | 'type2' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other'
   uploadTime: Date
   uploadedBy: string
 }

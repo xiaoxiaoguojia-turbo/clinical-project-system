@@ -266,6 +266,37 @@ const OtherProjectsPage: React.FC = () => {
       { value: 'xiaolanchuan', label: '肖兰川' }
     ]
 
+    // 字段映射函数 - 将英文枚举值转换为中文显示
+    const getLeaderLabel = (value: string): string => {
+      const leader = leaderOptions.find(opt => opt.value === value)
+      return leader?.label || value
+    }
+
+    const getStatusLabel = (value: string): string => {
+      const statusMap: { [key: string]: string } = {
+        'early-stage': '早期',
+        'preclinical': '临床前',
+        'clinical-stage': '临床阶段',
+        'market-product': '上市产品'
+      }
+      return statusMap[value] || value
+    }
+
+    const getImportanceLabel = (value: string): string => {
+      const importanceMap: { [key: string]: string } = {
+        'very-important': '非常重要',
+        'important': '重要',
+        'normal': '一般',
+        'not-important': '不重要'
+      }
+      return importanceMap[value] || value
+    }
+
+    const getDepartmentLabel = (value: string): string => {
+      const dept = departmentOptions.find(opt => opt.value === value)
+      return dept?.label || value
+    }
+
     /* ------------------------------------------------------------------------------------------ */
     
     // 认证检查和数据加载
@@ -520,7 +551,7 @@ const OtherProjectsPage: React.FC = () => {
       // 重置表单
       const resetForm = useCallback(() => {
         setFormData({
-          department: 'transfer-investment-dept-1', // 使用正确的英文enum值
+          department: 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
           source: '',
           name: '',
           leader: 'to-be-determined',
@@ -548,7 +579,7 @@ const OtherProjectsPage: React.FC = () => {
       // 处理编辑项目
       const handleEditProject = useCallback((project: UnifiedProject) => {
         setFormData({
-          department: project.department || 'transfer-investment-dept-1', // 使用正确的英文enum值
+          department: project.department || 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
           source: project.source || '',
           name: project.name || '',
           leader: project.leader || 'to-be-determined',
@@ -967,7 +998,7 @@ const OtherProjectsPage: React.FC = () => {
                                 .slice(0, 10)
                                 .map(([leader, count]) => (
                                   <div key={leader} className="leader-item">
-                                    <span className="leader-name">{leader}</span>
+                                    <span className="leader-name">{getLeaderLabel(leader)}</span>
                                     <div className="leader-bar">
                                       <div 
                                         className="leader-fill"
@@ -1083,7 +1114,9 @@ const OtherProjectsPage: React.FC = () => {
                         >
                           <option value="">全部负责人</option>
                           {availableLeaders.map(leader => (
-                            <option key={leader} value={leader}>{leader}</option>
+                            <option key={leader} value={leader}>
+                              {getLeaderLabel(leader)}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -1115,33 +1148,23 @@ const OtherProjectsPage: React.FC = () => {
                                 <td>
                                   <div className="leader-info">
                                     <UserIcon className="w-4 h-4" />
-                                    <span>{project.leader}</span>
+                                    <span>{getLeaderLabel(project.leader)}</span>
                                   </div>
                                 </td>
                                 <td>
                                   <span className={`status-badge ${project.status}`}>
-                                    {project.status === 'early-stage' && '早期'}
-                                    {project.status === 'preclinical' && '临床前'}
-                                    {project.status === 'clinical-stage' && '临床阶段'}
-                                    {project.status === 'market-product' && '上市产品'}
+                                    {getStatusLabel(project.status)}
                                   </span>
                                 </td>
                                 <td>
                                   <span className={`importance-badge ${project.importance}`}>
                                     {project.importance === 'very-important' && (
-                                      <>
-                                        <StarIcon className="w-4 h-4" />
-                                        非常重要
-                                      </>
+                                      <StarIcon className="w-4 h-4" />
                                     )}
                                     {project.importance === 'important' && (
-                                      <>
-                                        <StarIcon className="w-4 h-4" />
-                                        重要
-                                      </>
+                                      <StarIcon className="w-4 h-4" />
                                     )}
-                                    {project.importance === 'normal' && '一般'}
-                                    {project.importance === 'not-important' && '不重要'}
+                                    {getImportanceLabel(project.importance)}
                                   </span>
                                 </td>
                                 <td>
@@ -1529,7 +1552,7 @@ const OtherProjectsPage: React.FC = () => {
                   <div className="form-group">
                     <label>部门</label>
                     <div className="readonly-field">
-                      {departmentOptions.find(opt => opt.value === viewingProject.department)?.label || viewingProject.department || '-'}
+                      {getDepartmentLabel(viewingProject.department) || '-'}
                     </div>
                   </div>
 
@@ -1541,7 +1564,7 @@ const OtherProjectsPage: React.FC = () => {
                   <div className="form-group">
                     <label>负责人</label>
                     <div className="readonly-field">
-                      {leaderOptions.find(opt => opt.value === viewingProject.leader)?.label || viewingProject.leader || '-'}
+                      {getLeaderLabel(viewingProject.leader) || '-'}
                     </div>
                   </div>
 
@@ -1555,20 +1578,14 @@ const OtherProjectsPage: React.FC = () => {
                   <div className="form-group">
                     <label>重要程度</label>
                     <div className="readonly-field">
-                      {viewingProject.importance === 'very-important' ? '非常重要' :
-                       viewingProject.importance === 'important' ? '重要' :
-                       viewingProject.importance === 'normal' ? '一般' :
-                       viewingProject.importance === 'not-important' ? '不重要' : '-'}
+                      {getImportanceLabel(viewingProject.importance) || '-'}
                     </div>
                   </div>
 
                   <div className="form-group">
                     <label>项目状态</label>
                     <div className="readonly-field">
-                      {viewingProject.status === 'early-stage' ? '早期' :
-                       viewingProject.status === 'preclinical' ? '临床前' :
-                       viewingProject.status === 'clinical-stage' ? '临床阶段' :
-                       viewingProject.status === 'market-product' ? '上市产品' : '-'}
+                      {getStatusLabel(viewingProject.status) || '-'}
                     </div>
                   </div>
 
@@ -1585,18 +1602,18 @@ const OtherProjectsPage: React.FC = () => {
                   <div className="form-group">
                     <label>转化需求</label>
                     <div className="readonly-field">
-                      {viewingProject.transformRequirement === 'license' ? '许可' :
-                       viewingProject.transformRequirement === 'transfer' ? '转让' :
-                       viewingProject.transformRequirement === 'company-operation' ? '公司化运营' :
-                       viewingProject.transformRequirement === 'other' ? '其他' : '-'}
+                      {formData.transformRequirement === 'license' ? '许可' :
+                       formData.transformRequirement === 'transfer' ? '转让' :
+                       formData.transformRequirement === 'company-operation' ? '公司化运营' :
+                       formData.transformRequirement === 'other' ? '其他' : '-'}
                     </div>
                   </div>
 
                   <div className="form-group">
                     <label>转化推进状态</label>
                     <div className="readonly-field">
-                      {viewingProject.transformProgress === 'contract-completed' ? '签约已完成' :
-                       viewingProject.transformProgress === 'contract-incomplete' ? '签约未完成' : '-'}
+                      {formData.transformProgress === 'contract-completed' ? '签约已完成' :
+                       formData.transformProgress === 'contract-incomplete' ? '签约未完成' : '-'}
                     </div>
                   </div>
 

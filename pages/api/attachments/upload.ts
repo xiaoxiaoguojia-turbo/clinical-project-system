@@ -43,7 +43,7 @@
  *                 example: "64f123456789abcd12345678"
  *               projectType:
  *                 type: string
- *                 enum: [overall, internal-preparation]
+ *                 enum: [overall, internal-preparation, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
  *                 description: 项目类型
  *                 example: "overall"
  *               description:
@@ -331,14 +331,26 @@ async function handler(
       })
     }
 
-    // 验证项目类型
-    if (!['overall', 'internal-preparation'].includes(projectType)) {
+    // 验证项目类型 - 支持所有统一项目类型
+    const validProjectTypes = [
+      'overall', 
+      'internal-preparation', 
+      'ai-medical-research', 
+      'diagnostic-detection', 
+      'cell-therapy', 
+      'drug', 
+      'medical-device', 
+      'medical-material', 
+      'other'
+    ]
+    
+    if (!validProjectTypes.includes(projectType)) {
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path)
       }
       return res.status(400).json({
         success: false,
-        error: '无效的项目类型'
+        error: `无效的项目类型。支持的类型：${validProjectTypes.join(', ')}`
       })
     }
 

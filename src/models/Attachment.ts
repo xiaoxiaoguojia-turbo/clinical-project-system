@@ -64,7 +64,17 @@ const AttachmentSchema: Schema = new Schema({
   },
   projectType: {
     type: String,
-    enum: ['overall', 'internal-preparation'],
+    enum: [
+      'overall', 
+      'internal-preparation',
+      'ai-medical-research',
+      'diagnostic-detection',
+      'cell-therapy',
+      'drug',
+      'medical-device',
+      'medical-material',
+      'other'
+    ],
     required: [true, '项目类型为必填项']
   },
   uploadTime: {

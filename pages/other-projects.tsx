@@ -172,7 +172,12 @@ interface ProjectFormData {
   importance: 'very-important' | 'important' | 'normal' | 'not-important'
   status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'
   transformRequirement: string
+  transformProgress: string
   hospitalDoctor: string
+  patent: string
+  clinicalData: string
+  marketSize: string
+  competitorStatus: string
   conclusion: string
 }
 
@@ -227,13 +232,18 @@ const OtherProjectsPage: React.FC = () => {
       department: 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
       source: '',
       name: '',
-      leader: '',
-      startDate: '',
+      leader: 'to-be-determined',
+      startDate: new Date().toISOString().split('T')[0],
       indication: '',
       importance: 'normal',
       status: 'early-stage',
       transformRequirement: '',
+      transformProgress: '',
       hospitalDoctor: '',
+      patent: '',
+      clinicalData: '',
+      marketSize: '',
+      competitorStatus: '',
       conclusion: ''
     })
 
@@ -242,6 +252,18 @@ const OtherProjectsPage: React.FC = () => {
       { value: 'transfer-investment-dept-1', label: '转移转化与投资一部' },
       { value: 'transfer-investment-dept-2', label: '转移转化与投资二部' },
       { value: 'transfer-investment-dept-3', label: '转移转化与投资三部' }
+    ]
+
+    // 负责人选项数据定义
+    const leaderOptions = [
+      { value: 'to-be-determined', label: '待定' },
+      { value: 'yangfeng', label: '杨逢' },
+      { value: 'qinqingsong', label: '秦青松' },
+      { value: 'haojingjing', label: '郝晶晶' },
+      { value: 'chenlong', label: '陈龙' },
+      { value: 'wangliyan', label: '王丽燕' },
+      { value: 'maoshiwei', label: '毛世伟' },
+      { value: 'xiaolanchuan', label: '肖兰川' }
     ]
 
     /* ------------------------------------------------------------------------------------------ */
@@ -501,13 +523,18 @@ const OtherProjectsPage: React.FC = () => {
           department: 'transfer-investment-dept-1', // 使用正确的英文enum值
           source: '',
           name: '',
-          leader: '',
-          startDate: '',
+          leader: 'to-be-determined',
+          startDate: new Date().toISOString().split('T')[0],
           indication: '',
           importance: 'normal',
           status: 'early-stage',
           transformRequirement: '',
+          transformProgress: '',
           hospitalDoctor: '',
+          patent: '',
+          clinicalData: '',
+          marketSize: '',
+          competitorStatus: '',
           conclusion: ''
         })
       }, [])
@@ -524,13 +551,18 @@ const OtherProjectsPage: React.FC = () => {
           department: project.department || 'transfer-investment-dept-1', // 使用正确的英文enum值
           source: project.source || '',
           name: project.name || '',
-          leader: project.leader || '',
+          leader: project.leader || 'to-be-determined',
           startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
           indication: project.indication || '',
           importance: project.importance || 'normal',
           status: project.status || 'early-stage',
           transformRequirement: project.transformRequirement || '',
+          transformProgress: project.transformProgress || '',
           hospitalDoctor: project.hospitalDoctor || '',
+          patent: project.patent || '',
+          clinicalData: project.clinicalData || '',
+          marketSize: project.marketSize || '',
+          competitorStatus: project.competitorStatus || '',
           conclusion: project.conclusion || ''
         })
         setEditingProject(project)
@@ -1251,7 +1283,8 @@ const OtherProjectsPage: React.FC = () => {
 
               <form onSubmit={handleSubmitProject} className="modal-body">
                 <div className="form-grid">
-                  <div className="form-group">
+                  {/* 第一行：项目名称 */}
+                  <div className="form-group full-width">
                     <label>项目名称 *</label>
                     <input
                       type="text"
@@ -1262,6 +1295,7 @@ const OtherProjectsPage: React.FC = () => {
                     />
                   </div>
 
+                  {/* 第二行：部门、来源 */}
                   <div className="form-group">
                     <label>部门 *</label>
                     <select
@@ -1287,15 +1321,20 @@ const OtherProjectsPage: React.FC = () => {
                     />
                   </div>
 
+                  {/* 第三行：负责人、开始日期 */}
                   <div className="form-group">
                     <label>负责人 *</label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.leader}
                       onChange={(e) => setFormData(prev => ({ ...prev, leader: e.target.value }))}
-                      placeholder="请输入负责人"
                       required
-                    />
+                    >
+                      {leaderOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="form-group">
@@ -1307,16 +1346,7 @@ const OtherProjectsPage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>适应症/科室</label>
-                    <input
-                      type="text"
-                      value={formData.indication}
-                      onChange={(e) => setFormData(prev => ({ ...prev, indication: e.target.value }))}
-                      placeholder="请输入适应症/科室"
-                    />
-                  </div>
-
+                  {/* 第四行：重要程度、项目状态 */}
                   <div className="form-group">
                     <label>重要程度 *</label>
                     <select
@@ -1324,7 +1354,6 @@ const OtherProjectsPage: React.FC = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, importance: e.target.value as any }))}
                       required
                     >
-                      <option value="">请选择重要程度</option>
                       <option value="very-important">非常重要</option>
                       <option value="important">重要</option>
                       <option value="normal">一般</option>
@@ -1345,6 +1374,28 @@ const OtherProjectsPage: React.FC = () => {
                     </select>
                   </div>
 
+                  {/* 第五行：适应症/科室、院端医生 */}
+                  <div className="form-group">
+                    <label>适应症/科室</label>
+                    <input
+                      type="text"
+                      value={formData.indication}
+                      onChange={(e) => setFormData(prev => ({ ...prev, indication: e.target.value }))}
+                      placeholder="请输入适应症/科室"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>院端医生</label>
+                    <input
+                      type="text"
+                      value={formData.hospitalDoctor}
+                      onChange={(e) => setFormData(prev => ({ ...prev, hospitalDoctor: e.target.value }))}
+                      placeholder="请输入院端医生"
+                    />
+                  </div>
+
+                  {/* 第六行：转化需求、转化推进状态 */}
                   <div className="form-group">
                     <label>转化需求</label>
                     <select
@@ -1360,29 +1411,78 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>院端医生</label>
-                    <input
-                      type="text"
-                      value={formData.hospitalDoctor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, hospitalDoctor: e.target.value }))}
-                      placeholder="请输入院端医生"
+                    <label>转化推进状态</label>
+                    <select
+                      value={formData.transformProgress}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transformProgress: e.target.value }))}
+                    >
+                      <option value="">请选择推进状态</option>
+                      <option value="contract-completed">签约已完成</option>
+                      <option value="contract-incomplete">签约未完成</option>
+                    </select>
+                  </div>
+
+                  {/* 第七行：专利信息 */}
+                  <div className="form-group full-width">
+                    <label>专利信息</label>
+                    <textarea
+                      value={formData.patent}
+                      onChange={(e) => setFormData(prev => ({ ...prev, patent: e.target.value }))}
+                      className="form-textarea"
+                      placeholder="请输入专利信息"
+                      rows={2}
                     />
                   </div>
 
+                  {/* 第八行：临床数据 */}
                   <div className="form-group full-width">
-                    <label>专利信息及项目结论</label>
+                    <label>临床数据</label>
+                    <textarea
+                      value={formData.clinicalData}
+                      onChange={(e) => setFormData(prev => ({ ...prev, clinicalData: e.target.value }))}
+                      className="form-textarea"
+                      placeholder="请输入临床数据"
+                      rows={2}
+                    />
+                  </div>
+
+                  {/* 第九行：市场规模、竞品状态 */}
+                  <div className="form-group">
+                    <label>市场规模</label>
+                    <input
+                      type="text"
+                      value={formData.marketSize}
+                      onChange={(e) => setFormData(prev => ({ ...prev, marketSize: e.target.value }))}
+                      placeholder="请输入市场规模"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>竞品状态</label>
+                    <input
+                      type="text"
+                      value={formData.competitorStatus}
+                      onChange={(e) => setFormData(prev => ({ ...prev, competitorStatus: e.target.value }))}
+                      placeholder="请输入竞品状态"
+                    />
+                  </div>
+
+                  {/* 第十行：项目结论 */}
+                  <div className="form-group full-width">
+                    <label>项目结论</label>
                     <textarea
                       value={formData.conclusion}
                       onChange={(e) => setFormData(prev => ({ ...prev, conclusion: e.target.value }))}
                       className="form-textarea"
-                      placeholder="请输入专利信息及项目结论"
-                      rows={4}
+                      placeholder="请输入项目结论"
+                      rows={3}
                     />
                   </div>
                 </div>
 
                 <div className="modal-footer">
                   <button
+                    type="button"
                     className="btn-secondary"
                     onClick={() => {
                       setShowCreateModal(false)
@@ -1391,7 +1491,7 @@ const OtherProjectsPage: React.FC = () => {
                   >
                     取消
                   </button>
-                  <button className="btn-primary" disabled={loading}>
+                  <button type="submit" className="btn-primary" disabled={loading}>
                     {loading ? '处理中...' : (showCreateModal ? '创建项目' : '保存修改')}
                   </button>
                 </div>
@@ -1420,7 +1520,8 @@ const OtherProjectsPage: React.FC = () => {
 
               <div className="modal-body">
                 <div className="form-grid">
-                  <div className="form-group">
+                  {/* 基本信息 */}
+                  <div className="form-group full-width">
                     <label>项目名称</label>
                     <div className="readonly-field">{viewingProject.name || '-'}</div>
                   </div>
@@ -1439,7 +1540,9 @@ const OtherProjectsPage: React.FC = () => {
 
                   <div className="form-group">
                     <label>负责人</label>
-                    <div className="readonly-field">{viewingProject.leader || '-'}</div>
+                    <div className="readonly-field">
+                      {leaderOptions.find(opt => opt.value === viewingProject.leader)?.label || viewingProject.leader || '-'}
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -1447,11 +1550,6 @@ const OtherProjectsPage: React.FC = () => {
                     <div className="readonly-field">
                       {viewingProject.startDate ? new Date(viewingProject.startDate).toLocaleDateString('zh-CN') : '-'}
                     </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>适应症/科室</label>
-                    <div className="readonly-field">{viewingProject.indication || '-'}</div>
                   </div>
 
                   <div className="form-group">
@@ -1475,6 +1573,16 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
+                    <label>适应症/科室</label>
+                    <div className="readonly-field">{viewingProject.indication || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>院端医生</label>
+                    <div className="readonly-field">{viewingProject.hospitalDoctor || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
                     <label>转化需求</label>
                     <div className="readonly-field">
                       {viewingProject.transformRequirement === 'license' ? '许可' :
@@ -1485,12 +1593,39 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>院端医生</label>
-                    <div className="readonly-field">{viewingProject.hospitalDoctor || '-'}</div>
+                    <label>转化推进状态</label>
+                    <div className="readonly-field">
+                      {viewingProject.transformProgress === 'contract-completed' ? '签约已完成' :
+                       viewingProject.transformProgress === 'contract-incomplete' ? '签约未完成' : '-'}
+                    </div>
                   </div>
 
                   <div className="form-group full-width">
-                    <label>专利信息及项目结论</label>
+                    <label>专利信息</label>
+                    <div className="readonly-field readonly-textarea">
+                      {viewingProject.patent || '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>临床数据</label>
+                    <div className="readonly-field readonly-textarea">
+                      {viewingProject.clinicalData || '-'}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>市场规模</label>
+                    <div className="readonly-field">{viewingProject.marketSize || '-'}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>竞品状态</label>
+                    <div className="readonly-field">{viewingProject.competitorStatus || '-'}</div>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>项目结论</label>
                     <div className="readonly-field readonly-textarea">
                       {viewingProject.conclusion || '-'}
                     </div>

@@ -73,18 +73,12 @@ COPY --from=builder /app/styles ./styles
 # 4. 复制脚本文件（数据库迁移、初始化等）
 COPY --from=builder /app/scripts ./scripts
 
-# 5. 复制文档文件
-COPY --from=builder /app/docs ./docs
-
-# 6. 复制配置文件
+# 5. 复制配置文件
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/next-env.d.ts ./next-env.d.ts
 COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/tailwind.config.js ./tailwind.config.js
 COPY --from=builder /app/postcss.config.js ./postcss.config.js
-
-# 7. 复制环境配置示例（可选）
-COPY --from=builder /app/.env.production.example ./.env.production.example
 
 # 复制启动脚本
 COPY docker-entrypoint.sh ./

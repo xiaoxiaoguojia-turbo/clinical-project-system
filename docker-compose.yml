@@ -6,7 +6,7 @@
 services:
   # ===== MongoDB 数据库服务 =====
   mongodb:
-    image: mongo:7.0
+    image: mongo:4.4
     container_name: clinical-mongodb
     restart: unless-stopped
     ports:
@@ -16,7 +16,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-Clinical_2025_admin_hhzn}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-clinical_project_system}
     volumes:
-      # 持久化数据存储 - 指定到 D 盘
+      # 持久化数据存储
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
       # 初始化脚本（可选）
@@ -24,7 +24,7 @@ services:
     networks:
       - clinical-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -90,28 +90,16 @@ networks:
       config:
         - subnet: 172.20.0.0/16
 
-# ===== 数据卷配置 - 指定到 D 盘 =====
+# ===== 数据卷配置 =====
 volumes:
   mongodb_data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: 'D:\Docker\clinical_data\mongodb_data'
     name: clinical_mongodb_data
   
   mongodb_config:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: 'D:\Docker\clinical_data\mongodb_config'
     name: clinical_mongodb_config
   
   uploads_data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: 'D:\Docker\clinical_data\uploads'
     name: clinical_uploads_data

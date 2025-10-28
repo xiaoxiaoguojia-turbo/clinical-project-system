@@ -62,9 +62,9 @@ services:
       NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.0}
       
       # Coze AI配置（需要外网）
-      COZE_API_KEY: ${COZE_API_KEY:-}
-      COZE_BOT_ID: ${COZE_BOT_ID:-}
-      COZE_WORKFLOW_ID: ${COZE_WORKFLOW_ID:-}
+      COZE_API_KEY: ${COZE_API_KEY:-sat_wdiLBGPfC1CJJ6k9vuNRabHI4XQg5zO4aPr1XI7q489pVuVKUV1BjJmWSfdNjgII}
+      COZE_BOT_ID: ${COZE_BOT_ID:-your-bot-id-if-needed}
+      COZE_WORKFLOW_ID: ${COZE_WORKFLOW_ID:-7547613197532938275}
     volumes:
       # 文件上传持久化
       - uploads_data:/app/uploads

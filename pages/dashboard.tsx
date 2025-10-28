@@ -97,6 +97,27 @@ interface StatCard {
 
 /* ------------------------------------------------------------------------------------------ */
 
+// 转化需求中文映射
+const getTransformRequirementLabel = (value: string): string => {
+  const labelMap: {[key: string]: string} = {
+    'license': '许可',
+    'transfer': '转让',
+    'company-operation': '公司化运营',
+    'license-transfer': '许可转让',
+    'other': '其他'
+  }
+  return labelMap[value] || value
+}
+
+// 转化推进状态中文映射
+const getTransformProgressLabel = (value: string): string => {
+  const labelMap: {[key: string]: string} = {
+    'contract-completed': '签约已完成',
+    'contract-incomplete': '未完成'
+  }
+  return labelMap[value] || value
+}
+
 export default function Dashboard() {
   // 基础状态
   const [mounted, setMounted] = useState(false)
@@ -361,7 +382,7 @@ export default function Dashboard() {
       // 6. 转化需求分布 - 饼图
       transformRequirement: {
         data: {
-          labels: overview.byTransformRequirement.map(item => item.label),
+          labels: overview.byTransformRequirement.map(item => getTransformRequirementLabel(item.label)),
           datasets: [{
             data: overview.byTransformRequirement.map(item => item.value),
             backgroundColor: CHART_COLORS.transformRequirement.slice(0, overview.byTransformRequirement.length),
@@ -402,7 +423,7 @@ export default function Dashboard() {
       // 8. 转化推进状态 - 饼图
       transformProgress: {
         data: {
-          labels: overview.byTransformProgress.map(item => item.label),
+          labels: overview.byTransformProgress.map(item => getTransformProgressLabel(item.label)),
           datasets: [{
             data: overview.byTransformProgress.map(item => item.value),
             backgroundColor: CHART_COLORS.transformProgress.slice(0, overview.byTransformProgress.length),

@@ -68,7 +68,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
   }
 
   const handleProfile = () => {
-    router.push('/profile')
+    router.push('/underconstruction')
   }
 
   const handleSettings = () => {

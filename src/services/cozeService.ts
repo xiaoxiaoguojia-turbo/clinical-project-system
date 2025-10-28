@@ -4,12 +4,12 @@
  */
 
 import { CozeAPI, COZE_CN_BASE_URL } from '@coze/api'
-import { InternalPreparationProject } from '@/types'
+import { UnifiedProject } from '@/types'
 
 // 从环境变量读取Coze配置（不再硬编码）
 const COZE_CONFIG = {
-  token: process.env.COZE_API_KEY || '',
-  workflowId: process.env.COZE_WORKFLOW_ID || '',
+  token: process.env.COZE_API_KEY || 'sat_wdiLBGPfC1CJJ6k9vuNRabHI4XQg5zO4aPr1XI7q489pVuVKUV1BjJmWSfdNjgII',
+  workflowId: process.env.COZE_WORKFLOW_ID || '7547613197532938275',
   baseURL: COZE_CN_BASE_URL
 }
 
@@ -50,7 +50,7 @@ interface CozeWorkflowParameters {
   function: string   // 功能
   guige: string      // 规格
   nianxian: string   // 年限
-  yongliang: string  // 用量
+  yongliang: string  // 市场规模
   beianhao: string   // 备案号
   zhuanli?: string   // 专利（可选）
 }
@@ -102,18 +102,22 @@ export class CozeService {
 
   /**
    * 将数据库项目数据映射为Coze工作流参数
+   * @param project 统一项目数据（UnifiedProject类型）
    */
-  private mapProjectToCozeParameters(project: InternalPreparationProject): CozeWorkflowParameters {
+  private mapProjectToCozeParameters(project: UnifiedProject): CozeWorkflowParameters {
     return {
-      bumen: project.department || '转移转化与投资部门',
-      laiyuan: project.source,
-      yaofang: project.name,
-      zufang: project.composition,
-      function: project.function,
-      guige: project.specification,
-      nianxian: project.duration,
-      yongliang: project.dosage,
-      beianhao: project.recordNumber,
+      // 必填字段（提供默认值以确保类型安全）
+      bumen: project.department || 'transfer-investment-dept-1',
+      laiyuan: project.source || '',
+      yaofang: project.name || '',
+      zufang: project.composition || '',
+      function: project.function || '',
+      
+      // 选填字段（提供默认空字符串）
+      guige: project.specification || '',
+      nianxian: project.duration || '',
+      yongliang: project.marketSize || '',
+      beianhao: project.recordNumber || '',
       zhuanli: project.patent || ''
     }
   }
@@ -121,7 +125,7 @@ export class CozeService {
   /**
    * 验证项目数据完整性
    */
-  private validateProjectData(project: InternalPreparationProject): { isValid: boolean; errors: string[] } {
+  private validateProjectData(project: UnifiedProject): { isValid: boolean; errors: string[] } {
     const errors: string[] = []
     
     if (!project.department?.trim()) errors.push('部门信息不能为空')
@@ -129,10 +133,6 @@ export class CozeService {
     if (!project.name?.trim()) errors.push('药方名称不能为空')
     if (!project.composition?.trim()) errors.push('组方信息不能为空')
     if (!project.function?.trim()) errors.push('功能信息不能为空')
-    if (!project.specification?.trim()) errors.push('规格信息不能为空')
-    if (!project.duration?.trim()) errors.push('年限信息不能为空')
-    if (!project.dosage?.trim()) errors.push('用量信息不能为空')
-    if (!project.recordNumber?.trim()) errors.push('备案号不能为空')
 
     return {
       isValid: errors.length === 0,
@@ -143,7 +143,7 @@ export class CozeService {
   /**
    * 调用Coze工作流生成AI报告（使用官方SDK）
    */
-  async generateReport(project: InternalPreparationProject): Promise<ReportGenerationResult> {
+  async generateReport(project: UnifiedProject): Promise<ReportGenerationResult> {
     try {
       console.log('开始生成AI报告，项目ID:', project._id)
       
@@ -258,7 +258,7 @@ export class CozeService {
         function: '测试功能',
         guige: '测试规格',
         nianxian: '测试年限',
-        yongliang: '测试用量',
+        yongliang: '测试市场规模',
         beianhao: 'TEST001',
         zhuanli: '测试专利'
       }
@@ -311,7 +311,7 @@ export class CozeService {
         function: 'function',
         specification: 'guige',
         duration: 'nianxian',
-        dosage: 'yongliang',
+        marketSize: 'yongliang',
         recordNumber: 'beianhao',
         patent: 'zhuanli'
       },

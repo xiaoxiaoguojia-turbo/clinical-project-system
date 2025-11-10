@@ -93,13 +93,13 @@ export interface IUnifiedProject {
   // 删除
 
   hospitalDoctor?: string                  // 院端医生
+  patent?: string                          // 专利信息（具体的专利号）
   clinicalData?: string                    // 临床数据
 
   // marketSize?: string                   // 市场规模
   // competitorStatus?: string             // 竞品状态
   // 删除
 
-  patent?: string                          // 专利信息（具体的专利号）
   xxxxx?: number                           // xxxxx（转化金额/万元）
   conclusion?: string                      // 项目结论
   

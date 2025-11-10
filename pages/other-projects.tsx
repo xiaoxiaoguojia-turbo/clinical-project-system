@@ -261,7 +261,7 @@ const OtherProjectsPage: React.FC = () => {
       { value: 'qinqingsong', label: '秦青松' },
       { value: 'haojingjing', label: '郝晶晶' },
       { value: 'chenlong', label: '陈龙' },
-      { value: 'wangliyan', label: '王丽燕' },
+      { value: 'wangliyan', label: '王立言' },
       { value: 'maoshiwei', label: '毛世伟' },
       { value: 'xiaolanchuan', label: '肖兰川' }
     ]

@@ -9,7 +9,7 @@
  *       分页获取所有类型项目列表，支持搜索和筛选
  *       
  *       **支持的项目类型：**
- *       - internal-preparation: 院内制剂
+ *       - chinese-medicine-modernization: 中药现代化
  *       - ai-medical-research: AI医疗及系统研究  
  *       - diagnostic-detection: 检测诊断
  *       - cell-therapy: 细胞治疗
@@ -47,21 +47,20 @@
  *         name: projectType
  *         schema:
  *           type: string
- *           enum: [internal-preparation, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
+ *           enum: [chinese-medicine-modernization, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
  *         description: 项目类型筛选
- *         example: "internal-preparation"
+ *         example: "chinese-medicine-modernization"
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
- *           enum: [early-stage, preclinical, clinical-stage, market-product]
- *         description: 项目状态筛选
- *         example: "early-stage"
+ *         description: 项目状态筛选（值根据项目类型不同）
+ *         example: "hospital-preparation"
  *       - in: query
  *         name: importance
  *         schema:
  *           type: string
- *           enum: [very-important, important, normal, not-important]
+ *           enum: [very-important, important, normal]
  *         description: 重要程度筛选
  *         example: "very-important"
  *       - in: query
@@ -98,63 +97,74 @@
  *                                 $ref: '#/components/schemas/UnifiedProject'
  *             examples:
  *               success:
- *                 summary: 成功响应示例
+ *                 summary: 成功获取项目列表
  *                 value:
  *                   success: true
+ *                   message: "获取项目列表成功，共13个项目"
  *                   data:
  *                     data:
- *                       - _id: "64f123456789abcd12345678"
+ *                       - _id: "68ff5fd9fa4eae1dc3cab7b5"
  *                         department: "transfer-investment-dept-1"
- *                         name: "清热解毒颗粒"
- *                         projectType: "internal-preparation"
- *                         source: "中医科"
+ *                         name: "蒲莲清解颗粒"
+ *                         projectType: "chinese-medicine-modernization"
+ *                         source: "上海市皮肤病医院"
  *                         importance: "very-important"
- *                         status: "early-stage"
+ *                         status: "hospital-preparation"
  *                         leader: "yangfeng"
- *                         indication: "清热解毒/流行病科室"
- *                         transformRequirement: "company-operation"
- *                         transformProgress: "contract-completed"
- *                         hospitalDoctor: "张医生"
- *                         patent: "专利信息"
- *                         clinicalData: "临床数据"
- *                         marketSize: "市场规模"
- *                         competitorStatus: "竞品状态"
- *                         conclusion: "项目结论"
- *                         composition: "金银花、连翘、板蓝根"
- *                         function: "清热解毒，抗病毒"
- *                         specification: "10g/袋"
- *                         duration: "3年"
- *                         recordNumber: "ZZ-2024-001"
- *                         attachments: []
- *                         createTime: "2025-10-01T08:30:00.000Z"
- *                         updateTime: "2025-10-01T08:30:00.000Z"
+ *                         transformRequirements:
+ *                           - type: "license-transfer"
+ *                             currentProgress: "潜在待推进"
+ *                         composition: "蒲公英，穿心莲，野菊花，连翘，马齿苋"
+ *                         function: "清热解毒、消痈散结"
+ *                         createTime: "2025-10-01T08:00:00.000Z"
+ *                         updateTime: "2025-10-10T15:30:00.000Z"
  *                         createdBy: "张三"
  *                         aiReport: {
  *                           reportUrl: "https://example.com/report.pdf",
  *                           status: "completed",
  *                           firstGeneratedAt: "2025-10-01T08:30:00.000Z",
- *                           lastGeneratedAt: "2025-10-01T08:30:00.000Z"
+ *                           lastGeneratedAt: "2025-10-05T14:20:00.000Z"
  *                         }
  *                     pagination:
  *                       current: 1
  *                       pageSize: 10
- *                       total: 25
- *                       totalPages: 3
- *                   message: "获取项目列表成功"
+ *                       total: 13
+ *                       totalPages: 2
  *       401:
- *         description: 未授权访问
+ *         description: 未授权
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 服务器内部错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   post:
  *     tags:
  *       - 统一项目管理
- *     summary: 创建新项目
+ *     summary: 创建新项目（所有类型）
  *     description: |
- *       创建新的项目记录，支持所有8大项目类型
+ *       创建新的项目，支持所有项目类型
  *       
- *       **字段要求：**
- *       - 院内制剂类型：需要组方、功能、规格等特有字段
- *       - 其他类型：需要负责人、适应症等通用字段
+ *       **必填字段（所有项目）：**
+ *       - department: 归属部门
+ *       - name: 项目名称
+ *       - projectType: 项目类型
+ *       - source: 医院来源
+ *       - importance: 重要程度
+ *       - status: 项目进展状态（值根据projectType不同）
+ *       - leader: 负责人
+ *       - transformRequirements: 转化需求列表
+ *       
+ *       **中药现代化额外必填字段：**
+ *       - composition: 组方
+ *       - function: 功能
+ *       
+ *       **其他类型额外必填字段：**
+ *       - startDate: 开始日期
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -164,156 +174,150 @@
  *           schema:
  *             type: object
  *             required:
+ *               - department
  *               - name
  *               - projectType
  *               - source
+ *               - importance
+ *               - status
+ *               - leader
+ *               - transformRequirements
  *             properties:
  *               department:
  *                 type: string
  *                 enum: [transfer-investment-dept-1, transfer-investment-dept-2, transfer-investment-dept-3]
- *                 default: "transfer-investment-dept-1"
  *                 description: 归属部门
+ *                 example: "transfer-investment-dept-1"
  *               name:
  *                 type: string
  *                 description: 项目名称
- *                 example: "清热解毒颗粒"
+ *                 example: "蒲莲清解颗粒"
  *               projectType:
  *                 type: string
- *                 enum: [internal-preparation, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
- *                 description: 项目分类型
- *                 example: "internal-preparation"
+ *                 enum: [chinese-medicine-modernization, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
+ *                 description: 项目类型
+ *                 example: "chinese-medicine-modernization"
  *               source:
  *                 type: string
  *                 description: 医院来源
- *                 example: "中医科"
+ *                 example: "上海市皮肤病医院"
  *               importance:
  *                 type: string
- *                 enum: [very-important, important, normal, not-important]
- *                 default: "very-important"
+ *                 enum: [very-important, important, normal]
  *                 description: 重要程度
+ *                 example: "very-important"
  *               status:
  *                 type: string
- *                 enum: [early-stage, preclinical, clinical-stage, market-product]
- *                 default: "early-stage"
- *                 description: 项目进展状态
+ *                 description: 项目进展状态（根据projectType不同而不同）
+ *                 example: "hospital-preparation"
  *               leader:
  *                 type: string
  *                 enum: [yangfeng, qinqingsong, haojingjing, chenlong, wangliyan, maoshiwei, xiaolanchuan, to-be-determined]
- *                 default: "to-be-determined"
- *                 description: 负责人（通用必填字段）
+ *                 description: 负责人
  *                 example: "yangfeng"
- *               # 通用选填字段
+ *               transformRequirements:
+ *                 type: array
+ *                 description: 转化需求列表（必填）
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - type
+ *                     - currentProgress
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [investment, company-operation, license-transfer, pending]
+ *                       description: 转化需求类型
+ *                       example: "license-transfer"
+ *                     currentProgress:
+ *                       type: string
+ *                       description: 当前进展节点
+ *                       example: "潜在待推进"
  *               indication:
  *                 type: string
  *                 description: 适应症/科室
- *                 example: "肿瘤科"
- *               transformRequirement:
+ *                 example: "皮肤科"
+ *               dockingCompany:
  *                 type: string
- *                 enum: [license, transfer, company-operation, other]
- *                 default: "other"
- *                 description: 转化需求
- *                 example: "license"
- *               transformProgress:
- *                 type: string
- *                 enum: [contract-completed, contract-incomplete]
- *                 description: 转化推进状态
- *                 example: "contract-completed"
+ *                 description: 对接企业
+ *                 example: "XX医药公司"
  *               hospitalDoctor:
  *                 type: string
  *                 description: 院端医生
- *                 example: "李教授"
+ *                 example: "李医生"
  *               patent:
  *                 type: string
  *                 description: 专利信息
- *                 example: "已申请发明专利ZL202410001234.5"
+ *                 example: "专利已授权"
  *               clinicalData:
  *                 type: string
  *                 description: 临床数据
- *                 example: "已完成I期临床试验"
- *               marketSize:
- *                 type: string
- *                 description: 市场规模
- *                 example: "预计市场规模10亿元"
- *               competitorStatus:
- *                 type: string
- *                 description: 竞品状态
- *                 example: "目前市场上有3款同类产品"
+ *                 example: "临床数据完整"
+ *               transformAmount:
+ *                 type: number
+ *                 description: 转化金额（万元）
+ *                 example: 500
  *               conclusion:
  *                 type: string
  *                 description: 项目结论
- *                 example: "项目具有较好的市场前景"
- *               # 院内制剂特有字段
+ *                 example: "项目进展顺利"
  *               composition:
  *                 type: string
- *                 description: 组方成分（院内制剂必填）
+ *                 description: 组方成分（中药现代化必填）
  *                 example: "金银花15g、连翘12g、板蓝根10g"
  *               function:
  *                 type: string
- *                 description: 功能主治（院内制剂必填）
- *                 example: "清热解毒，抗病毒感染"
+ *                 description: 功能主治（中药现代化必填）
+ *                 example: "清热解毒、消痈散结"
  *               specification:
  *                 type: string
- *                 description: 制剂规格（院内制剂选填）
- *                 example: "10g/袋"
+ *                 description: 制剂规格
+ *                 example: "颗粒剂，每袋装20g"
  *               duration:
  *                 type: string
- *                 description: 使用年限（院内制剂选填）
- *                 example: "3年"
+ *                 description: 使用年限
+ *                 example: "30"
  *               recordNumber:
  *                 type: string
- *                 description: 备案号（院内制剂选填）
- *                 example: "ZZ-2024-001"
- *               # 其他类型特有字段
+ *                 description: 备案号
+ *                 example: "沪药制备字Z20190019000"
  *               startDate:
  *                 type: string
- *                 format: date
+ *                 format: date-time
  *                 description: 开始日期（其他类型必填）
- *                 example: "2024-01-15"
+ *                 example: "2025-01-01T00:00:00.000Z"
  *           examples:
- *             internal_preparation:
- *               summary: 创建院内制剂项目
+ *             chinese-medicine:
+ *               summary: 创建中药现代化项目
  *               value:
  *                 department: "transfer-investment-dept-1"
- *                 name: "清热解毒颗粒"
- *                 projectType: "internal-preparation"
- *                 source: "中医科"
+ *                 name: "新制剂项目"
+ *                 projectType: "chinese-medicine-modernization"
+ *                 source: "上海市中医医院"
  *                 importance: "very-important"
- *                 status: "early-stage"
+ *                 status: "hospital-preparation"
  *                 leader: "yangfeng"
- *                 indication: "清热解毒/流行病科室"
- *                 transformRequirement: "company-operation"
- *                 transformProgress: "contract-completed"
- *                 hospitalDoctor: "张医生"
- *                 patent: "已申请发明专利"
- *                 clinicalData: "已完成临床观察200例"
- *                 marketSize: "预计年销售额500万元"
- *                 competitorStatus: "市场上暂无同类产品"
- *                 conclusion: "项目具有良好的临床应用价值"
- *                 composition: "金银花15g、连翘12g、板蓝根10g"
- *                 function: "清热解毒，抗病毒感染"
- *                 specification: "10g/袋"
- *                 duration: "3年"
- *                 recordNumber: "ZZ-2024-001"
- *             drug_research:
- *               summary: 创建药物研发项目
+ *                 transformRequirements:
+ *                   - type: "investment"
+ *                     currentProgress: "入库"
+ *                 composition: "金银花、连翘、板蓝根"
+ *                 function: "清热解毒"
+ *                 specification: "颗粒剂"
+ *                 duration: "20"
+ *             other-project:
+ *               summary: 创建其他类型项目
  *               value:
  *                 department: "transfer-investment-dept-2"
- *                 name: "新型抗肿瘤药物研发"
+ *                 name: "新药研发项目"
  *                 projectType: "drug"
- *                 source: "科研处"
+ *                 source: "某医院"
  *                 importance: "important"
- *                 status: "clinical-stage"
+ *                 status: "early-stage"
  *                 leader: "qinqingsong"
- *                 startDate: "2024-01-15"
- *                 indication: "肿瘤科"
- *                 transformRequirement: "license"
- *                 transformProgress: "contract-incomplete"
- *                 hospitalDoctor: "李教授"
- *                 patent: "已申请PCT国际专利"
- *                 clinicalData: "已完成II期临床试验"
- *                 marketSize: "预计市场规模50亿元"
- *                 competitorStatus: "全球有5款同靶点药物在研"
- *                 conclusion: "项目进展顺利，预期2025年申报上市"
+ *                 transformRequirements:
+ *                   - type: "company-operation"
+ *                     currentProgress: "合同签署"
+ *                 startDate: "2025-01-01T00:00:00.000Z"
  *     responses:
  *       201:
  *         description: 创建项目成功
@@ -326,12 +330,51 @@
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/UnifiedProject'
+ *             examples:
+ *               success:
+ *                 summary: 创建成功
+ *                 value:
+ *                   success: true
+ *                   message: "中药现代化项目创建成功"
+ *                   data:
+ *                     _id: "68ff5fd9fa4eae1dc3cab7b6"
+ *                     department: "transfer-investment-dept-1"
+ *                     name: "新制剂项目"
+ *                     projectType: "chinese-medicine-modernization"
+ *                     status: "hospital-preparation"
+ *                     transformRequirements:
+ *                       - type: "investment"
+ *                         currentProgress: "入库"
+ *                     createTime: "2025-10-11T10:30:00.000Z"
  *       400:
  *         description: 请求参数错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               missing-field:
+ *                 summary: 缺少必填字段
+ *                 value:
+ *                   success: false
+ *                   error: "缺少必填字段：项目名称、项目类型、来源"
+ *               validation-error:
+ *                 summary: 数据验证失败
+ *                 value:
+ *                   success: false
+ *                   error: "数据验证失败: 转化需求列表不能为空"
  *       401:
- *         description: 未授权访问
+ *         description: 未授权
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 服务器内部错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 import { NextApiResponse } from 'next'
@@ -339,13 +382,13 @@ import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import UnifiedProject from '@/models/UnifiedProject'
 import Attachment from '@/models/Attachment'
-import User from '@/models/User'
-import { ApiResponse, PaginatedResponse, UnifiedProject as IUnifiedProject } from '@/types'
+import { IUnifiedProject } from '@/models/UnifiedProject'
+import { ApiResponse, PaginatedResponse } from '@/types'
 import { 
-  isInternalPreparationType, 
-  getRequiredFieldsForType, 
-  buildSearchQuery,
-  validateProjectData 
+  validateProjectData, 
+  buildSearchQuery, 
+  isChineseMedicineModernization,
+  getRequiredFieldsForType 
 } from '@/utils/projectHelpers'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -354,30 +397,22 @@ async function handler(
   req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse<PaginatedResponse<IUnifiedProject> | IUnifiedProject>>
 ) {
-  try {
-    await connectDB()
+  await connectDB()
 
-    // 确保模型都被注册
-    const ensureModels = [UnifiedProject, Attachment, User]
-    ensureModels.forEach(model => model.modelName)
-
-    if (req.method === 'GET') {
-      return await handleGetProjects(req, res)
-    } else if (req.method === 'POST') {
-      return await handleCreateProject(req, res)
-    } else {
-      return res.status(405).json({
-        success: false,
-        error: '不支持的请求方法'
-      })
-    }
-  } catch (error: any) {
-    console.error('统一项目管理API错误:', error)
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : '服务器内部错误'
-    })
+  // 获取项目列表
+  if (req.method === 'GET') {
+    return handleGetProjects(req, res as NextApiResponse<ApiResponse<PaginatedResponse<IUnifiedProject>>>)
   }
+  
+  // 创建新项目
+  if (req.method === 'POST') {
+    return handleCreateProject(req, res as NextApiResponse<ApiResponse<IUnifiedProject>>)
+  }
+  
+  return res.status(405).json({
+    success: false,
+    error: `方法 ${req.method} 不被允许`
+  })
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -467,18 +502,27 @@ async function handleCreateProject(
       })
     }
 
+    // 验证转化需求列表（必填）
+    if (!projectData.transformRequirements || projectData.transformRequirements.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: '转化需求列表为必填项，至少需要一个转化需求'
+      })
+    }
+
     // 根据项目类型验证特有字段
     const requiredFields = getRequiredFieldsForType(projectData.projectType)
     const missingFields = requiredFields.filter((field: string) => !projectData[field])
     
     if (missingFields.length > 0) {
+      const projectTypeName = isChineseMedicineModernization(projectData.projectType) ? '中药现代化' : '该类型项目'
       return res.status(400).json({
         success: false,
-        error: `缺少${projectData.projectType === 'internal-preparation' ? '院内制剂' : '项目（除院内制剂）'}必填字段: ${missingFields.join(', ')}`
+        error: `缺少${projectTypeName}必填字段: ${missingFields.join(', ')}`
       })
     }
 
-    // 数据验证
+    // 完整数据验证
     const validation = validateProjectData(projectData)
     if (!validation.isValid) {
       return res.status(400).json({
@@ -487,10 +531,10 @@ async function handleCreateProject(
       })
     }
 
-    // 院内制剂特殊验证：备案号唯一性
-    if (projectData.projectType === 'internal-preparation' && projectData.recordNumber) {
+    // 中药现代化特殊验证：备案号唯一性
+    if (isChineseMedicineModernization(projectData.projectType) && projectData.recordNumber) {
       const existingProject = await UnifiedProject.findOne({
-        projectType: 'internal-preparation',
+        projectType: 'chinese-medicine-modernization',
         recordNumber: projectData.recordNumber
       })
 
@@ -505,18 +549,9 @@ async function handleCreateProject(
     // 创建项目数据
     const newProjectData = {
       ...projectData,
-      department: projectData.department || 'transfer-investment-dept-1',
-      importance: projectData.importance || 'very-important',
-      status: projectData.status || 'early-stage',
-      leader: projectData.leader || 'to-be-determined',
       createdBy: req.user.userId,
       createTime: new Date(),
       updateTime: new Date()
-    }
-
-    // 设置默认的转化需求（可选字段）
-    if (projectData.transformRequirement === undefined) {
-      newProjectData.transformRequirement = 'other'
     }
 
     // 保存到数据库（Schema会自动验证必填字段）
@@ -529,10 +564,11 @@ async function handleCreateProject(
       .populate('attachments')
       .lean()
 
+    const projectTypeName = isChineseMedicineModernization(projectData.projectType) ? '中药现代化' : '项目'
     return res.status(201).json({
       success: true,
       data: populatedProject as IUnifiedProject,
-      message: `${isInternalPreparationType(projectData.projectType) ? '院内制剂' : '项目（除院内制剂）'}创建成功`
+      message: `${projectTypeName}创建成功`
     })
 
   } catch (error: any) {

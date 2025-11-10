@@ -9,8 +9,8 @@
  *       根据项目ID获取项目的详细信息，支持所有项目类型
  *       
  *       **支持的项目类型：**
- *       - internal-preparation: 院内制剂
- *       - ai-medical: AI医疗及系统研究
+ *       - chinese-medicine-modernization: 中药现代化
+ *       - ai-medical-research: AI医疗及系统研究
  *       - diagnostic-detection: 检测诊断
  *       - cell-therapy: 细胞治疗
  *       - drug: 药物
@@ -27,7 +27,7 @@
  *           type: string
  *           pattern: '^[0-9a-fA-F]{24}$'
  *         description: 项目ID（MongoDB ObjectId）
- *         example: "64f123456789abcd12345678"
+ *         example: "68ff5fd9fa4eae1dc3cab7b5"
  *     responses:
  *       200:
  *         description: 获取项目详情成功
@@ -41,70 +41,71 @@
  *                     data:
  *                       $ref: '#/components/schemas/UnifiedProject'
  *             examples:
- *               internal_preparation:
- *                 summary: 院内制剂项目详情
+ *               chinese_medicine:
+ *                 summary: 中药现代化项目详情
  *                 value:
  *                   success: true
  *                   data:
- *                     _id: "64f123456789abcd12345678"
+ *                     _id: "68ff5fd9fa4eae1dc3cab7b5"
  *                     department: "transfer-investment-dept-1"
- *                     name: "清热解毒颗粒"
- *                     projectType: "internal-preparation"
- *                     source: "中医科"
+ *                     name: "蒲莲清解颗粒"
+ *                     projectType: "chinese-medicine-modernization"
+ *                     source: "上海市皮肤病医院"
  *                     importance: "very-important"
- *                     status: "early-stage"
+ *                     status: "hospital-preparation"
  *                     leader: "yangfeng"
- *                     indication: "清热解毒/流行病科室"
- *                     transformRequirement: "company-operation"
- *                     transformProgress: "contract-completed"
- *                     hospitalDoctor: "张医生"
- *                     patent: "已申请发明专利"
- *                     clinicalData: "已完成临床观察200例"
- *                     marketSize: "预计年销售额500万元"
- *                     competitorStatus: "市场上暂无同类产品"
- *                     conclusion: "项目具有良好的临床应用价值"
- *                     composition: "金银花15g、连翘12g、板蓝根10g"
- *                     function: "清热解毒，抗病毒感染"
- *                     specification: "10g/袋"
- *                     duration: "3年"
- *                     recordNumber: "ZZ-2024-001"
+ *                     indication: "皮肤科"
+ *                     transformRequirements:
+ *                       - type: "license-transfer"
+ *                         currentProgress: "潜在待推进"
+ *                     dockingCompany: "XX医药公司"
+ *                     hospitalDoctor: "李医生"
+ *                     patent: "专利已授权"
+ *                     clinicalData: "临床数据完整"
+ *                     transformAmount: 500
+ *                     conclusion: "项目进展顺利"
+ *                     composition: "蒲公英，穿心莲，野菊花，连翘，马齿苋"
+ *                     function: "清热解毒、消痈散结"
+ *                     specification: "颗粒剂，每袋装20g"
+ *                     duration: "30"
+ *                     recordNumber: "沪药制备字Z20190019000"
  *                     attachments: []
- *                     createTime: "2024-01-15T08:30:00.000Z"
- *                     updateTime: "2024-01-15T08:30:00.000Z"
- *                     createdBy: "64f123456789abcd12345678"
+ *                     createTime: "2025-10-01T08:00:00.000Z"
+ *                     updateTime: "2025-10-10T15:30:00.000Z"
+ *                     createdBy: "张三"
  *                     aiReport:
  *                       reportUrl: "https://example.com/report.pdf"
  *                       status: "completed"
- *                       firstGeneratedAt: "2024-01-15T08:30:00.000Z"
- *                       lastGeneratedAt: "2024-01-15T08:30:00.000Z"
+ *                       firstGeneratedAt: "2025-10-01T08:30:00.000Z"
+ *                       lastGeneratedAt: "2025-10-05T14:20:00.000Z"
  *                   message: "获取项目详情成功"
  *               drug_research:
  *                 summary: 药物研发项目详情
  *                 value:
  *                   success: true
  *                   data:
- *                     _id: "64f123456789abcd12345679"
+ *                     _id: "68ff5fd9fa4eae1dc3cab7b6"
  *                     department: "transfer-investment-dept-2"
  *                     name: "新型抗肿瘤药物研发"
  *                     projectType: "drug"
- *                     source: "科研处"
+ *                     source: "某医院科研处"
  *                     importance: "important"
  *                     status: "clinical-stage"
  *                     leader: "qinqingsong"
- *                     startDate: "2024-01-15"
+ *                     startDate: "2025-01-15T00:00:00.000Z"
  *                     indication: "肿瘤科"
- *                     transformRequirement: "license"
- *                     transformProgress: "contract-incomplete"
+ *                     transformRequirements:
+ *                       - type: "investment"
+ *                         currentProgress: "立项"
  *                     hospitalDoctor: "李教授"
  *                     patent: "已申请PCT国际专利"
  *                     clinicalData: "已完成II期临床试验"
- *                     marketSize: "预计市场规模50亿元"
- *                     competitorStatus: "全球有5款同靶点药物在研"
- *                     conclusion: "项目进展顺利，预期2025年申报上市"
+ *                     transformAmount: 2000
+ *                     conclusion: "项目进展顺利"
  *                     attachments: []
- *                     createTime: "2024-02-01T10:00:00.000Z"
- *                     updateTime: "2024-02-01T10:00:00.000Z"
- *                     createdBy: "64f123456789abcd12345679"
+ *                     createTime: "2025-02-01T10:00:00.000Z"
+ *                     updateTime: "2025-02-01T10:00:00.000Z"
+ *                     createdBy: "李四"
  *                   message: "获取项目详情成功"
  *       400:
  *         description: 项目ID格式无效
@@ -123,7 +124,7 @@
  *       
  *       **注意事项：**
  *       - 不能修改项目类型(projectType)
- *       - 院内制剂的备案号必须唯一
+ *       - 中药现代化的备案号必须唯一
  *       - Schema会自动验证必填字段
  *     security:
  *       - bearerAuth: []
@@ -135,7 +136,7 @@
  *           type: string
  *           pattern: '^[0-9a-fA-F]{24}$'
  *         description: 项目ID（MongoDB ObjectId）
- *         example: "64f123456789abcd12345678"
+ *         example: "68ff5fd9fa4eae1dc3cab7b5"
  *     requestBody:
  *       required: true
  *       content:
@@ -143,7 +144,6 @@
  *           schema:
  *             type: object
  *             properties:
- *               # 通用字段
  *               department:
  *                 type: string
  *                 enum: [transfer-investment-dept-1, transfer-investment-dept-2, transfer-investment-dept-3]
@@ -156,28 +156,32 @@
  *                 description: 医院来源
  *               importance:
  *                 type: string
- *                 enum: [very-important, important, normal, not-important]
+ *                 enum: [very-important, important, normal]
  *                 description: 重要程度
  *               status:
  *                 type: string
- *                 enum: [early-stage, preclinical, clinical-stage, market-product]
- *                 description: 项目进展状态
+ *                 description: 项目进展状态（根据projectType不同）
  *               leader:
  *                 type: string
  *                 enum: [yangfeng, qinqingsong, haojingjing, chenlong, wangliyan, maoshiwei, xiaolanchuan, to-be-determined]
- *                 description: 负责人（通用必填）
- *               # 通用选填字段
+ *                 description: 负责人
+ *               transformRequirements:
+ *                 type: array
+ *                 description: 转化需求列表
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [investment, company-operation, license-transfer, pending]
+ *                     currentProgress:
+ *                       type: string
  *               indication:
  *                 type: string
  *                 description: 适应症/科室
- *               transformRequirement:
+ *               dockingCompany:
  *                 type: string
- *                 enum: [license, transfer, company-operation, other]
- *                 description: 转化需求
- *               transformProgress:
- *                 type: string
- *                 enum: [contract-completed, contract-incomplete]
- *                 description: 转化推进状态
+ *                 description: 对接企业
  *               hospitalDoctor:
  *                 type: string
  *                 description: 院端医生
@@ -187,59 +191,41 @@
  *               clinicalData:
  *                 type: string
  *                 description: 临床数据
- *               marketSize:
- *                 type: string
- *                 description: 市场规模
- *               competitorStatus:
- *                 type: string
- *                 description: 竞品状态
+ *               transformAmount:
+ *                 type: number
+ *                 description: 转化金额（万元）
  *               conclusion:
  *                 type: string
  *                 description: 项目结论
- *               # 院内制剂特有字段
  *               composition:
  *                 type: string
- *                 description: 组方成分（院内制剂）
+ *                 description: 组方（中药现代化必填）
  *               function:
  *                 type: string
- *                 description: 功能主治（院内制剂）
+ *                 description: 功能（中药现代化必填）
  *               specification:
  *                 type: string
- *                 description: 制剂规格（院内制剂）
+ *                 description: 制剂规格
  *               duration:
  *                 type: string
- *                 description: 使用年限（院内制剂）
+ *                 description: 使用年限
  *               recordNumber:
  *                 type: string
- *                 description: 备案号（院内制剂）
- *               # 其他类型特有字段
+ *                 description: 备案号
  *               startDate:
  *                 type: string
- *                 format: date
- *                 description: 开始日期（其他类型）
+ *                 format: date-time
+ *                 description: 开始日期（其他类型必填）
  *           examples:
- *             update_internal_preparation:
- *               summary: 更新院内制剂项目
+ *             update_status:
+ *               summary: 更新项目状态
  *               value:
- *                 name: "清热解毒颗粒（改良版）"
  *                 status: "clinical-stage"
- *                 transformProgress: "contract-incomplete"
- *                 conclusion: "临床试验完成，准备申请上市许可"
- *                 marketSize: "预计年销售额800万元"
- *                 composition: "金银花15g、连翘12g、板蓝根10g、薄荷3g"
- *                 function: "清热解毒，抗病毒感染，清咽利喉"
- *                 specification: "12g/袋"
- *             update_drug_research:
- *               summary: 更新药物研发项目
- *               value:
- *                 name: "新型抗肿瘤药物研发（二期）"
- *                 leader: "wangliyan"
- *                 transformRequirement: "company-operation"
- *                 transformProgress: "contract-completed"
- *                 status: "clinical-stage"
+ *                 transformRequirements:
+ *                   - type: "investment"
+ *                     currentProgress: "投决"
  *                 clinicalData: "II期临床试验入组患者300例"
- *                 marketSize: "预计市场规模80亿元"
- *                 conclusion: "二期临床试验结果良好"
+ *                 transformAmount: 800
  *     responses:
  *       200:
  *         description: 更新项目成功
@@ -253,7 +239,7 @@
  *                     data:
  *                       $ref: '#/components/schemas/UnifiedProject'
  *       400:
- *         description: 请求参数错误或项目ID格式错误
+ *         description: 请求参数错误
  *       404:
  *         description: 项目不存在
  *       401:
@@ -264,12 +250,7 @@
  *     tags:
  *       - 统一项目管理
  *     summary: 删除项目
- *     description: |
- *       删除指定ID的项目（物理删除）
- *       
- *       **注意事项：**
- *       - 实施物理删除，项目数据将被永久删除
- *       - 删除操作不可恢复，请谨慎操作
+ *     description: 删除指定ID的项目（软删除或硬删除）
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -280,23 +261,22 @@
  *           type: string
  *           pattern: '^[0-9a-fA-F]{24}$'
  *         description: 项目ID（MongoDB ObjectId）
- *         example: "64f123456789abcd12345678"
+ *         example: "68ff5fd9fa4eae1dc3cab7b5"
  *     responses:
  *       200:
  *         description: 删除项目成功
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "项目删除成功"
+ *               $ref: '#/components/schemas/ApiResponse'
+ *             examples:
+ *               success:
+ *                 summary: 删除成功
+ *                 value:
+ *                   success: true
+ *                   message: "项目删除成功"
  *       400:
- *         description: 项目ID格式错误
+ *         description: 项目ID格式无效
  *       404:
  *         description: 项目不存在
  *       401:
@@ -310,13 +290,12 @@ import mongoose from 'mongoose'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import UnifiedProject from '@/models/UnifiedProject'
-import Attachment from '@/models/Attachment'
-import User from '@/models/User'
-import { ApiResponse, UnifiedProject as IUnifiedProject } from '@/types'
+import { IUnifiedProject } from '@/models/UnifiedProject'
+import { ApiResponse } from '@/types'
 import { 
-  isInternalPreparationType, 
+  isChineseMedicineModernization, 
   getRequiredFieldsForType,
-  validateProjectData 
+  validateProjectData
 } from '@/utils/projectHelpers'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -325,48 +304,31 @@ async function handler(
   req: AuthenticatedRequest,
   res: NextApiResponse<ApiResponse<IUnifiedProject | null>>
 ) {
-  try {
-    await connectDB()
-    
-    // 确保所有相关模型都被注册
-    const ensureModels = [UnifiedProject, Attachment, User]
-    ensureModels.forEach(model => model.modelName)
+  await connectDB()
 
-    const { id } = req.query
+  const { id } = req.query
 
-    // 验证项目ID格式
-    if (!id || typeof id !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: '缺少项目ID参数'
-      })
-    }
+  // 验证项目ID格式
+  if (!id || typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      error: '无效的项目ID格式'
+    })
+  }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: '无效的项目ID格式'
-      })
-    }
-
-    if (req.method === 'GET') {
-      return await handleGetProject(req, res, id)
-    } else if (req.method === 'PUT') {
-      return await handleUpdateProject(req, res, id)
-    } else if (req.method === 'DELETE') {
-      return await handleDeleteProject(req, res, id)
-    } else {
+  // 根据请求方法调用对应的处理函数
+  switch (req.method) {
+    case 'GET':
+      return handleGetProject(req, res as NextApiResponse<ApiResponse<IUnifiedProject>>, id)
+    case 'PUT':
+      return handleUpdateProject(req, res as NextApiResponse<ApiResponse<IUnifiedProject>>, id)
+    case 'DELETE':
+      return handleDeleteProject(req, res as NextApiResponse<ApiResponse<null>>, id)
+    default:
       return res.status(405).json({
         success: false,
-        error: '不支持的请求方法'
+        error: `方法 ${req.method} 不被允许`
       })
-    }
-  } catch (error) {
-    console.error('统一项目管理API错误:', error)
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : '服务器内部错误'
-    })
   }
 }
 
@@ -390,21 +352,17 @@ async function handleGetProject(
       })
     }
 
-    const projectTypeName = isInternalPreparationType((project as any).projectType) 
-      ? '院内制剂项目' 
-      : '项目（除院内制剂）'
-
     return res.status(200).json({
       success: true,
       data: project as IUnifiedProject,
-      message: `获取${projectTypeName}详情成功`
+      message: '获取项目详情成功'
     })
 
   } catch (error: any) {
     console.error('获取项目详情失败:', error)
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : '获取项目详情失败'
+      error: '获取项目详情失败'
     })
   }
 }
@@ -449,9 +407,10 @@ async function handleUpdateProject(
       const missingFields = requiredFields.filter((field: string) => !mergedData[field])
       
       if (missingFields.length > 0) {
+        const projectTypeName = isChineseMedicineModernization(projectType) ? '中药现代化' : '该类型项目'
         return res.status(400).json({
           success: false,
-          error: `缺少${isInternalPreparationType(projectType) ? '院内制剂' : '项目（除院内制剂）'}必填字段: ${missingFields.join(', ')}`
+          error: `缺少${projectTypeName}必填字段: ${missingFields.join(', ')}`
         })
       }
 
@@ -465,11 +424,11 @@ async function handleUpdateProject(
       }
     }
 
-    // 院内制剂特殊验证：备案号唯一性
-    if (projectType === 'internal-preparation' && updateData.recordNumber) {
+    // 中药现代化特殊验证：备案号唯一性
+    if (isChineseMedicineModernization(projectType) && updateData.recordNumber) {
       const existingWithSameRecord = await UnifiedProject.findOne({
         _id: { $ne: id },
-        projectType: 'internal-preparation',
+        projectType: 'chinese-medicine-modernization',
         recordNumber: updateData.recordNumber
       })
 
@@ -504,9 +463,9 @@ async function handleUpdateProject(
       })
     }
 
-    const projectTypeName = isInternalPreparationType(projectType) 
-      ? '院内制剂项目' 
-      : '项目（除院内制剂）'
+    const projectTypeName = isChineseMedicineModernization(projectType) 
+      ? '中药现代化项目' 
+      : '项目'
 
     return res.status(200).json({
       success: true,
@@ -549,29 +508,22 @@ async function handleDeleteProject(
   id: string
 ) {
   try {
-    // 查找项目
-    const project = await UnifiedProject.findById(id)
-    if (!project) {
+    const deletedProject = await UnifiedProject.findByIdAndDelete(id)
+
+    if (!deletedProject) {
       return res.status(404).json({
         success: false,
         error: '项目不存在'
       })
     }
 
-    const projectTypeName = isInternalPreparationType((project as any).projectType) 
-      ? '院内制剂项目' 
-      : '项目（除院内制剂）'
-
-    // 物理删除：直接从数据库中删除
-    await UnifiedProject.findByIdAndDelete(id)
-
     return res.status(200).json({
       success: true,
       data: null,
-      message: `${projectTypeName}删除成功`
+      message: '项目删除成功'
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('删除项目失败:', error)
     return res.status(500).json({
       success: false,

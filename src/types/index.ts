@@ -29,6 +29,19 @@ export interface UserResponse {
   createdBy?: string
 }
 
+// 转化需求进展节点类型
+export type TransformRequirementType = 
+  | 'investment'           // 投资
+  | 'company-operation'    // 公司化运营
+  | 'license-transfer'     // 许可转让
+  | 'pending'              // 待推进
+
+// 转化需求接口（简化版）
+export interface TransformRequirement {
+  type: TransformRequirementType            // 转化需求（类型）
+  currentProgress: string                   // 进展节点
+}
+
 // 统一项目类型定义
 export interface UnifiedProject {
   _id?: string                                                                              // 项目ID
@@ -36,30 +49,29 @@ export interface UnifiedProject {
   // 通用必填字段
   department: string                                                                        // 归属部门，必填
   name: string                                                                              // 项目名称，必填
-  projectType: 'internal-preparation' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other' // 项目分类型，必填
+  projectType: 'chinese-medicine-modernization' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other' // 项目分类型，必填
   source: string                                                                            // 医院来源，必填
-  importance: 'very-important' | 'important' | 'normal' | 'not-important'                   // 重要程度，必填
-  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'               // 项目进展状态，必填
+  importance: 'very-important' | 'important' | 'normal'                                     // 重要程度，必填
+  status: string                                                                            // 项目进展状态，必填
   leader: string                                                                            // 负责人，必填
+  transformRequirements: TransformRequirement[]                                             // 转化需求列表，必填
 
   // 通用选填字段
   indication?: string                                                                       // 适应症/科室，非必填
-  transformRequirement?: 'license' | 'transfer' | 'company-operation' | 'other'             // 转化需求，非必填
-  transformProgress?: 'contract-completed' | 'contract-incomplete'                          // 转化推进状态，非必填
+  dockingCompany?: string                                                                   // 对接企业，非必填
   hospitalDoctor?: string                                                                   // 院端医生，非必填
   patent?: string                                                                           // 专利信息，非必填
   clinicalData?: string                                                                     // 临床数据，非必填
-  marketSize?: string                                                                       // 市场规模，非必填
-  competitorStatus?: string                                                                 // 竞品状态，非必填
+  transformAmount?: number                                                                  // 转化金额（万元），非必填
   conclusion?: string                                                                       // 项目结论，非必填
   
-  // 院内制剂特有字段
+  // 中药现代化特有字段（原院内制剂）
 
-  // 院内制剂必填字段
+  // 中药现代化必填字段
   composition?: string                                                                      // 组方，必填
   function?: string                                                                         // 功能，必填
 
-  // 院内制剂选填字段
+  // 中药现代化选填字段
   specification?: string                                                                    // 制剂规格，非必填
   duration?: string                                                                         // 使用年限，非必填
   recordNumber?: string                                                                     // 备案号，非必填
@@ -92,7 +104,7 @@ export const UnifiedProjectDepartmentEnum = {
 } as const
 
 export const UnifiedProjectTypeEnum = {
-  INTERNAL_PREPARATION: 'internal-preparation',
+  CHINESE_MEDICINE_MODERNIZATION: 'chinese-medicine-modernization',  // 中药现代化（原院内制剂）
   AI_MEDICAL_RESEARCH: 'ai-medical-research',
   DIAGNOSTIC_DETECTION: 'diagnostic-detection',
   CELL_THERAPY: 'cell-therapy',
@@ -105,15 +117,33 @@ export const UnifiedProjectTypeEnum = {
 export const UnifiedProjectImportanceEnum = {
   VERY_IMPORTANT: 'very-important',
   IMPORTANT: 'important',
-  NORMAL: 'normal',
-  NOT_IMPORTANT: 'not-important'
+  NORMAL: 'normal'
 } as const
 
+// 项目进展状态枚举（根据projectType不同）
 export const UnifiedProjectStatusEnum = {
-  EARLY_STAGE: 'early-stage',
-  PRECLINICAL: 'preclinical',
-  CLINICAL_STAGE: 'clinical-stage',
-  MARKET_PRODUCT: 'market-product'
+  // 中药现代化专用状态
+  CHINESE_MEDICINE: {
+    HOSPITAL_PREPARATION: 'hospital-preparation',  // 院内制剂
+    EXPERIENCE_FORMULA: 'experience-formula',      // 经验方
+    PROTOCOL_FORMULA: 'protocol-formula',          // 协定方
+    EARLY_RESEARCH: 'early-research'               // 早期研究
+  },
+  // 医疗器械专用状态
+  MEDICAL_DEVICE: {
+    EARLY_STAGE: 'early-stage',                    // 早期
+    SAMPLE_DESIGN: 'sample-design',                // 样品设计
+    TYPE_INSPECTION: 'type-inspection',            // 型检
+    CLINICAL_STAGE: 'clinical-stage',              // 临床阶段
+    MARKET_PRODUCT: 'market-product'               // 上市产品
+  },
+  // 其他项目通用状态
+  OTHER: {
+    EARLY_STAGE: 'early-stage',                    // 早期
+    PRECLINICAL: 'preclinical',                    // 临床前
+    CLINICAL_STAGE: 'clinical-stage',              // 临床阶段
+    MARKET_PRODUCT: 'market-product'               // 上市产品
+  }
 } as const
 
 export const UnifiedProjectLeaderEnum = {
@@ -127,16 +157,27 @@ export const UnifiedProjectLeaderEnum = {
   TO_BE_DETERMINED: 'to-be-determined'
 } as const
 
-export const UnifiedProjectTransformRequirementEnum = {
-  LICENSE: 'license',
-  TRANSFER: 'transfer',
+// 转化需求类型枚举
+export const TransformRequirementTypeEnum = {
+  INVESTMENT: 'investment',
   COMPANY_OPERATION: 'company-operation',
-  OTHER: 'other'
+  LICENSE_TRANSFER: 'license-transfer',
+  PENDING: 'pending'
 } as const
 
-export const UnifiedProjectTransformProgressEnum = {
-  CONTRACT_COMPLETED: 'contract-completed',
-  CONTRACT_INCOMPLETE: 'contract-incomplete'
+// 转化需求进展节点映射
+export const TransformRequirementProgressNodesMap = {
+  investment: [
+    '入库', '初筛', '立项', '尽调', '投决', 
+    '投资协议签署', '交割', '投后管理', '退出'
+  ],
+  'company-operation': [
+    '合同签署', '注册完成', '拟签约已过董事会或总裁会', '潜在待推进'
+  ],
+  'license-transfer': [
+    '已完成', '院端已过会', '医企实质性谈判', '潜在待推进'
+  ],
+  pending: []  // 待推进项目无节点（空数组）
 } as const
 
 // 总体项目类型
@@ -232,7 +273,7 @@ export interface Attachment {
   filePath?: string
   gridfsId?: string
   projectId: string
-  projectType: 'overall' | 'internal-preparation' | 'type2' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other'
+  projectType: 'overall' | 'chinese-medicine-modernization' | 'type2' | 'ai-medical-research' | 'diagnostic-detection' | 'cell-therapy' | 'drug' | 'medical-device' | 'medical-material' | 'other'
   uploadTime: Date
   uploadedBy: string
 }

@@ -10,28 +10,47 @@ export const DepartmentEnum = {
 } as const
 
 export const ProjectTypeEnum = {
-  INTERNAL_PREPARATION: 'internal-preparation',        // 院内制剂
-  AI_MEDICAL_RESEARCH: 'ai-medical-research',          // AI医疗及系统研究
-  DIAGNOSTIC_DETECTION: 'diagnostic-detection',        // 检测诊断
-  CELL_THERAPY: 'cell-therapy',                        // 细胞治疗
-  DRUG: 'drug',                                        // 药物
-  MEDICAL_DEVICE: 'medical-device',                    // 医疗器械
-  MEDICAL_MATERIAL: 'medical-material',                // 医用材料
-  OTHER: 'other'                                       // 其他
+  CHINESE_MEDICINE_MODERNIZATION: 'chinese-medicine-modernization',           // 中药现代化（原院内制剂）
+  AI_MEDICAL_RESEARCH: 'ai-medical-research',                                 // AI医疗及系统研究
+  DIAGNOSTIC_DETECTION: 'diagnostic-detection',                               // 检测诊断
+  CELL_THERAPY: 'cell-therapy',                                               // 细胞治疗
+  DRUG: 'drug',                                                               // 药物
+  MEDICAL_DEVICE: 'medical-device',                                           // 医疗器械
+  MEDICAL_MATERIAL: 'medical-material',                                       // 医用材料
+  OTHER: 'other'                                                              // 其他
 } as const
 
 export const ImportanceEnum = {
   VERY_IMPORTANT: 'very-important',                    // 非常重要
   IMPORTANT: 'important',                              // 重要
-  NORMAL: 'normal',                                    // 一般
-  NOT_IMPORTANT: 'not-important'                       // 不重要
+  NORMAL: 'normal'                                     // 一般
+  // 删除了 NOT_IMPORTANT
 } as const
 
+// 项目进展状态枚举（根据projectType不同）
 export const ProjectStatusEnum = {
-  EARLY_STAGE: 'early-stage',                          // 早期
-  PRECLINICAL: 'preclinical',                          // 临床前
-  CLINICAL_STAGE: 'clinical-stage',                    // 临床阶段
-  MARKET_PRODUCT: 'market-product'                     // 上市产品
+  // 中药现代化专用状态
+  CHINESE_MEDICINE: {
+    HOSPITAL_PREPARATION: 'hospital-preparation',      // 院内制剂
+    EXPERIENCE_FORMULA: 'experience-formula',          // 经验方
+    PROTOCOL_FORMULA: 'protocol-formula',              // 协定方
+    EARLY_RESEARCH: 'early-research'                   // 早期研究
+  },
+  // 医疗器械专用状态
+  MEDICAL_DEVICE: {
+    EARLY_STAGE: 'early-stage',                        // 早期
+    SAMPLE_DESIGN: 'sample-design',                    // 样品设计
+    TYPE_INSPECTION: 'type-inspection',                // 型检
+    CLINICAL_STAGE: 'clinical-stage',                  // 临床阶段
+    MARKET_PRODUCT: 'market-product'                   // 上市产品
+  },
+  // 其他项目通用状态
+  OTHER: {
+    EARLY_STAGE: 'early-stage',                        // 早期
+    PRECLINICAL: 'preclinical',                        // 临床前
+    CLINICAL_STAGE: 'clinical-stage',                  // 临床阶段
+    MARKET_PRODUCT: 'market-product'                   // 上市产品
+  }
 } as const
 
 export const LeaderEnum = {
@@ -45,19 +64,36 @@ export const LeaderEnum = {
   TO_BE_DETERMINED: 'to-be-determined'                 // 待定
 } as const
 
-export const TransformRequirementEnum = {
-  LICENSE: 'license',                                  // 许可
-  TRANSFER: 'transfer',                                // 转让
+// 转化需求类型枚举
+export const TransformRequirementTypeEnum = {
+  INVESTMENT: 'investment',                            // 投资
   COMPANY_OPERATION: 'company-operation',              // 公司化运营
-  OTHER: 'other'                                       // 其他
+  LICENSE_TRANSFER: 'license-transfer',                // 许可转让
+  PENDING: 'pending'                                   // 待推进
 } as const
 
-export const TransformProgressEnum = {
-  CONTRACT_COMPLETED: 'contract-completed',            // 签约已完成
-  CONTRACT_INCOMPLETE: 'contract-incomplete'           // 未完成
+// 转化需求进展节点映射
+export const TransformRequirementProgressNodesMap = {
+  investment: [
+    '入库', '初筛', '立项', '尽调', '投决', 
+    '投资协议签署', '交割', '投后管理', '退出'
+  ],
+  'company-operation': [
+    '合同签署', '注册完成', '拟签约已过董事会或总裁会', '潜在待推进'
+  ],
+  'license-transfer': [
+    '已完成', '院端已过会', '医企实质性谈判', '潜在待推进'
+  ],
+  pending: []  // 待推进项目无节点（空数组）
 } as const
 
 /* ------------------------------------------------------------------------------------------ */
+
+// 转化需求接口（简化版）
+export interface ITransformRequirement {
+  type: string                             // 转化需求（类型）
+  currentProgress: string                  // 进展节点
+}
 
 // 统一项目接口定义
 export interface IUnifiedProject {
@@ -69,27 +105,26 @@ export interface IUnifiedProject {
   projectType: string                      // 项目分类型
   source: string                           // 医院来源
   importance: string                       // 重要程度
-  status: string                           // 项目进展状态
+  status: string                           // 项目进展状态（值根据projectType不同）
   leader: string                           // 负责人
+  transformRequirements: ITransformRequirement[]  // 转化需求列表（必填）
 
   // 通用选填字段
   indication?: string                      // 适应症/科室
-  transformRequirement?: string            // 转化需求（许可、转让、公司化运营、其他）
-  transformProgress?: string               // 转化推进状态（签约已完成、未完成）
+  dockingCompany?: string                  // 对接企业
   hospitalDoctor?: string                  // 院端医生
   patent?: string                          // 专利信息
   clinicalData?: string                    // 临床数据
-  marketSize?: string                      // 市场规模
-  competitorStatus?: string                // 竞品状态
+  transformAmount?: number                 // 转化金额（万元）
   conclusion?: string                      // 项目结论
   
-  // 院内制剂特有字段
+  // 中药现代化特有字段（原院内制剂）
 
-  // 院内制剂必填字段
+  // 中药现代化必填字段
   composition?: string                     // 组方
   function?: string                        // 功能
 
-  // 院内制剂选填字段
+  // 中药现代化选填字段
   specification?: string                   // 制剂规格
   duration?: string                        // 使用年限
   recordNumber?: string                    // 备案号
@@ -118,208 +153,194 @@ export interface UnifiedProjectDocument extends Omit<IUnifiedProject, '_id'>, Do
 
 /* ------------------------------------------------------------------------------------------ */
 
-// Schema定义
-const UnifiedProjectSchema: Schema = new Schema({
+// 转化需求Schema（简化版）
+const TransformRequirementSchema = new Schema({
+  type: {
+    type: String,
+    enum: Object.values(TransformRequirementTypeEnum),
+    required: true
+  },
+  currentProgress: {
+    type: String,
+    required: true
+  }
+}, { _id: false })
+
+// 统一项目Schema
+const UnifiedProjectSchema = new Schema<UnifiedProjectDocument>({
   // 通用必填字段
   department: {
     type: String,
-    enum: {
-      values: Object.values(DepartmentEnum),
-      message: '部门必须是：转移转化与投资一部、转移转化与投资二部、转移转化与投资三部 之一'
-    },
-    required: [true, '部门为必填项'],
+    enum: Object.values(DepartmentEnum),
+    required: [true, '归属部门为必填项'],
     default: DepartmentEnum.DEPT_ONE,
-    maxlength: [100, '部门名称不能超过100个字符']
+    index: true
   },
   
   name: {
     type: String,
     required: [true, '项目名称为必填项'],
     trim: true,
-    maxlength: [200, '项目名称不能超过200个字符'],
-    index: true  // 添加索引用于搜索
+    maxLength: [200, '项目名称长度不能超过200个字符'],
+    index: true
   },
   
   projectType: {
     type: String,
-    enum: {
-      values: Object.values(ProjectTypeEnum),
-      message: '项目类型必须是：院内制剂、AI医疗及系统研究、检测诊断、细胞治疗、药物、医疗器械、医用材料、其他 之一'
-    },
-    required: [true, '项目类型为必填项'],
-    default: ProjectTypeEnum.INTERNAL_PREPARATION,
-    index: true  // 添加索引用于筛选
+    enum: Object.values(ProjectTypeEnum),
+    required: [true, '项目分类型为必填项'],
+    default: ProjectTypeEnum.OTHER,
+    index: true
   },
   
   source: {
     type: String,
-    required: [true, '项目来源为必填项'],
+    required: [true, '医院来源为必填项'],
     trim: true,
-    maxlength: [100, '项目来源不能超过100个字符']
+    maxLength: [200, '医院来源长度不能超过200个字符'],
+    index: true
   },
   
   importance: {
     type: String,
-    enum: {
-      values: Object.values(ImportanceEnum),
-      message: '重要程度必须是：非常重要、重要、一般、不重要 之一'
-    },
+    enum: Object.values(ImportanceEnum),
     required: [true, '重要程度为必填项'],
     default: ImportanceEnum.VERY_IMPORTANT,
-    index: true  // 添加索引用于筛选
+    index: true
   },
   
   status: {
     type: String,
-    enum: {
-      values: Object.values(ProjectStatusEnum),
-      message: '项目状态必须是：早期、临床前、临床阶段、上市产品 之一'
-    },
-    required: [true, '项目状态为必填项'],
-    default: ProjectStatusEnum.EARLY_STAGE,
-    index: true  // 添加索引用于筛选
+    required: [true, '项目进展状态为必填项'],
+    index: true,
+    validate: {
+      validator: function(this: UnifiedProjectDocument, value: string) {
+        // 根据 projectType 验证 status 的有效性
+        const projectType = this.projectType
+        
+        if (projectType === ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION) {
+          return Object.values(ProjectStatusEnum.CHINESE_MEDICINE).includes(value as any)
+        } else if (projectType === ProjectTypeEnum.MEDICAL_DEVICE) {
+          return Object.values(ProjectStatusEnum.MEDICAL_DEVICE).includes(value as any)
+        } else {
+          return Object.values(ProjectStatusEnum.OTHER).includes(value as any)
+        }
+      },
+      message: '项目进展状态与项目类型不匹配'
+    }
   },
   
   leader: {
     type: String,
-    enum: {
-      values: Object.values(LeaderEnum),
-      message: '负责人必须是：杨锋、秦青松、郝菁菁、陈栊、王立言、毛世伟、肖蓝川、待定 之一'
-    },
+    enum: Object.values(LeaderEnum),
     required: [true, '负责人为必填项'],
     default: LeaderEnum.TO_BE_DETERMINED,
-    trim: true,
-    maxlength: [50, '负责人姓名不能超过50个字符'],
-    index: true  // 添加索引用于筛选
+    index: true
   },
-
+  
+  transformRequirements: {
+    type: [TransformRequirementSchema],
+    required: [true, '转化需求列表为必填项'],
+    default: []
+  },
+  
   // 通用选填字段
   indication: {
     type: String,
-    trim: true,
-    maxlength: [200, '适应症/科室不能超过200个字符']
-  },
-  
-  transformRequirement: {
-    type: String,
-    enum: {
-      values: Object.values(TransformRequirementEnum),
-      message: '转化需求必须是：许可、转让、公司化运营、其他 之一'
-    },
-    default: TransformRequirementEnum.OTHER,
+    required: false,
+    maxLength: [200, '适应症/科室长度不能超过200个字符'],
     trim: true
   },
   
-  transformProgress: {
+  dockingCompany: {
     type: String,
-    enum: {
-      values: Object.values(TransformProgressEnum),
-      message: '转化推进状态必须是：签约已完成、未完成 之一'
-    },
-    default: TransformProgressEnum.CONTRACT_INCOMPLETE,
+    required: false,
+    maxLength: [200, '对接企业长度不能超过200个字符'],
     trim: true
   },
   
   hospitalDoctor: {
     type: String,
-    trim: true,
-    maxlength: [50, '院端医生姓名不能超过50个字符']
+    required: false,
+    trim: true
   },
-
+  
   patent: {
     type: String,
-    trim: true,
-    maxlength: [500, '专利信息不能超过500个字符']
+    required: false,
+    trim: true
   },
   
   clinicalData: {
     type: String,
-    trim: true,
-    maxlength: [1000, '临床数据不能超过1000个字符']
+    required: false
   },
   
-  marketSize: {
-    type: String,
-    trim: true,
-    maxlength: [200, '市场规模不能超过200个字符']
-  },
-  
-  competitorStatus: {
-    type: String,
-    trim: true,
-    maxlength: [500, '竞品状态不能超过500个字符']
+  transformAmount: {
+    type: Number,
+    required: false,
+    min: [0, '转化金额不能为负数']
   },
   
   conclusion: {
     type: String,
-    trim: true,
-    maxlength: [1000, '项目结论不能超过1000个字符']
+    required: false
   },
   
-  // 院内制剂特有字段
-
-  // 院内制剂必填字段
+  // 中药现代化特有字段（原院内制剂）
   composition: {
     type: String,
-    trim: true,
-    maxlength: [500, '组方不能超过500个字符'],
-    // 动态必填验证：仅院内制剂类型必填
+    required: false,
     validate: {
       validator: function(this: UnifiedProjectDocument, value: string) {
-        if (this.projectType === ProjectTypeEnum.INTERNAL_PREPARATION) {
-          return value && value.trim().length > 0
+        if (this.projectType === ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION) {
+          return value && value.length > 0
         }
         return true
       },
-      message: '院内制剂项目的组方为必填项'
+      message: '中药现代化项目的组方为必填项'
     }
   },
   
   function: {
     type: String,
-    trim: true,
-    maxlength: [300, '功能描述不能超过300个字符'],
+    required: false,
     validate: {
       validator: function(this: UnifiedProjectDocument, value: string) {
-        if (this.projectType === ProjectTypeEnum.INTERNAL_PREPARATION) {
-          return value && value.trim().length > 0
+        if (this.projectType === ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION) {
+          return value && value.length > 0
         }
         return true
       },
-      message: '院内制剂项目的功能为必填项'
+      message: '中药现代化项目的功能为必填项'
     }
   },
   
-  // 院内制剂选填字段
+  // 中药现代化选填字段
   specification: {
     type: String,
-    trim: true,
-    maxlength: [100, '规格不能超过100个字符']
+    required: false
   },
   
   duration: {
     type: String,
-    trim: true,
-    maxlength: [50, '年限不能超过50个字符']
+    required: false
   },
   
   recordNumber: {
     type: String,
-    trim: true,
-    maxlength: [100, '备案号不能超过100个字符']
-    // 注意：按业务要求，不设置unique约束
+    required: false
   },
   
   // 其他类型特有字段
-
-  // 其他类型必填字段
   startDate: {
     type: Date,
+    required: false,
     validate: {
       validator: function(this: UnifiedProjectDocument, value: Date) {
-        // 非院内制剂类型必填
-        if (this.projectType !== ProjectTypeEnum.INTERNAL_PREPARATION) {
-          return value != null
+        if (this.projectType !== ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION && 
+            this.projectType !== ProjectTypeEnum.MEDICAL_DEVICE) {
+          return !!value
         }
         return true
       },
@@ -328,15 +349,15 @@ const UnifiedProjectSchema: Schema = new Schema({
   },
 
   // 系统字段
-  attachments: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Attachment'
-  }],
+  attachments: {
+    type: [String],
+    default: []
+  },
   
   createTime: {
     type: Date,
     default: Date.now,
-    index: true  // 添加索引用于排序
+    index: true
   },
   
   updateTime: {
@@ -345,95 +366,92 @@ const UnifiedProjectSchema: Schema = new Schema({
   },
   
   createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, '创建者为必填项'],
-    index: true  // 添加索引用于筛选
+    type: String,
+    required: true
   },
   
-  // AI报告相关信息
+  // AI报告
   aiReport: {
     reportUrl: {
       type: String,
-      default: null,
-      maxlength: [2000, 'AI报告URL不能超过2000个字符']
+      required: false
     },
     status: {
       type: String,
       enum: ['idle', 'generating', 'completed', 'error'],
-      default: 'idle',
-      required: true
+      default: 'idle'
     },
     firstGeneratedAt: {
       type: Date,
-      default: null
+      required: false
     },
     lastGeneratedAt: {
       type: Date,
-      default: null
+      required: false
     }
   }
+}, {
+  timestamps: { createdAt: 'createTime', updatedAt: 'updateTime' },
+  collection: 'unifiedprojects'
 })
 
-/* ------------------------------------------------------------------------------------------ */
-
-// 索引优化
-UnifiedProjectSchema.index({ projectType: 1, status: 1 })               // 复合索引：类型+状态
-UnifiedProjectSchema.index({ department: 1, importance: 1 })            // 复合索引：部门+重要性
-UnifiedProjectSchema.index({ leader: 1, projectType: 1 })               // 复合索引：负责人+类型
-UnifiedProjectSchema.index({ name: 'text', source: 'text' })            // 文本搜索索引
-UnifiedProjectSchema.index({ createTime: -1 })                          // 创建时间降序索引
-
-// 更新时间中间件
-UnifiedProjectSchema.pre('save', function(next) {
-  this.updateTime = new Date()
-  next()
-})
-
-/* ------------------------------------------------------------------------------------------ */
+// 索引
+UnifiedProjectSchema.index({ projectType: 1, status: 1 })
+UnifiedProjectSchema.index({ department: 1, importance: 1 })
+UnifiedProjectSchema.index({ source: 1 })
+UnifiedProjectSchema.index({ leader: 1 })
+UnifiedProjectSchema.index({ createTime: -1 })
 
 // 实例方法
-UnifiedProjectSchema.methods.isInternalPreparation = function(): boolean {
-  return this.projectType === ProjectTypeEnum.INTERNAL_PREPARATION
+UnifiedProjectSchema.methods.isChineseMedicineModernization = function(): boolean {
+  return this.projectType === ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION
 }
 
 UnifiedProjectSchema.methods.getDisplayImportance = function(): string {
-  const importanceMap = {
-    [ImportanceEnum.VERY_IMPORTANT]: '非常重要',
-    [ImportanceEnum.IMPORTANT]: '重要',
-    [ImportanceEnum.NORMAL]: '一般',
-    [ImportanceEnum.NOT_IMPORTANT]: '不重要'
+  const importanceMap: {[key: string]: string} = {
+    'very-important': '非常重要',
+    'important': '重要',
+    'normal': '一般'
   }
-  return importanceMap[this.importance as keyof typeof importanceMap] || this.importance
+  return importanceMap[this.importance] || this.importance
 }
 
 UnifiedProjectSchema.methods.getDisplayStatus = function(): string {
-  const statusMap = {
-    [ProjectStatusEnum.EARLY_STAGE]: '早期',
-    [ProjectStatusEnum.PRECLINICAL]: '临床前', 
-    [ProjectStatusEnum.CLINICAL_STAGE]: '临床阶段',
-    [ProjectStatusEnum.MARKET_PRODUCT]: '上市产品'
+  const statusMap: {[key: string]: string} = {
+    // 中药现代化状态
+    'hospital-preparation': '院内制剂',
+    'experience-formula': '经验方',
+    'protocol-formula': '协定方',
+    'early-research': '早期研究',
+    // 医疗器械状态
+    'sample-design': '样品设计',
+    'type-inspection': '型检',
+    // 通用状态
+    'early-stage': '早期',
+    'preclinical': '临床前',
+    'clinical-stage': '临床阶段',
+    'market-product': '上市产品'
   }
-  return statusMap[this.status as keyof typeof statusMap] || this.status
+  return statusMap[this.status] || this.status
 }
 
 UnifiedProjectSchema.methods.canGenerateAIReport = function(): boolean {
-  return this.aiReport?.status !== 'generating'
+  return this.projectType === ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION
 }
 
 // 静态方法
 UnifiedProjectSchema.statics.getProjectTypeDisplayName = function(projectType: string): string {
-  const typeMap = {
-    [ProjectTypeEnum.INTERNAL_PREPARATION]: '院内制剂',
-    [ProjectTypeEnum.AI_MEDICAL_RESEARCH]: 'AI医疗及系统研究',
-    [ProjectTypeEnum.DIAGNOSTIC_DETECTION]: '检测诊断',
-    [ProjectTypeEnum.CELL_THERAPY]: '细胞治疗',
-    [ProjectTypeEnum.DRUG]: '药物',
-    [ProjectTypeEnum.MEDICAL_DEVICE]: '医疗器械',
-    [ProjectTypeEnum.MEDICAL_MATERIAL]: '医用材料',
-    [ProjectTypeEnum.OTHER]: '其他'
+  const projectTypeMap: {[key: string]: string} = {
+    'chinese-medicine-modernization': '中药现代化',
+    'ai-medical-research': 'AI医疗及系统研究',
+    'diagnostic-detection': '检测诊断',
+    'cell-therapy': '细胞治疗',
+    'drug': '药物',
+    'medical-device': '医疗器械',
+    'medical-material': '医用材料',
+    'other': '其他'
   }
-  return typeMap[projectType as keyof typeof typeMap] || projectType
+  return projectTypeMap[projectType] || projectType
 }
 
 /* ------------------------------------------------------------------------------------------ */

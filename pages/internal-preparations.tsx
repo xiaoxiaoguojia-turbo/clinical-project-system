@@ -1862,12 +1862,12 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group full-width">
-                    <label>专利情况</label>
+                    <label>专利信息</label>
                     <textarea
                       value={createFormData.patent}
                       onChange={(e) => handleCreateFormChange('patent', e.target.value)}
                       className="form-textarea"
-                      placeholder="请输入专利情况（可选）"
+                      placeholder="请输入专利信息（可选）"
                       rows={2}
                     />
                   </div>
@@ -2146,10 +2146,10 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group full-width">
-                    <label>专利情况</label>
+                    <label>专利信息</label>
                     <textarea
                       className="form-textarea"
-                      placeholder="请输入专利情况（可选）"
+                      placeholder="请输入专利信息（可选）"
                       value={editFormData.patent}
                       onChange={(e) => handleEditFormChange('patent', e.target.value)}
                       rows={2}
@@ -2321,7 +2321,7 @@ export default function InternalPreparationsPage() {
                         )}
                         {selectedProject.patent && (
                           <div className="detail-item full-width">
-                            <label className="detail-label">专利情况</label>
+                            <label className="detail-label">专利信息</label>
                             <div className="detail-value detail-text">{selectedProject.patent}</div>
                           </div>
                         )}

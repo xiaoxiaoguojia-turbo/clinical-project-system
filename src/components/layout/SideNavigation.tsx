@@ -115,9 +115,9 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
           children: [
             {
               id: 'internal-preparations',
-              label: '院内制剂',
+              label: '中药现代化',
               icon: PillIcon,
-              route: '/internal-preparations',
+              route: '/chinese-medicine-modernization',
               level: 3
             },
             {

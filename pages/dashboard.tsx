@@ -443,7 +443,7 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout title="数据统计">
+    <DashboardLayout title="数据统计 - 临床创新项目管理系统">
       <div className="dashboard-page">
         {/* 页面头部 */}
         <div className="page-header">

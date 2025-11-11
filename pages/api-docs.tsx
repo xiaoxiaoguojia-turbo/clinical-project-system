@@ -281,8 +281,8 @@ const ApiDocsPage: React.FC = () => {
   return (
     <>
       <Head>
-        <title>API文档 - 临床创新项目管理系统</title>
-        <meta name="description" content="临床创新项目管理系统的API接口文档" />
+        <title>后端API文档 - 临床创新项目管理系统</title>
+        <meta name="description" content="临床创新项目管理系统的后端API接口文档" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       
@@ -292,7 +292,7 @@ const ApiDocsPage: React.FC = () => {
           {/* API统计信息 */}
           {apiStats && !loading && (
             <div className="api-stats">
-              <h3>📋 临床创新项目管理系统 API 文档</h3>
+              <h3>📋 临床创新项目管理系统后端 API 文档</h3>
               <p>上海临床创新转化研究院项目管理系统接口文档</p>
               <div className="stats-grid">
                 <div className="stat-item">

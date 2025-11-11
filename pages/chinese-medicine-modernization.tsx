@@ -31,9 +31,12 @@ import {
 import { 
   ApiResponse, 
   PaginatedResponse,
-  UnifiedProject
+  UnifiedProject,
+  TransformRequirement
 } from '@/types'
 import { TokenManager } from '@/utils/auth'
+import TransformRequirementsForm from '@/components/TransformRequirementsForm'
+
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -65,9 +68,8 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
 interface PreparationStats {
   totalPreparations: number
   veryImportantCount: number
-  marketProductCount: number
-  contractCompletedCount: number
-  contractIncompleteCount: number
+  hospitalPreparationCount: number
+  experienceFormulaCount: number
 }
 
 interface StatCard {
@@ -91,9 +93,8 @@ export default function InternalPreparationsPage() {
   const [preparationStats, setPreparationStats] = useState<PreparationStats>({
     totalPreparations: 0,
     veryImportantCount: 0,
-    marketProductCount: 0,
-    contractCompletedCount: 0,
-    contractIncompleteCount: 0
+    hospitalPreparationCount: 0,
+    experienceFormulaCount: 0
   })
   
   const [preparations, setPreparations] = useState<UnifiedProject[]>([])
@@ -118,20 +119,19 @@ export default function InternalPreparationsPage() {
   // 创建项目表单状态
   const [createFormData, setCreateFormData] = useState({
     department: 'transfer-investment-dept-1',
-    projectType: 'internal-preparation',
+    projectType: 'chinese-medicine-modernization',
     name: '',
     source: '',
     importance: 'very-important',
-    status: 'early-stage',
+    status: 'hospital-preparation',
     leader: 'to-be-determined',
+    transformRequirements: [] as TransformRequirement[],
     indication: '',
-    transformRequirement: 'other',
-    transformProgress: 'contract-incomplete',
+    dockingCompany: '',
     hospitalDoctor: '',
     patent: '',
     clinicalData: '',
-    marketSize: '',
-    competitorStatus: '',
+    transformAmount: '',
     conclusion: '',
     composition: '',
     function: '',
@@ -145,20 +145,19 @@ export default function InternalPreparationsPage() {
   // 编辑项目表单状态
   const [editFormData, setEditFormData] = useState({
     department: 'transfer-investment-dept-1',
-    projectType: 'internal-preparation',
+    projectType: 'chinese-medicine-modernization',
     name: '',
     source: '',
     importance: 'very-important',
-    status: 'early-stage',
+    status: 'hospital-preparation',
     leader: 'to-be-determined',
+    transformRequirements: [] as TransformRequirement[],
     indication: '',
-    transformRequirement: 'other',
-    transformProgress: 'contract-incomplete',
+    dockingCompany: '',
     hospitalDoctor: '',
     patent: '',
     clinicalData: '',
-    marketSize: '',
-    competitorStatus: '',
+    transformAmount: '',
     conclusion: '',
     composition: '',
     function: '',
@@ -225,7 +224,7 @@ export default function InternalPreparationsPage() {
       setLoading(true)
       
       // 获取所有院内制剂项目数据用于统计
-      const response = await fetch('/api/projects?projectType=internal-preparation&pageSize=100', {
+      const response = await fetch('/api/projects?projectType=chinese-medicine-modernization&pageSize=100', {
         headers: {
           'Authorization': `Bearer ${TokenManager.getToken()}`,
           'Content-Type': 'application/json'
@@ -252,16 +251,14 @@ export default function InternalPreparationsPage() {
   const calculateStats = (projects: UnifiedProject[]): PreparationStats => {
     const totalPreparations = projects.length
     const veryImportantCount = projects.filter(p => p.importance === 'very-important').length
-    const marketProductCount = projects.filter(p => p.status === 'market-product').length
-    const contractCompletedCount = projects.filter(p => p.transformProgress === 'contract-completed').length
-    const contractIncompleteCount = projects.filter(p => p.transformProgress === 'contract-incomplete').length
+    const hospitalPreparationCount = projects.filter(p => p.status === 'hospital-preparation').length
+    const experienceFormulaCount = projects.filter(p => p.status === 'experience-formula').length
 
     return {
       totalPreparations,
       veryImportantCount,
-      marketProductCount,
-      contractCompletedCount,
-      contractIncompleteCount
+      hospitalPreparationCount,
+      experienceFormulaCount
     }
   }
   /* ------------------------------------------------------------------------------------------ */
@@ -274,7 +271,7 @@ export default function InternalPreparationsPage() {
       const Chart = (await import('chart.js/auto')).default
       
       // 先清理所有现有的图表实例
-      const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart', 'transformRequirementChart', 'transformProgressChart']
+      const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart']
       chartIds.forEach(chartId => {
         const existingChart = Chart.getChart(chartId)
         if (existingChart) {
@@ -360,48 +357,14 @@ export default function InternalPreparationsPage() {
     
     const statusLabels = Object.keys(statusData).map(key => {
       const labels: {[key: string]: string} = {
-        'early-stage': '早期',
-        'preclinical': '临床前',
-        'clinical-stage': '临床阶段',
-        'market-product': '上市产品'
+        'hospital-preparation': '院内制剂',
+        'experience-formula': '经验方',
+        'protocol-formula': '协定方',
+        'early-research': '早期研究'
       }
       return labels[key] || key
     })
     const statusValues = Object.values(statusData)
-
-    // 5. 转化需求统计
-    const transformReqData = preparations.reduce((acc, prep) => {
-      const key = prep.transformRequirement || 'other'
-      acc[key] = (acc[key] || 0) + 1
-      return acc
-    }, {} as {[key: string]: number})
-    
-    const transformReqLabels = Object.keys(transformReqData).map(key => {
-      const labels: {[key: string]: string} = {
-        'license': '许可',
-        'transfer': '转让',
-        'company-operation': '公司化运营',
-        'other': '其他'
-      }
-      return labels[key] || key
-    })
-    const transformReqValues = Object.values(transformReqData)
-
-    // 6. 转化推进状态统计
-    const transformProgressData = preparations.reduce((acc, prep) => {
-      const key = prep.transformProgress || 'contract-incomplete'
-      acc[key] = (acc[key] || 0) + 1
-      return acc
-    }, {} as {[key: string]: number})
-    
-    const transformProgressLabels = Object.keys(transformProgressData).map(key => {
-      const labels: {[key: string]: string} = {
-        'contract-completed': '签约已完成',
-        'contract-incomplete': '未完成'
-      }
-      return labels[key] || key
-    })
-    const transformProgressValues = Object.values(transformProgressData)
 
     return {
       // 1. 归属部门 - 柱状图
@@ -491,55 +454,7 @@ export default function InternalPreparationsPage() {
           labels: statusLabels,
           datasets: [{
             data: statusValues,
-            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6'],
-            borderWidth: 0,
-            cutout: '60%'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom' as const,
-              labels: { padding: 15, usePointStyle: true }
-            }
-          }
-        }
-      },
-
-      // 5. 转化需求 - 饼图
-      transformRequirementChart: {
-        type: 'pie' as const,
-        data: {
-          labels: transformReqLabels,
-          datasets: [{
-            data: transformReqValues,
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6b7280'],
-            borderColor: '#ffffff',
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom' as const,
-              labels: { padding: 15, usePointStyle: true }
-            }
-          }
-        }
-      },
-
-      // 6. 转化推进状态 - 环形图
-      transformProgressChart: {
-        type: 'doughnut' as const,
-        data: {
-          labels: transformProgressLabels,
-          datasets: [{
-            data: transformProgressValues,
-            backgroundColor: ['#10b981', '#f59e0b'],
+            backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'],
             borderWidth: 0,
             cutout: '60%'
           }]
@@ -568,7 +483,7 @@ export default function InternalPreparationsPage() {
     const destroyCharts = async () => {
       try {
         const Chart = (await import('chart.js/auto')).default
-        const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart', 'transformRequirementChart', 'transformProgressChart']
+        const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart']
         
         chartIds.forEach(chartId => {
           const existingChart = Chart.getChart(chartId)
@@ -622,20 +537,19 @@ export default function InternalPreparationsPage() {
     // 预填充编辑表单数据
     setEditFormData({
       department: project.department,
-      projectType: 'internal-preparation',
+      projectType: 'chinese-medicine-modernization',
       name: project.name,
       source: project.source,
       importance: project.importance,
       status: project.status,
       leader: project.leader,
+      transformRequirements: project.transformRequirements || [],
       indication: project.indication || '',
-      transformRequirement: project.transformRequirement || '',
-      transformProgress: project.transformProgress || '',
+      dockingCompany: project.dockingCompany || '',
       hospitalDoctor: project.hospitalDoctor || '',
       patent: project.patent || '',
       clinicalData: project.clinicalData || '',
-      marketSize: project.marketSize || '',
-      competitorStatus: project.competitorStatus || '',
+      transformAmount: project.transformAmount ? String(project.transformAmount) : '',
       conclusion: project.conclusion || '',
       composition: project.composition || '',
       function: project.function || '',
@@ -678,20 +592,19 @@ export default function InternalPreparationsPage() {
     setSelectedProject(null)
     setCreateFormData({
       department: 'transfer-investment-dept-1',
-      projectType: 'internal-preparation',
+      projectType: 'chinese-medicine-modernization',
       name: '',
       source: '',
       importance: 'very-important',
-      status: 'early-stage',
+      status: 'hospital-preparation',
       leader: 'to-be-determined',
+      transformRequirements: [] as TransformRequirement[],
       indication: '',
-      transformRequirement: 'other',
-      transformProgress: 'contract-incomplete',
+      dockingCompany: '',
       hospitalDoctor: '',
       patent: '',
       clinicalData: '',
-      marketSize: '',
-      competitorStatus: '',
+      transformAmount: '',
       conclusion: '',
       composition: '',
       function: '',
@@ -703,7 +616,7 @@ export default function InternalPreparationsPage() {
     setShowCreateModal(true)
   }
 
-  const handleCreateFormChange = (field: string, value: string) => {
+  const handleCreateFormChange = (field: string, value: string | TransformRequirement[]) => {
     setCreateFormData(prev => ({
       ...prev,
       [field]: value
@@ -729,9 +642,19 @@ export default function InternalPreparationsPage() {
     if (!createFormData.status.trim()) errors.status = '项目进展状态为必填项'
     if (!createFormData.leader.trim()) errors.leader = '负责人为必填项'
 
-    // 院内制剂必填字段
+    // 中药现代化必填字段
     if (!createFormData.composition.trim()) errors.composition = '组方为必填项'
     if (!createFormData.function.trim()) errors.function = '功能为必填项'
+    
+    // 转化需求验证
+    if (createFormData.transformRequirements && createFormData.transformRequirements.length > 0) {
+      const hasInvalidRequirement = createFormData.transformRequirements.some(req => 
+        !req.type || !req.currentProgress
+      )
+      if (hasInvalidRequirement) {
+        errors.transformRequirements = '请完善所有转化需求的类型和当前状态'
+      }
+    }
     
     setCreateFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -775,20 +698,19 @@ export default function InternalPreparationsPage() {
     setShowCreateModal(false)
     setCreateFormData({
       department: 'transfer-investment-dept-1',
-      projectType: 'internal-preparation',
+      projectType: 'chinese-medicine-modernization',
       name: '',
       source: '',
       importance: 'very-important',
-      status: 'early-stage',
+      status: 'hospital-preparation',
       leader: 'to-be-determined',
+      transformRequirements: [] as TransformRequirement[],
       indication: '',
-      transformRequirement: 'other',
-      transformProgress: 'contract-incomplete',
+      dockingCompany: '',
       hospitalDoctor: '',
       patent: '',
       clinicalData: '',
-      marketSize: '',
-      competitorStatus: '',
+      transformAmount: '',
       conclusion: '',
       composition: '',
       function: '',
@@ -799,7 +721,7 @@ export default function InternalPreparationsPage() {
     setCreateFormErrors({})
   }
 
-  const handleEditFormChange = (field: string, value: string) => {
+  const handleEditFormChange = (field: string, value: string | TransformRequirement[]) => {
     setEditFormData(prev => ({
       ...prev,
       [field]: value
@@ -836,12 +758,22 @@ export default function InternalPreparationsPage() {
       errors.leader = '负责人不能为空'
     }
 
-    // 院内制剂必填字段
+    // 中药现代化必填字段
     if (!editFormData.composition.trim()) {
       errors.composition = '组方不能为空'
     }
     if (!editFormData.function.trim()) {
       errors.function = '功能不能为空'
+    }
+    
+    // 转化需求验证
+    if (editFormData.transformRequirements && editFormData.transformRequirements.length > 0) {
+      const hasInvalidRequirement = editFormData.transformRequirements.some(req => 
+        !req.type || !req.currentProgress
+      )
+      if (hasInvalidRequirement) {
+        errors.transformRequirements = '请完善所有转化需求的类型和当前状态'
+      }
     }
     
     setEditFormErrors(errors)
@@ -858,20 +790,19 @@ export default function InternalPreparationsPage() {
     try {
       const updateData = {
         department: editFormData.department,
-        projectType: 'internal-preparation',
+        projectType: 'chinese-medicine-modernization',
         name: editFormData.name.trim(),
         source: editFormData.source.trim(),
         importance: editFormData.importance.trim(),
         status: editFormData.status.trim(),
         leader: editFormData.leader.trim(),
+        transformRequirements: editFormData.transformRequirements,
         indication: editFormData.indication.trim(),
-        transformRequirement: editFormData.transformRequirement.trim(),
-        transformProgress: editFormData.transformProgress.trim(),
+        dockingCompany: editFormData.dockingCompany.trim(),
         hospitalDoctor: editFormData.hospitalDoctor.trim(),
         patent: editFormData.patent.trim(),
         clinicalData: editFormData.clinicalData.trim(),
-        marketSize: editFormData.marketSize.trim(),
-        competitorStatus: editFormData.competitorStatus.trim(),
+        transformAmount: editFormData.transformAmount.trim(),
         conclusion: editFormData.conclusion.trim(),
         composition: editFormData.composition.trim(),
         function: editFormData.function.trim(),
@@ -896,20 +827,19 @@ export default function InternalPreparationsPage() {
         setSelectedProject(null)
         setEditFormData({
           department: 'transfer-investment-dept-1',
-          projectType: 'internal-preparation',
+          projectType: 'chinese-medicine-modernization',
           name: '',
           source: '',
           importance: 'very-important',
-          status: 'early-stage',
+          status: 'hospital-preparation',
           leader: 'to-be-determined',
+          transformRequirements: [] as TransformRequirement[],
           indication: '',
-          transformRequirement: 'other',
-          transformProgress: 'contract-incomplete',
+          dockingCompany: '',
           hospitalDoctor: '',
           patent: '',
           clinicalData: '',
-          marketSize: '',
-          competitorStatus: '',
+          transformAmount: '',
           conclusion: '',
           composition: '',
           function: '',
@@ -934,20 +864,19 @@ export default function InternalPreparationsPage() {
     setSelectedProject(null)
     setEditFormData({
       department: 'transfer-investment-dept-1',
-      projectType: 'internal-preparation',
+      projectType: 'chinese-medicine-modernization',
       source: '',
       name: '',
       importance: 'very-important',
-      status: 'early-stage',
+      status: 'hospital-preparation',
       leader: 'to-be-determined',
+      transformRequirements: [] as TransformRequirement[],
       indication: '',
-      transformRequirement: 'other',
-      transformProgress: 'contract-incomplete',
+      dockingCompany: '',
       hospitalDoctor: '',
       patent: '',
       clinicalData: '',
-      marketSize: '',
-      competitorStatus: '',
+      transformAmount: '',
       conclusion: '',
       composition: '',
       function: '',
@@ -965,20 +894,20 @@ export default function InternalPreparationsPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'early-stage': return '早期'
-      case 'preclinical': return '临床前'
-      case 'clinical-stage': return '临床阶段'
-      case 'market-product': return '上市产品'
+      case 'hospital-preparation': return '院内制剂'
+      case 'experience-formula': return '经验方'
+      case 'protocol-formula': return '协定方'
+      case 'early-research': return '早期研究'
       default: return status
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'early-stage': return 'yellow'
-      case 'preclinical': return 'blue'
-      case 'clinical-stage': return 'green'
-      case 'market-product': return 'purple'
+      case 'hospital-preparation': return 'blue'
+      case 'experience-formula': return 'green'
+      case 'protocol-formula': return 'purple'
+      case 'early-research': return 'yellow'
       default: return 'gray'
     }
   }
@@ -1036,11 +965,11 @@ export default function InternalPreparationsPage() {
     console.log('项目名称:', project.name)
     
     // 构建跳转参数
-    const targetPath = '/internal-preparation-attachments'
+    const targetPath = '/chinese-medicine-modernization-attachments'
     const queryParams = {
       projectId: project._id,
       projectName: project.name,
-      projectType: 'internal-preparation'
+      projectType: 'chinese-medicine-modernization'
     }
     
     console.log('跳转路径:', targetPath)
@@ -1131,7 +1060,7 @@ export default function InternalPreparationsPage() {
   // 数据处理
   const statisticCards: StatCard[] = [
     {
-      title: '总制剂数',
+      title: '总项目数',
       value: preparationStats.totalPreparations,
       unit: '个',
       icon: BeakerIcon,
@@ -1145,25 +1074,18 @@ export default function InternalPreparationsPage() {
       color: 'red'
     },
     {
-      title: '上市产品',
-      value: preparationStats.marketProductCount,
+      title: '院内制剂',
+      value: preparationStats.hospitalPreparationCount,
       unit: '个',
       icon: CheckCircleIcon,
       color: 'green'
     },
     {
-      title: '签约已完成',
-      value: preparationStats.contractCompletedCount,
+      title: '经验方',
+      value: preparationStats.experienceFormulaCount,
       unit: '个',
       icon: ClipboardDocumentListIcon,
-      color: 'emerald'
-    },
-    {
-      title: '签约未完成',
-      value: preparationStats.contractIncompleteCount,
-      unit: '个',
-      icon: ClockIcon,
-      color: 'amber'
+      color: 'purple'
     }
   ]
   
@@ -1173,7 +1095,7 @@ export default function InternalPreparationsPage() {
       
       // 构建查询参数
       const params = new URLSearchParams({
-        projectType: 'internal-preparation',
+        projectType: 'chinese-medicine-modernization',
         page: currentPage.toString(),
         pageSize: pageSize.toString()
       })
@@ -1212,14 +1134,14 @@ export default function InternalPreparationsPage() {
   }
 
   return (
-    <DashboardLayout title="院内制剂 - 临床创新项目管理系统">
+    <DashboardLayout title="中药现代化 - 临床创新项目管理系统">
       <div className="preparations-page">
         {/* 页面头部 */}
         <div className="page-header">
           <div className="header-content">
             <div className="title-section">
-              <h1>院内制剂管理</h1>
-              <p>院内制剂项目的统计分析与项目管理</p>
+              <h1>中药现代化管理</h1>
+              <p>中药现代化项目的统计分析与项目管理</p>
             </div>
             <button
               className="create-button"
@@ -1320,30 +1242,6 @@ export default function InternalPreparationsPage() {
                   <canvas id="statusChart"></canvas>
                 </div>
               </div>
-
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h3>转化需求分布</h3>
-                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
-                    <EllipsisVerticalIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="chart-container">
-                  <canvas id="transformRequirementChart"></canvas>
-                </div>
-              </div>
-
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h3>转化推进状态</h3>
-                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
-                    <EllipsisVerticalIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="chart-container">
-                  <canvas id="transformProgressChart"></canvas>
-                </div>
-              </div>
             </div>
           </>
         )}
@@ -1374,10 +1272,10 @@ export default function InternalPreparationsPage() {
                     className="filter-select"
                   >
                     <option value="">全部状态</option>
-                    <option value="early-stage">早期</option>
-                    <option value="preclinical">临床前</option>
-                    <option value="clinical-stage">临床阶段</option>
-                    <option value="market-product">上市产品</option>
+                    <option value="hospital-preparation">院内制剂</option>
+                    <option value="experience-formula">经验方</option>
+                    <option value="protocol-formula">协定方</option>
+                    <option value="early-research">早期研究</option>
                   </select>
                 </div>
                 <div className="filter-item">
@@ -1611,7 +1509,7 @@ export default function InternalPreparationsPage() {
           <div className="modal-overlay" onClick={handleCloseCreateModal}>
             <div className="modal-container" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>新建院内制剂项目</h2>
+                <h2>新建中药现代化项目</h2>
                 <button className="modal-close" onClick={handleCloseCreateModal}>
                   <XMarkIcon className="w-5 h-5" />
                 </button>
@@ -1698,10 +1596,10 @@ export default function InternalPreparationsPage() {
                       onChange={(e) => handleCreateFormChange('status', e.target.value)}
                       className={`form-input ${createFormErrors.status ? 'error' : ''}`}
                     >
-                      <option value="early-stage">早期</option>
-                      <option value="preclinical">临床前</option>
-                      <option value="clinical-stage">临床阶段</option>
-                      <option value="market-product">上市产品</option>
+                      <option value="hospital-preparation">院内制剂</option>
+                      <option value="experience-formula">经验方</option>
+                      <option value="protocol-formula">协定方</option>
+                      <option value="early-research">早期研究</option>
                     </select>
                     {createFormErrors.status && <span className="error-text">{createFormErrors.status}</span>}
                   </div>
@@ -1779,31 +1677,25 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>转化需求</label>
-                    <select
-                      value={createFormData.transformRequirement}
-                      onChange={(e) => handleCreateFormChange('transformRequirement', e.target.value)}
+                    <label>对接公司</label>
+                    <input
+                      type="text"
+                      value={createFormData.dockingCompany}
+                      onChange={(e) => handleCreateFormChange('dockingCompany', e.target.value)}
                       className="form-input"
-                    >
-                      <option value="">请选择</option>
-                      <option value="license">许可</option>
-                      <option value="transfer">转让</option>
-                      <option value="company-operation">公司化运营</option>
-                      <option value="other">其他</option>
-                    </select>
+                      placeholder="请输入对接公司（可选）"
+                    />
                   </div>
 
                   <div className="form-group">
-                    <label>转化推进状态</label>
-                    <select
-                      value={createFormData.transformProgress}
-                      onChange={(e) => handleCreateFormChange('transformProgress', e.target.value)}
+                    <label>转化金额</label>
+                    <input
+                      type="text"
+                      value={createFormData.transformAmount}
+                      onChange={(e) => handleCreateFormChange('transformAmount', e.target.value)}
                       className="form-input"
-                    >
-                      <option value="">请选择</option>
-                      <option value="contract-completed">签约已完成</option>
-                      <option value="contract-incomplete">签约未完成</option>
-                    </select>
+                      placeholder="请输入转化金额（可选）"
+                    />
                   </div>
 
                   <div className="form-group">
@@ -1829,28 +1721,6 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group full-width">
-                    <label>市场规模</label>
-                    <textarea
-                      value={createFormData.marketSize}
-                      onChange={(e) => handleCreateFormChange('marketSize', e.target.value)}
-                      className="form-textarea"
-                      placeholder="请输入市场规模（可选）"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="form-group full-width">
-                    <label>竞品状态</label>
-                    <textarea
-                      value={createFormData.competitorStatus}
-                      onChange={(e) => handleCreateFormChange('competitorStatus', e.target.value)}
-                      className="form-textarea"
-                      placeholder="请输入竞品状态（可选）"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="form-group full-width">
                     <label>项目结论</label>
                     <textarea
                       value={createFormData.conclusion}
@@ -1869,6 +1739,15 @@ export default function InternalPreparationsPage() {
                       className="form-textarea"
                       placeholder="请输入专利情况（可选）"
                       rows={2}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>转化需求</label>
+                    <TransformRequirementsForm
+                      value={createFormData.transformRequirements}
+                      onChange={(requirements) => handleCreateFormChange('transformRequirements', requirements as any)}
+                      errors={createFormErrors.transformRequirements ? [createFormErrors.transformRequirements] : []}
                     />
                   </div>
                 </div>
@@ -1985,10 +1864,10 @@ export default function InternalPreparationsPage() {
                       onChange={(e) => handleEditFormChange('status', e.target.value)}
                       className={`form-input ${editFormErrors.status ? 'error' : ''}`}
                     >
-                      <option value="early-stage">早期</option>
-                      <option value="preclinical">临床前</option>
-                      <option value="clinical-stage">临床阶段</option>
-                      <option value="market-product">上市产品</option>
+                      <option value="hospital-preparation">院内制剂</option>
+                      <option value="experience-formula">经验方</option>
+                      <option value="protocol-formula">协定方</option>
+                      <option value="early-research">早期研究</option>
                     </select>
                     {editFormErrors.status && <div className="error-text">{editFormErrors.status}</div>}
                   </div>
@@ -2063,31 +1942,25 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>转化需求</label>
-                    <select
-                      value={editFormData.transformRequirement}
-                      onChange={(e) => handleEditFormChange('transformRequirement', e.target.value)}
+                    <label>对接公司</label>
+                    <input
+                      type="text"
                       className="form-input"
-                    >
-                      <option value="">请选择</option>
-                      <option value="license">许可</option>
-                      <option value="transfer">转让</option>
-                      <option value="company-operation">公司化运营</option>
-                      <option value="other">其他</option>
-                    </select>
+                      placeholder="请输入对接公司（可选）"
+                      value={editFormData.dockingCompany}
+                      onChange={(e) => handleEditFormChange('dockingCompany', e.target.value)}
+                    />
                   </div>
 
                   <div className="form-group">
-                    <label>转化推进状态</label>
-                    <select
-                      value={editFormData.transformProgress}
-                      onChange={(e) => handleEditFormChange('transformProgress', e.target.value)}
+                    <label>转化金额</label>
+                    <input
+                      type="text"
                       className="form-input"
-                    >
-                      <option value="">请选择</option>
-                      <option value="contract-completed">签约已完成</option>
-                      <option value="contract-incomplete">签约未完成</option>
-                    </select>
+                      placeholder="请输入转化金额（可选）"
+                      value={editFormData.transformAmount}
+                      onChange={(e) => handleEditFormChange('transformAmount', e.target.value)}
+                    />
                   </div>
 
                   <div className="form-group">
@@ -2113,28 +1986,6 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="form-group full-width">
-                    <label>市场规模</label>
-                    <textarea
-                      className="form-textarea"
-                      placeholder="请输入市场规模（可选）"
-                      value={editFormData.marketSize}
-                      onChange={(e) => handleEditFormChange('marketSize', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="form-group full-width">
-                    <label>竞品状态</label>
-                    <textarea
-                      className="form-textarea"
-                      placeholder="请输入竞品状态（可选）"
-                      value={editFormData.competitorStatus}
-                      onChange={(e) => handleEditFormChange('competitorStatus', e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="form-group full-width">
                     <label>项目结论</label>
                     <textarea
                       className="form-textarea"
@@ -2153,6 +2004,15 @@ export default function InternalPreparationsPage() {
                       value={editFormData.patent}
                       onChange={(e) => handleEditFormChange('patent', e.target.value)}
                       rows={2}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>转化需求</label>
+                    <TransformRequirementsForm
+                      value={editFormData.transformRequirements}
+                      onChange={(requirements) => handleEditFormChange('transformRequirements', requirements as any)}
+                      errors={editFormErrors.transformRequirements ? [editFormErrors.transformRequirements] : []}
                     />
                   </div>
                 </div>
@@ -2234,7 +2094,7 @@ export default function InternalPreparationsPage() {
                   </div>
 
                   <div className="detail-section">
-                    <h3 className="detail-section-title">制剂信息</h3>
+                    <h3 className="detail-section-title">中药现代化信息</h3>
                     <div className="detail-group">
                       <div className="detail-item full-width">
                         <label className="detail-label">组方</label>
@@ -2267,22 +2127,12 @@ export default function InternalPreparationsPage() {
                         <div className="detail-value">{selectedProject.indication || '-'}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">转化需求</label>
-                        <div className="detail-value">
-                          {selectedProject.transformRequirement === 'license' ? '许可' :
-                           selectedProject.transformRequirement === 'transfer' ? '转让' :
-                           selectedProject.transformRequirement === 'company-operation' ? '公司化运营' :
-                           selectedProject.transformRequirement === 'other' ? '其他' :
-                           selectedProject.transformRequirement || '-'}
-                        </div>
+                        <label className="detail-label">对接公司</label>
+                        <div className="detail-value">{selectedProject.dockingCompany || '-'}</div>
                       </div>
                       <div className="detail-item">
-                        <label className="detail-label">转化推进状态</label>
-                        <div className="detail-value">
-                          {selectedProject.transformProgress === 'contract-completed' ? '签约已完成' :
-                           selectedProject.transformProgress === 'contract-incomplete' ? '签约未完成' :
-                           selectedProject.transformProgress || '-'}
-                        </div>
+                        <label className="detail-label">转化金额</label>
+                        <div className="detail-value">{selectedProject.transformAmount || '-'}</div>
                       </div>
                       <div className="detail-item">
                         <label className="detail-label">院端医生</label>
@@ -2291,7 +2141,7 @@ export default function InternalPreparationsPage() {
                     </div>
                   </div>
 
-                  {(selectedProject.clinicalData || selectedProject.marketSize || selectedProject.competitorStatus || selectedProject.conclusion || selectedProject.patent) && (
+                  {(selectedProject.clinicalData || selectedProject.conclusion || selectedProject.patent) && (
                     <div className="detail-section">
                       <h3 className="detail-section-title">数据分析</h3>
                       <div className="detail-group">
@@ -2299,18 +2149,6 @@ export default function InternalPreparationsPage() {
                           <div className="detail-item full-width">
                             <label className="detail-label">临床数据</label>
                             <div className="detail-value detail-text">{selectedProject.clinicalData}</div>
-                          </div>
-                        )}
-                        {selectedProject.marketSize && (
-                          <div className="detail-item full-width">
-                            <label className="detail-label">市场规模</label>
-                            <div className="detail-value detail-text">{selectedProject.marketSize}</div>
-                          </div>
-                        )}
-                        {selectedProject.competitorStatus && (
-                          <div className="detail-item full-width">
-                            <label className="detail-label">竞品状态</label>
-                            <div className="detail-value detail-text">{selectedProject.competitorStatus}</div>
                           </div>
                         )}
                         {selectedProject.conclusion && (
@@ -2858,7 +2696,7 @@ export default function InternalPreparationsPage() {
           .status-badge.yellow {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             color: #92400e;
-            border: 1px solid #fbbf24;
+            border: 1px solid #fb923c;
           }
 
           .status-badge.blue {
@@ -3046,578 +2884,6 @@ export default function InternalPreparationsPage() {
             .tab-button {
               font-size: 13px;
               padding: 10px 16px;
-            }
-          }
-
-          @media (max-width: 480px) {
-            .detail-grid {
-              gap: 24px;
-            }
-            
-            .detail-section {
-              padding: 16px;
-            }
-            
-            .detail-group {
-              gap: 12px;
-            }
-            
-            .detail-value {
-              padding: 10px 12px;
-            }
-          }
-
-          .actions-cell {
-            padding: 16px 20px;
-            text-align: center;
-            background: white;
-            border-bottom: 1px solid #f1f5f9;
-          }
-
-          .action-buttons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-          }
-
-          .action-group {
-            display: flex;
-            gap: 6px;
-            padding: 4px;
-            border-radius: 8px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-          }
-
-          .primary-actions {
-            background: #f8fafc;
-            border-color: #e2e8f0;
-          }
-
-          .extended-actions {
-            background: #fef7ff;
-            border-color: #e9d5ff;
-          }
-
-          .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: transparent;
-          }
-
-          .action-btn.ai-generate-btn {
-            color: #f59e0b;
-            position: relative;
-          }
-
-          .action-btn.ai-generate-btn:hover {
-            background: #fef3c7;
-            color: #d97706;
-          }
-
-          .action-btn.ai-generate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            pointer-events: none;
-          }
-
-          .action-btn.ai-generate-btn.loading {
-            color: #d97706;
-            background: #fef3c7;
-          }
-
-          .action-btn.ai-view-btn {
-            color: #06b6d4;
-            position: relative;
-          }
-
-          .action-btn.ai-view-btn:hover {
-            background: #cffafe;
-            color: #0891b2;
-          }
-
-          .action-btn.ai-view-btn.has-report {
-            color: #f59e0b;
-          }
-
-          .action-btn.ai-view-btn.has-report:hover {
-            background: #d1fae5;
-            color: #047857;
-          }
-
-          .loading-spinner {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 8px;
-            height: 8px;
-            border: 1px solid #d97706;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-          }
-
-          .loading-row td {
-            padding: 20px;
-          }
-
-          .no-data {
-            text-align: center;
-            padding: 60px 20px;
-          }
-
-          .no-data-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            color: #9ca3b8;
-          }
-
-          .no-data-icon {
-            opacity: 0.5;
-          }
-
-          .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            border-top: 1px solid #f1f5f9;
-            background: #fafbfc;
-          }
-
-          .pagination-info {
-            font-size: 14px;
-            color: #64748b;
-          }
-
-          .pagination-controls {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-          }
-
-          .page-btn {
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: #64748b;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-
-          .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-
-          .page-btn:not(:disabled):hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-          }
-
-          .page-numbers {
-            display: flex;
-            gap: 2px;
-            margin: 0 8px;
-          }
-
-          .page-number {
-            width: 36px;
-            height: 36px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: #64748b;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .page-number.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-          }
-
-          .page-number:not(.active):hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-          }
-
-          /* 模态框样式 */
-          .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-          }
-
-          .modal-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            max-width: 900px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-          }
-
-          .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 32px;
-            border-bottom: 1px solid #f1f5f9;
-            background: #fafbfc;
-          }
-
-          .modal-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1e293b;
-            margin: 0;
-          }
-
-          .modal-close {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: #f8fafc;
-            color: #64748b;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-
-          .modal-close:hover {
-            background: #f1f5f9;
-            color: #475569;
-          }
-
-          .modal-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 32px;
-          }
-
-          .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px 28px;
-          }
-
-          .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-          }
-
-          .form-group.full-width {
-            grid-column: 1 / -1;
-          }
-
-          .form-group label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 2px;
-          }
-
-          .form-input, .form-textarea {
-            padding: 14px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            color: #374151;
-            transition: all 0.2s ease;
-            width: 100%;
-            box-sizing: border-box;
-          }
-
-          .form-input:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-          }
-
-          .form-input.error, .form-textarea.error {
-            border-color: #dc2626;
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-          }
-
-          .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-            font-family: inherit;
-          }
-
-          .error-text {
-            font-size: 12px;
-            color: #dc2626;
-            margin-top: 4px;
-            font-weight: 500;
-          }
-
-          .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 16px;
-            padding: 24px 32px;
-            border-top: 1px solid #f1f5f9;
-            background: #fafbfc;
-          }
-
-          .btn-secondary {
-            padding: 14px 28px;
-            border: 2px solid #e2e8f0;
-            background: white;
-            color: #64748b;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 100px;
-          }
-
-          .btn-secondary:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #475569;
-          }
-
-          .btn-primary {
-            padding: 14px 28px;
-            border: none;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-            min-width: 120px;
-          }
-
-          .btn-primary:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 10px -1px rgba(59, 130, 246, 0.4);
-          }
-
-          .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
-
-          /* 响应式设计 */
-          @media (max-width: 768px) {
-            .modal-container {
-              max-width: 95vw;
-              margin: 10px;
-            }
-            
-            .modal-header {
-              padding: 20px 24px;
-            }
-            
-            .modal-body {
-              padding: 24px;
-            }
-            
-            .form-grid {
-              grid-template-columns: 1fr;
-              gap: 20px;
-            }
-            
-            .form-group.full-width {
-              grid-column: 1;
-            }
-            
-            .modal-footer {
-              padding: 20px 24px;
-              flex-direction: column;
-            }
-            
-            .btn-secondary, .btn-primary {
-              width: 100%;
-              justify-content: center;
-            }
-          }
-
-          @media (max-width: 480px) {
-            .modal-overlay {
-              padding: 10px;
-            }
-            
-            .modal-container {
-              max-height: 95vh;
-            }
-            
-            .modal-body {
-              padding: 20px;
-            }
-            
-            .form-grid {
-              gap: 16px;
-            }
-            
-            .form-input, .form-textarea {
-              padding: 10px 12px;
-            }
-          }
-
-          /* 查看详情模态框样式 */
-          .detail-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 32px;
-          }
-
-          .detail-section {
-            border: 1px solid #f1f5f9;
-            border-radius: 12px;
-            padding: 24px;
-            background: #fafbfc;
-          }
-
-          .detail-section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e293b;
-            margin: 0 0 20px 0;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e2e8f0;
-          }
-
-          .detail-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px 24px;
-          }
-
-          .detail-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          }
-
-          .detail-item.full-width {
-            grid-column: 1 / -1;
-          }
-
-          .detail-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-          }
-
-          .detail-value {
-            font-size: 14px;
-            color: #1e293b;
-            font-weight: 500;
-            background: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            min-height: 20px;
-          }
-
-          .detail-text {
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-          }
-
-          .status-badge.active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-          }
-
-          .status-badge.completed {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
-          }
-
-          .status-badge.paused {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
-          }
-
-          /* 响应式设计 - 查看详情 */
-          @media (max-width: 768px) {
-            .detail-group {
-              grid-template-columns: 1fr;
-              gap: 16px;
-            }
-            
-            .detail-item.full-width {
-              grid-column: 1;
-            }
-            
-            .detail-section {
-              padding: 20px;
-            }
-            
-            .detail-group {
-              gap: 12px;
-            }
-            
-            .detail-value {
-              padding: 10px 12px;
             }
           }
 

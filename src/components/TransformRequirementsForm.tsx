@@ -38,7 +38,7 @@ export default function TransformRequirementsForm({
   const handleAddRequirement = () => {
     const newRequirement: TransformRequirement = {
       type: 'pending',
-      currentProgress: ''
+      currentProgress: '待推进'
     }
     const updated = [...localRequirements, newRequirement]
     setLocalRequirements(updated)
@@ -55,7 +55,7 @@ export default function TransformRequirementsForm({
     const updated = [...localRequirements]
     updated[index] = {
       type: type as TransformRequirement['type'],
-      currentProgress: '' // 重置进展节点
+      currentProgress: type === 'pending' ? '待推进' : ''
     }
     setLocalRequirements(updated)
     onChange(updated)
@@ -315,7 +315,7 @@ export default function TransformRequirementsForm({
         .requirement-fields {
           flex: 1;
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 2fr 3fr;
           gap: 12px;
         }
 

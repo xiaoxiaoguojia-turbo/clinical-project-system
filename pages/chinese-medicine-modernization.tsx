@@ -648,7 +648,7 @@ export default function InternalPreparationsPage() {
     // 转化需求验证
     if (createFormData.transformRequirements && createFormData.transformRequirements.length > 0) {
       const hasInvalidRequirement = createFormData.transformRequirements.some(req => 
-        !req.type || !req.currentProgress
+        !req.type || (req.type !== 'pending' && !req.currentProgress)
       )
       if (hasInvalidRequirement) {
         errors.transformRequirements = '请完善所有转化需求的类型和当前状态'
@@ -768,7 +768,7 @@ export default function InternalPreparationsPage() {
     // 转化需求验证
     if (editFormData.transformRequirements && editFormData.transformRequirements.length > 0) {
       const hasInvalidRequirement = editFormData.transformRequirements.some(req => 
-        !req.type || !req.currentProgress
+        !req.type || (req.type !== 'pending' && !req.currentProgress)
       )
       if (hasInvalidRequirement) {
         errors.transformRequirements = '请完善所有转化需求的类型和当前状态'
@@ -2552,7 +2552,7 @@ export default function InternalPreparationsPage() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px 16px 24px;
+            padding: 20px 24px;
             border-bottom: 1px solid #f1f5f9;
             background: #fafbfc;
           }
@@ -3041,6 +3041,8 @@ export default function InternalPreparationsPage() {
             background: white;
             color: #64748b;
             border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
           }

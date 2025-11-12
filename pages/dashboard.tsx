@@ -77,7 +77,7 @@ ChartJS.register(
 
 /* ------------------------------------------------------------------------------------------ */
 
-import { TokenManager } from '@/utils/auth'
+import { TokenManager, authenticatedFetch } from '@/utils/auth'
 import { 
   DashboardStats, 
   DashboardFilters, 
@@ -161,24 +161,9 @@ export default function Dashboard() {
       setLoading(true)
       console.log('开始加载Dashboard数据...')
 
-      const token = TokenManager.getToken()
-      if (!token) {
-        throw new Error('未找到认证令牌')
-      }
-
-      const response = await fetch('/api/dashboard/stats', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const result = await authenticatedFetch('/api/dashboard/stats', {
+        method: 'GET'
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
       
       if (result.success) {
         console.log('✅ Dashboard数据加载成功:', result.data)
@@ -189,6 +174,10 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('❌ Dashboard数据加载异常:', error)
+      // 如果是令牌过期错误，不显示alert（因为已经跳转）
+      if (error instanceof Error && error.message === '认证令牌已过期') {
+        return
+      }
       alert('加载统计数据失败，请重试')
     } finally {
       setLoading(false)

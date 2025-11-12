@@ -34,7 +34,7 @@ import {
   UnifiedProject,
   TransformRequirement
 } from '@/types'
-import { TokenManager } from '@/utils/auth'
+import { TokenManager, authenticatedFetch } from '@/utils/auth'
 import TransformRequirementsForm from '@/components/TransformRequirementsForm'
 
 
@@ -223,15 +223,10 @@ export default function InternalPreparationsPage() {
     try {
       setLoading(true)
       
-      // 获取所有院内制剂项目数据用于统计
-      const response = await fetch('/api/projects?projectType=chinese-medicine-modernization&pageSize=100', {
-        headers: {
-          'Authorization': `Bearer ${TokenManager.getToken()}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      const data = await response.json() as ApiResponse<PaginatedResponse<UnifiedProject>>
+      // 获取所有中药现代化项目数据用于统计
+      const data = await authenticatedFetch<ApiResponse<PaginatedResponse<UnifiedProject>>>(
+        '/api/projects?projectType=chinese-medicine-modernization&pageSize=100'
+      )
       
       if (data.success && data.data) {
         const projectsData = data.data.data || []
@@ -242,7 +237,11 @@ export default function InternalPreparationsPage() {
         setPreparationStats(stats)
       }
     } catch (error) {
-      console.error('加载院内制剂数据失败:', error)
+      console.error('加载中药现代化数据失败:', error)
+      // 如果是令牌过期错误，不显示alert（因为已经跳转到登录页面）
+      if (error instanceof Error && error.message === '认证令牌已过期') {
+        return
+      }
     } finally {
       setLoading(false)
     }

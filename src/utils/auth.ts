@@ -289,11 +289,75 @@ export const getProjectStatusDisplayName = (status: string): string => {
 }
 
 // 获取项目状态颜色类名
-export const getProjectStatusColorClass = (status: string): string => {
-  const colorMap: Record<string, string> = {
-    active: 'text-green-600 bg-green-100',
-    completed: 'text-blue-600 bg-blue-100',
-    paused: 'text-yellow-600 bg-yellow-100'
+export function getProjectStatusColorClass(status: string): string {
+  switch (status) {
+    case 'early-stage': return 'text-green-600 bg-green-100'
+    case 'preclinical': return 'text-blue-600 bg-blue-100'
+    case 'clinical-stage': return 'text-yellow-600 bg-yellow-100'
+    case 'market-product': return 'text-red-600 bg-red-100'
+    default: return 'text-gray-600 bg-gray-100'
   }
-  return colorMap[status] || 'text-gray-600 bg-gray-100'
+}
+
+/**
+ * 统一的认证请求函数 - 自动处理401错误
+ * @param url 请求URL
+ * @param options fetch选项
+ * @returns 响应数据
+ */
+export async function authenticatedFetch<T = any>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  const token = TokenManager.getToken()
+  
+  if (!token) {
+    // 没有令牌，直接跳转到登录页面
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
+    throw new Error('未找到认证令牌')
+  }
+
+  // 合并headers
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    ...options?.headers,
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    })
+
+    // 处理401错误
+    if (response.status === 401) {
+      console.warn('🔒 令牌已过期或无效，正在跳转到登录页面...')
+      TokenManager.clearAuth()
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+      throw new Error('认证令牌已过期')
+    }
+
+    // 处理其他错误
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || `HTTP ${response.status}`)
+    }
+
+    // 返回JSON数据
+    return response.json()
+  } catch (error) {
+    // 如果是401错误已经处理过了
+    if (error instanceof Error && error.message === '认证令牌已过期') {
+      throw error
+    }
+    
+    // 其他错误
+    console.error('API请求失败:', error)
+    throw error
+  }
 }

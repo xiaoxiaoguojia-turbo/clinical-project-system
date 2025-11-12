@@ -13,17 +13,16 @@ export interface StatItem {
 // 项目总体统计
 export interface ProjectOverviewStats {
   totalProjects: number                   // 项目总数
-  internalPreparationCount: number        // 院内制剂数量
-  contractCompletedCount: number          // 签约已完成数量
-  contractIncompleteCount: number         // 签约未完成数量
+  investmentCount: number                 // 转化需求为投资的数量
+  companyOperationCount: number           // 转化需求为公司化运营的数量
+  licenseTransferCount: number            // 转化需求为许可转让的数量
+  pendingCount: number                    // 转化需求为待推进的数量
   byDepartment: StatItem[]                // 归属部门分布
   byProjectType: StatItem[]               // 项目分类型分布
   bySource: StatItem[]                    // 医院来源分布
-  byImportance: StatItem[]                // 重要程度分布
-  byStatus: StatItem[]                    // 项目进展状态分布
-  byIndication: StatItem[]                // 适应症/科室分布
-  byTransformRequirement: StatItem[]      // 转化需求分布
-  byTransformProgress: StatItem[]         // 转化推进状态分布
+  totalTransformAmount: number            // 转化金额总计（万元）
+  averageTransformAmount: number          // 平均转化金额（万元）
+  transformAmountDistribution: StatItem[] // 转化金额分布（按区间）
 }
 
 // 完整的Dashboard数据接口

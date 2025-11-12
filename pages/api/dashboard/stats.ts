@@ -7,11 +7,7 @@ import {
   ProjectOverviewStats, 
   StatItem,
   DEPARTMENT_LABELS,
-  PROJECT_TYPE_LABELS,
-  IMPORTANCE_LABELS,
-  STATUS_LABELS,
-  TRANSFORM_REQUIREMENT_LABELS,
-  TRANSFORM_PROGRESS_LABELS
+  PROJECT_TYPE_LABELS
 } from '@/types/dashboard'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -52,21 +48,27 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
           // 总数统计
           totalCount: [{ $count: 'count' }],
           
-          // 院内制剂数量
-          internalPreparationCount: [
-            { $match: { projectType: 'internal-preparation' } },
+          // 转化需求为投资的项目数量
+          investmentCount: [
+            { $match: { 'transformRequirements.type': 'investment' } },
             { $count: 'count' }
           ],
           
-          // 签约完成数量
-          contractCompletedCount: [
-            { $match: { transformProgress: 'contract-completed' } },
+          // 转化需求为公司化运营的项目数量
+          companyOperationCount: [
+            { $match: { 'transformRequirements.type': 'company-operation' } },
             { $count: 'count' }
           ],
           
-          // 签约未完成数量
-          contractIncompleteCount: [
-            { $match: { transformProgress: 'contract-incomplete' } },
+          // 转化需求为许可转让的项目数量
+          licenseTransferCount: [
+            { $match: { 'transformRequirements.type': 'license-transfer' } },
+            { $count: 'count' }
+          ],
+          
+          // 转化需求为待推进的项目数量
+          pendingCount: [
+            { $match: { 'transformRequirements.type': 'pending' } },
             { $count: 'count' }
           ],
           
@@ -82,43 +84,38 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
             { $sort: { count: -1 } }
           ],
           
-          // 按重要程度分组
-          byImportance: [
-            { $group: { _id: '$importance', count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
-          ],
-          
-          // 按项目状态分组
-          byStatus: [
-            { $group: { _id: '$status', count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
-          ],
-          
           // 按医院来源分组
           bySource: [
             { $group: { _id: '$source', count: { $sum: 1 } } },
             { $sort: { count: -1 } }
           ],
           
-          // 按适应症/科室分组（过滤空值）
-          byIndication: [
-            { $match: { indication: { $exists: true, $nin: [null, ''] } } },
-            { $group: { _id: '$indication', count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
+          // 转化金额统计
+          transformAmountStats: [
+            { $match: { transformAmount: { $exists: true, $ne: null, $gt: 0 } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: '$transformAmount' },
+                average: { $avg: '$transformAmount' },
+                count: { $sum: 1 }
+              }
+            }
           ],
           
-          // 按转化需求分组（过滤空值）
-          byTransformRequirement: [
-            { $match: { transformRequirement: { $exists: true, $nin: [null, ''] } } },
-            { $group: { _id: '$transformRequirement', count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
-          ],
-          
-          // 按转化推进状态分组（过滤空值）
-          byTransformProgress: [
-            { $match: { transformProgress: { $exists: true, $nin: [null, ''] } } },
-            { $group: { _id: '$transformProgress', count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
+          // 转化金额分布（按区间）
+          transformAmountDistribution: [
+            { $match: { transformAmount: { $exists: true, $ne: null, $gt: 0 } } },
+            {
+              $bucket: {
+                groupBy: '$transformAmount',
+                boundaries: [0, 100, 500, 1000, 100000],
+                default: 'other',
+                output: {
+                  count: { $sum: 1 }
+                }
+              }
+            }
           ]
         }
       }
@@ -126,24 +123,45 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
 
     const stats = statsResults[0]
     const totalProjects = stats.totalCount[0]?.count || 0
-    const internalPreparationCount = stats.internalPreparationCount[0]?.count || 0
-    const contractCompletedCount = stats.contractCompletedCount[0]?.count || 0
-    const contractIncompleteCount = stats.contractIncompleteCount[0]?.count || 0
+    const investmentCount = stats.investmentCount[0]?.count || 0
+    const companyOperationCount = stats.companyOperationCount[0]?.count || 0
+    const licenseTransferCount = stats.licenseTransferCount[0]?.count || 0
+    const pendingCount = stats.pendingCount[0]?.count || 0
+    
+    // 转化金额统计
+    const transformAmountStats = stats.transformAmountStats[0] || { total: 0, average: 0, count: 0 }
+    const totalTransformAmount = Math.round(transformAmountStats.total || 0)
+    const averageTransformAmount = Math.round(transformAmountStats.average || 0)
+    
+    // 格式化转化金额分布
+    const transformAmountDistribution: StatItem[] = (stats.transformAmountDistribution || []).map((item: any) => {
+      let label = ''
+      if (item._id === 0) label = '0-100万'
+      else if (item._id === 100) label = '100-500万'
+      else if (item._id === 500) label = '500-1000万'
+      else if (item._id === 1000) label = '1000万以上'
+      else label = '其他'
+      
+      return {
+        label,
+        value: item.count,
+        percentage: totalProjects > 0 ? Math.round((item.count / totalProjects) * 100) : 0
+      }
+    })
 
     // 构建响应数据
     const overview: ProjectOverviewStats = {
       totalProjects,
-      internalPreparationCount,
-      contractCompletedCount,
-      contractIncompleteCount,
+      investmentCount,
+      companyOperationCount,
+      licenseTransferCount,
+      pendingCount,
       byProjectType: formatStatItems(stats.byProjectType, PROJECT_TYPE_LABELS, totalProjects),
       byDepartment: formatStatItems(stats.byDepartment, DEPARTMENT_LABELS, totalProjects),
-      byImportance: formatStatItems(stats.byImportance, IMPORTANCE_LABELS, totalProjects),
-      byStatus: formatStatItems(stats.byStatus, STATUS_LABELS, totalProjects),
       bySource: formatStatItems(stats.bySource, {}, totalProjects),
-      byIndication: formatStatItems(stats.byIndication, {}, totalProjects),
-      byTransformRequirement: formatStatItems(stats.byTransformRequirement, TRANSFORM_REQUIREMENT_LABELS, totalProjects),
-      byTransformProgress: formatStatItems(stats.byTransformProgress, TRANSFORM_PROGRESS_LABELS, totalProjects)
+      totalTransformAmount,
+      averageTransformAmount,
+      transformAmountDistribution
     }
 
     const dashboardStats: DashboardStats = {

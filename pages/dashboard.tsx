@@ -12,7 +12,10 @@ import {
   ClockIcon,
   ArrowTrendingUpIcon,
   ArrowPathIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  BanknotesIcon,
+  BuildingOffice2Icon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -137,12 +140,12 @@ export default function Dashboard() {
     const checkAuth = async () => {
       try {
         if (!TokenManager.isAuthenticated()) {
-          console.log('🔒 未检测到认证令牌，跳转到登录页面...')
+          console.log('未检测到认证令牌，跳转到登录页面...')
           window.location.href = '/login'
           return
         }
         
-        console.log('✅ 认证检查通过')
+        console.log('认证检查通过')
         setIsAuthenticated(true)
         await loadDashboardData()
       } catch (error) {
@@ -159,7 +162,7 @@ export default function Dashboard() {
   // 加载Dashboard数据
   const loadDashboardData = async () => {
     try {
-      console.log('🔄 开始加载Dashboard数据...')
+      console.log('开始加载Dashboard数据...')
       setLoading(true)
       console.log('开始加载Dashboard数据...')
 
@@ -168,14 +171,14 @@ export default function Dashboard() {
       })
       
       if (result.success) {
-        console.log('✅ Dashboard数据加载成功:', result.data)
+        console.log('Dashboard数据加载成功:', result.data)
         setDashboardData(result.data)
       } else {
-        console.error('❌ Dashboard数据加载失败:', result.error)
+        console.error('Dashboard数据加载失败:', result.error)
         alert('加载统计数据失败: ' + result.error)
       }
     } catch (error) {
-      console.error('❌ Dashboard数据加载异常:', error)
+      console.error('Dashboard数据加载异常:', error)
       // 如果是令牌过期错误或未找到令牌错误，不显示alert（因为已经跳转）
       if (error instanceof Error && (
         error.message === '认证令牌已过期' || 
@@ -213,22 +216,29 @@ export default function Dashboard() {
         color: 'blue'
       },
       {
-        title: '院内制剂',
-        value: overview.internalPreparationCount,
+        title: '投资项目',
+        value: overview.investmentCount,
         unit: '个',
-        icon: BuildingOfficeIcon,
+        icon: BanknotesIcon,
         color: 'green'
       },
       {
-        title: '签约已完成',
-        value: overview.contractCompletedCount,
+        title: '公司化运营',
+        value: overview.companyOperationCount,
         unit: '个',
-        icon: CheckCircleIcon,
+        icon: BuildingOffice2Icon,
+        color: 'purple'
+      },
+      {
+        title: '许可转让',
+        value: overview.licenseTransferCount,
+        unit: '个',
+        icon: DocumentTextIcon,
         color: 'emerald'
       },
       {
-        title: '签约未完成',
-        value: overview.contractIncompleteCount,
+        title: '待推进项目',
+        value: overview.pendingCount,
         unit: '个',
         icon: ClockIcon,
         color: 'amber'
@@ -246,7 +256,7 @@ export default function Dashboard() {
     const baseOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      animation: false as const, // 修复类型：使用字面值类型
+      animation: false as const,
       plugins: {
         legend: {
           display: true,
@@ -332,28 +342,14 @@ export default function Dashboard() {
         }
       },
 
-      // 4. 重要程度分布 - 饼图
-      importance: {
+      // 4. 转化金额分布 - 柱状图
+      transformAmount: {
         data: {
-          labels: overview.byImportance.map(item => item.label),
-          datasets: [{
-            data: overview.byImportance.map(item => item.value),
-            backgroundColor: CHART_COLORS.importance.slice(0, overview.byImportance.length),
-            borderColor: '#ffffff',
-            borderWidth: 2,
-          }]
-        },
-        options: baseOptions
-      },
-
-      // 5. 项目状态分布 - 柱状图
-      status: {
-        data: {
-          labels: overview.byStatus.map(item => item.label),
+          labels: overview.transformAmountDistribution.map(item => item.label),
           datasets: [{
             label: '项目数量',
-            data: overview.byStatus.map(item => item.value),
-            backgroundColor: CHART_COLORS.status.slice(0, overview.byStatus.length),
+            data: overview.transformAmountDistribution.map(item => item.value),
+            backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
             borderWidth: 1,
             borderRadius: 4,
           }]
@@ -371,61 +367,6 @@ export default function Dashboard() {
             }
           }
         }
-      },
-
-      // 6. 转化需求分布 - 饼图
-      transformRequirement: {
-        data: {
-          labels: overview.byTransformRequirement.map(item => getTransformRequirementLabel(item.label)),
-          datasets: [{
-            data: overview.byTransformRequirement.map(item => item.value),
-            backgroundColor: CHART_COLORS.transformRequirement.slice(0, overview.byTransformRequirement.length),
-            borderColor: '#ffffff',
-            borderWidth: 2,
-          }]
-        },
-        options: baseOptions
-      },
-
-      // 7. 适应症分布 - 柱状图
-      indication: {
-        data: {
-          labels: overview.byIndication.map(item => item.label),
-          datasets: [{
-            label: '项目数量',
-            data: overview.byIndication.map(item => item.value),
-            backgroundColor: CHART_COLORS.indication.slice(0, overview.byIndication.length),
-            borderWidth: 1,
-            borderRadius: 4,
-          }]
-        },
-        options: {
-          ...baseOptions,
-          plugins: {
-            ...baseOptions.plugins,
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
-      },
-
-      // 8. 转化推进状态 - 饼图
-      transformProgress: {
-        data: {
-          labels: overview.byTransformProgress.map(item => getTransformProgressLabel(item.label)),
-          datasets: [{
-            data: overview.byTransformProgress.map(item => item.value),
-            backgroundColor: CHART_COLORS.transformProgress.slice(0, overview.byTransformProgress.length),
-            borderColor: '#ffffff',
-            borderWidth: 2,
-          }]
-        },
-        options: baseOptions
       }
     }
   }, [dashboardData])
@@ -504,25 +445,23 @@ export default function Dashboard() {
                     <h3 className="chart-title">来源分布</h3>
                     <Bar data={getChartConfigs.sources.data} options={getChartConfigs.sources.options} />
                   </div>
-                  <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">重要程度分布</h3>
-                    <Pie data={getChartConfigs.importance.data} options={getChartConfigs.importance.options} />
-                  </div>
-                  <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">项目状态分布</h3>
-                    <Bar data={getChartConfigs.status.data} options={getChartConfigs.status.options} />
-                  </div>
-                  <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">转化需求分布</h3>
-                    <Pie data={getChartConfigs.transformRequirement.data} options={getChartConfigs.transformRequirement.options} />
-                  </div>
-                  <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">适应症分布</h3>
-                    <Bar data={getChartConfigs.indication.data} options={getChartConfigs.indication.options} />
-                  </div>
-                  <div className="chart-item" style={{ height: '350px' }}>
-                    <h3 className="chart-title">转化推进状态</h3>
-                    <Pie data={getChartConfigs.transformProgress.data} options={getChartConfigs.transformProgress.options} />
+                  
+                  {/* 转化金额统计卡片 */}
+                  <div className="chart-item transform-amount-card" style={{ height: '350px' }}>
+                    <h3 className="chart-title">转化金额统计</h3>
+                    <div className="amount-summary">
+                      <div className="amount-item">
+                        <div className="amount-label">总计</div>
+                        <div className="amount-value">{dashboardData?.overview.totalTransformAmount.toLocaleString()}<span className="amount-unit">万元</span></div>
+                      </div>
+                      <div className="amount-item">
+                        <div className="amount-label">平均</div>
+                        <div className="amount-value">{dashboardData?.overview.averageTransformAmount.toLocaleString()}<span className="amount-unit">万元</span></div>
+                      </div>
+                    </div>
+                    <div style={{ height: '220px', marginTop: '20px' }}>
+                      <Bar data={getChartConfigs.transformAmount.data} options={getChartConfigs.transformAmount.options} />
+                    </div>
                   </div>
                 </>
               )}
@@ -822,6 +761,23 @@ export default function Dashboard() {
           color: #064e3b;
         }
 
+        .stat-card.purple {
+          background: linear-gradient(135deg, #f7d2c4 0%, #f2c4b7 100%);
+          border: 2px solid #f7a5a5;
+        }
+
+        .stat-card.purple .card-title {
+          color: #7c3aed;
+        }
+
+        .stat-card.purple .card-header svg {
+          color: #7c3aed;
+        }
+
+        .stat-card.purple .value {
+          color: #7c3aed;
+        }
+
         .stat-card.emerald {
           background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
           border-color: #6ee7b7;
@@ -838,6 +794,52 @@ export default function Dashboard() {
 
         .stat-card.amber .card-icon {
           color: #f59e0b;
+        }
+
+        /* 转化金额统计卡片样式 */
+        .transform-amount-card {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .amount-summary {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          padding: 20px;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border-radius: 12px;
+          border: 2px solid #e2e8f0;
+        }
+
+        .amount-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .amount-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .amount-value {
+          font-size: 28px;
+          font-weight: 700;
+          color: #1e293b;
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+        }
+
+        .amount-unit {
+          font-size: 14px;
+          font-weight: 500;
+          color: #64748b;
         }
 
         /* 响应式设计 */

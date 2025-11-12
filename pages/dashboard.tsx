@@ -137,10 +137,12 @@ export default function Dashboard() {
     const checkAuth = async () => {
       try {
         if (!TokenManager.isAuthenticated()) {
+          console.log('🔒 未检测到认证令牌，跳转到登录页面...')
           window.location.href = '/login'
           return
         }
         
+        console.log('✅ 认证检查通过')
         setIsAuthenticated(true)
         await loadDashboardData()
       } catch (error) {
@@ -174,8 +176,11 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('❌ Dashboard数据加载异常:', error)
-      // 如果是令牌过期错误，不显示alert（因为已经跳转）
-      if (error instanceof Error && error.message === '认证令牌已过期') {
+      // 如果是令牌过期错误或未找到令牌错误，不显示alert（因为已经跳转）
+      if (error instanceof Error && (
+        error.message === '认证令牌已过期' || 
+        error.message === '未找到认证令牌'
+      )) {
         return
       }
       alert('加载统计数据失败，请重试')

@@ -21,28 +21,49 @@ const TopNavigation: React.FC<TopNavigationProps> = ({ className = '' }) => {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
   // 生命周期函数 - 客户端初始化
   useEffect(() => {
+    // 防止服务端渲染时执行
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    // 防止重复检查
+    if (hasCheckedAuth) {
+      return
+    }
+
     try {
       const authenticated = TokenManager.isAuthenticated()
       const user = TokenManager.getUser()
       
+      console.log('🔍 TopNavigation 认证检查:', { authenticated, user: user?.username })
+      
       setIsAuthenticated(authenticated)
       setCurrentUser(user)
       setIsAdmin(user?.role === 'admin')
+      setHasCheckedAuth(true)
       
       // 如果未认证，重定向到登录页
       if (!authenticated) {
-        router.replace('/login')
+        console.log('🔒 TopNavigation: 未认证，准备跳转到登录页')
+        // 使用 setTimeout 避免在渲染期间导航
+        setTimeout(() => {
+          router.replace('/login')
+        }, 0)
       }
     } catch (error) {
-      console.error('初始化认证状态失败:', error)
-      router.replace('/login')
+      console.error('❌ TopNavigation: 初始化认证状态失败:', error)
+      setHasCheckedAuth(true)
+      setTimeout(() => {
+        router.replace('/login')
+      }, 0)
     }
-  }, [router])
+  }, [])  // ✅ 空数组依赖，只在挂载时执行一次
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */

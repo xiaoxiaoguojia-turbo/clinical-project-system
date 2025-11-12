@@ -218,6 +218,12 @@ const UnifiedProjectSchema = new Schema<UnifiedProjectDocument>({
         // 根据 projectType 验证 status 的有效性
         const projectType = this.projectType
         
+        // 在 UPDATE 操作中，this.projectType 可能是 undefined
+        // 此时跳过验证，因为后端 API 已经做了验证
+        if (!projectType) {
+          return true
+        }
+        
         if (projectType === ProjectTypeEnum.CHINESE_MEDICINE_MODERNIZATION) {
           return Object.values(ProjectStatusEnum.CHINESE_MEDICINE).includes(value as any)
         } else if (projectType === ProjectTypeEnum.MEDICAL_DEVICE) {

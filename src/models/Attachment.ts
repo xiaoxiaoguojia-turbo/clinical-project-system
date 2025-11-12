@@ -65,8 +65,7 @@ const AttachmentSchema: Schema = new Schema({
   projectType: {
     type: String,
     enum: [
-      'overall', 
-      'internal-preparation',
+      'chinese-medicine-modernization',
       'ai-medical-research',
       'diagnostic-detection',
       'cell-therapy',

@@ -160,7 +160,7 @@ export default function InternalPreparationAttachments() {
       // 延迟跳转，确保用户能看到错误信息
       setTimeout(() => {
         alert('缺少必要的项目参数，将返回项目列表')
-        router.replace('/internal-preparations')
+        router.replace('/chinese-medicine-modernization')
       }, 100)
       return
     }
@@ -421,7 +421,7 @@ export default function InternalPreparationAttachments() {
     return (
       <>
         <Head>
-          <title>附件管理 - 院内制剂</title>
+          <title>附件管理 - 中药现代化</title>
         </Head>
         <div className="loading-container">
           <div className="loading-content">
@@ -436,7 +436,7 @@ export default function InternalPreparationAttachments() {
   /* ------------------------------------------------------------------------------------------ */
 
   return (
-    <DashboardLayout title={`附件管理 - ${projectInfo.name} - 院内制剂`}>
+    <DashboardLayout title={`附件管理 - ${projectInfo.name} - 中药现代化`}>
       <div className="attachment-page">
         {/* 页面标题和操作按钮 */}
         <div className="page-header">
@@ -444,17 +444,17 @@ export default function InternalPreparationAttachments() {
             <h1 className="page-title">附件管理</h1>
             <div className="project-info">
               <InformationCircleIcon className="w-5 h-5 text-blue-500" />
-              <span>制剂：{projectInfo.name}</span>
+              <span>项目：{projectInfo.name}</span>
             </div>
           </div>
           
           <div className="header-actions">
             <button
-              onClick={() => router.push('/internal-preparations')}
+              onClick={() => router.push('/chinese-medicine-modernization')}
               className="back-button"
             >
               <ArrowLeftIcon className="w-4 h-4" />
-              返回院内制剂
+              返回中药现代化
             </button>
                 
             <button
@@ -648,7 +648,7 @@ export default function InternalPreparationAttachments() {
               <div className="modal-content">
                 <div className="form-group">
                   <label className="form-label">
-                    制剂名称
+                    项目名称
                   </label>
                   <div className="project-display">
                     {projectInfo.name}
@@ -666,7 +666,7 @@ export default function InternalPreparationAttachments() {
                     className="file-input"
                   />
                   <p className="input-hint">
-                    支持：文档、图片、压缩包等格式，最大10MB
+                    支持：文档、图片、压缩包等格式，最大100MB
                   </p>
                 </div>
                     

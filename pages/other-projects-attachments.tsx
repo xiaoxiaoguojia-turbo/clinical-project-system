@@ -666,7 +666,7 @@ export default function InternalPreparationAttachments() {
                     className="file-input"
                   />
                   <p className="input-hint">
-                    支持：文档、图片、压缩包等格式，最大10MB
+                    支持：文档、图片、压缩包等格式，最大100MB
                   </p>
                 </div>
                     

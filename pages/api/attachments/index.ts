@@ -259,8 +259,8 @@ import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import Attachment from '@/models/Attachment'
-import OverallProject from '@/models/OverallProject'
-import InternalPreparationProject from '@/models/InternalPreparationProject'
+import UnifiedProject from '@/models/UnifiedProject'
+import User from '@/models/User'
 import { ApiResponse, PaginatedResponse, Attachment as IAttachment } from '@/types'
 import fs from 'fs'
 
@@ -273,7 +273,7 @@ async function handler(
     await connectDB()
 
     // 确保所有相关模型都被注册（解决MissingSchemaError）
-    const ensureModels = [Attachment, OverallProject, InternalPreparationProject]
+    const ensureModels = [Attachment, UnifiedProject, User]
     ensureModels.forEach(model => model.modelName)
 
     if (req.method === 'GET') {
@@ -303,18 +303,11 @@ async function handler(
         ]
       }
 
-      // 权限检查：非管理员用户只能看到自己相关的附件
+      // 权限检查：非管理员用户只能看到自己创建的项目的附件
       if (req.user.role !== 'admin') {
         // 获取用户有权访问的项目ID列表
-        const userProjectIds: string[] = []
-        
-        // 获取用户创建的总体项目
-        const overallProjects = await OverallProject.find({ createdBy: req.user.userId }).select('_id')
-        userProjectIds.push(...overallProjects.map(p => p._id.toString()))
-        
-        // 获取用户创建的院内制剂项目
-        const internalProjects = await InternalPreparationProject.find({ createdBy: req.user.userId }).select('_id')
-        userProjectIds.push(...internalProjects.map(p => p._id.toString()))
+        const userProjects = await UnifiedProject.find({ createdBy: req.user.userId }).select('_id')
+        const userProjectIds = userProjects.map(p => p._id.toString())
         
         // 限制查询范围
         query.projectId = { $in: userProjectIds }

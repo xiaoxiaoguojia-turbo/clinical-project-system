@@ -13,7 +13,7 @@
  *       - 图片：jpg, jpeg, png, gif, bmp, webp
  *       - 压缩包：zip, rar, 7z
  *       
- *       **文件大小限制：** 10MB
+ *       **文件大小限制：** 100MB
  *       
  *       **使用步骤：**
  *       1. 选择要上传的文件
@@ -43,9 +43,9 @@
  *                 example: "64f123456789abcd12345678"
  *               projectType:
  *                 type: string
- *                 enum: [overall, internal-preparation, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
+ *                 enum: [chinese-medicine-modernization, ai-medical-research, diagnostic-detection, cell-therapy, drug, medical-device, medical-material, other]
  *                 description: 项目类型
- *                 example: "overall"
+ *                 example: "ai-medical-research"
  *               description:
  *                 type: string
  *                 maxLength: 200
@@ -79,7 +79,7 @@
  *                     size: 2048576
  *                     path: "uploads/2024/01/64f123456789abcd12345679_项目申报书.pdf"
  *                     projectId: "64f123456789abcd12345678"
- *                     projectType: "overall"
+ *                     projectType: "ai-medical-research"
  *                     uploadedBy: "64f123456789abcd12345677"
  *                     description: "项目申报书最终版本"
  *                     downloadCount: 0
@@ -107,7 +107,7 @@
  *                 summary: 文件过大
  *                 value:
  *                   success: false
- *                   error: "文件大小超过限制（最大10MB）"
+ *                   error: "文件大小超过限制（最大100MB）"
  *               missing_params:
  *                 summary: 缺少必需参数
  *                 value:
@@ -148,8 +148,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import Attachment from '@/models/Attachment'
-import OverallProject from '@/models/OverallProject'
-import InternalPreparationProject from '@/models/InternalPreparationProject'
+import UnifiedProject from '@/models/UnifiedProject'
 import { ApiResponse, Attachment as IAttachment } from '@/types'
 import multer from 'multer'
 import path from 'path'
@@ -175,7 +174,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 默认10MB (1024*1024)
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600'), // 默认100MB (1024*1024*100)
   },
   fileFilter: (req, file, cb) => {
     // 允许的文件类型
@@ -299,7 +298,7 @@ async function handler(
     await connectDB()
 
     // 确保所有相关模型都被注册（解决MissingSchemaError）
-    const ensureModels = [Attachment, OverallProject, InternalPreparationProject]
+    const ensureModels = [Attachment, UnifiedProject]
     ensureModels.forEach(model => model.modelName)
 
     // 处理文件上传
@@ -333,8 +332,7 @@ async function handler(
 
     // 验证项目类型 - 支持所有统一项目类型
     const validProjectTypes = [
-      'overall', 
-      'internal-preparation', 
+      'chinese-medicine-modernization',
       'ai-medical-research', 
       'diagnostic-detection', 
       'cell-therapy', 
@@ -415,7 +413,7 @@ async function handler(
           case 'LIMIT_FILE_SIZE':
             return res.status(400).json({
               success: false,
-              error: '文件大小超出限制（最大10MB）'
+              error: '文件大小超出限制（最大100MB）'
             })
           case 'LIMIT_FILE_COUNT':
             return res.status(400).json({
@@ -451,7 +449,7 @@ async function handler(
 export const config = {
   api: {
     bodyParser: false,
-    sizeLimit: '10mb', // 设置请求体大小限制为10MB
+    sizeLimit: '100mb', // 设置请求体大小限制为100MB
   },
 }
 

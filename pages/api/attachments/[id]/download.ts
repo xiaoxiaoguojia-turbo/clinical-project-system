@@ -132,8 +132,7 @@ import { NextApiResponse } from 'next'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
 import connectDB from '@/lib/mongodb'
 import Attachment from '@/models/Attachment'
-import OverallProject from '@/models/OverallProject'
-import InternalPreparationProject from '@/models/InternalPreparationProject'
+import UnifiedProject from '@/models/UnifiedProject'
 import fs from 'fs'
 import path from 'path'
 import { pipeline } from 'stream'
@@ -157,7 +156,7 @@ async function handler(
     await connectDB()
 
     // 确保所有相关模型都被注册（解决MissingSchemaError）
-    const ensureModels = [Attachment, OverallProject, InternalPreparationProject]
+    const ensureModels = [Attachment, UnifiedProject]
     ensureModels.forEach(model => model.modelName)
 
     const { id } = req.query
@@ -186,16 +185,9 @@ async function handler(
       hasPermission = true
     } else {
       // 检查用户是否是项目的创建者或有访问权限
-      if (attachment.projectType === 'overall') {
-        const project = await OverallProject.findById(attachment.projectId)
-        if (project && project.createdBy.toString() === req.user.userId) {
-          hasPermission = true
-        }
-      } else if (attachment.projectType === 'internal-preparation') {
-        const project = await InternalPreparationProject.findById(attachment.projectId)
-        if (project && project.createdBy.toString() === req.user.userId) {
-          hasPermission = true
-        }
+      const project = await UnifiedProject.findById(attachment.projectId)
+      if (project && project.createdBy.toString() === req.user.userId) {
+        hasPermission = true
       }
     }
 

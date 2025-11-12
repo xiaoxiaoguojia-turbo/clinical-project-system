@@ -142,12 +142,13 @@ interface ProjectStats {
     'preclinical': number
     'clinical-stage': number
     'market-product': number
+    'sample-design': number
+    'type-inspection': number
   }
   importanceCounts: {
     'very-important': number
     'important': number
     'normal': number
-    'not-important': number
   }
   departmentCounts: { [key: string]: number }
   leaderCounts: { [key: string]: number }
@@ -169,15 +170,14 @@ interface ProjectFormData {
   leader: string
   startDate: string
   indication: string
-  importance: 'very-important' | 'important' | 'normal' | 'not-important'
-  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product'
-  transformRequirement: string
-  transformProgress: string
+  importance: 'very-important' | 'important' | 'normal'
+  status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product' | 'sample-design' | 'type-inspection'
+  transformRequirements: { type: string; currentProgress: string }[]
+  dockingCompany: string
   hospitalDoctor: string
   patent: string
   clinicalData: string
-  marketSize: string
-  competitorStatus: string
+  transformAmount: string
   conclusion: string
 }
 
@@ -229,7 +229,7 @@ const OtherProjectsPage: React.FC = () => {
   
     // 表单数据状态
     const [formData, setFormData] = useState<ProjectFormData>({
-      department: 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
+      department: 'transfer-investment-dept-1',
       source: '',
       name: '',
       leader: 'to-be-determined',
@@ -237,13 +237,12 @@ const OtherProjectsPage: React.FC = () => {
       indication: '',
       importance: 'normal',
       status: 'early-stage',
-      transformRequirement: '',
-      transformProgress: '',
+      transformRequirements: [],
+      dockingCompany: '',
       hospitalDoctor: '',
       patent: '',
       clinicalData: '',
-      marketSize: '',
-      competitorStatus: '',
+      transformAmount: '',
       conclusion: ''
     })
 
@@ -276,6 +275,8 @@ const OtherProjectsPage: React.FC = () => {
       const statusMap: { [key: string]: string } = {
         'early-stage': '早期',
         'preclinical': '临床前',
+        'sample-design': '样品设计',
+        'type-inspection': '型检',
         'clinical-stage': '临床阶段',
         'market-product': '上市产品'
       }
@@ -286,8 +287,7 @@ const OtherProjectsPage: React.FC = () => {
       const importanceMap: { [key: string]: string } = {
         'very-important': '非常重要',
         'important': '重要',
-        'normal': '一般',
-        'not-important': '不重要'
+        'normal': '一般'
       }
       return importanceMap[value] || value
     }
@@ -297,8 +297,29 @@ const OtherProjectsPage: React.FC = () => {
       return dept?.label || value
     }
 
+    // 辅助函数：根据项目类型获取状态选项
+    const getStatusOptions = useCallback((projectType: string) => {
+      if (projectType === 'medical-device') {
+        return [
+          { value: 'early-stage', label: '早期' },
+          { value: 'sample-design', label: '样品设计' },
+          { value: 'type-inspection', label: '型检' },
+          { value: 'clinical-stage', label: '临床阶段' },
+          { value: 'market-product', label: '上市产品' }
+        ]
+      } else {
+        // 其他项目通用状态
+        return [
+          { value: 'early-stage', label: '早期' },
+          { value: 'preclinical', label: '临床前' },
+          { value: 'clinical-stage', label: '临床阶段' },
+          { value: 'market-product', label: '上市产品' }
+        ]
+      }
+    }, [])
+
     /* ------------------------------------------------------------------------------------------ */
-    
+
     // 认证检查和数据加载
     useEffect(() => {
       setMounted(true)
@@ -451,13 +472,14 @@ const OtherProjectsPage: React.FC = () => {
                         'early-stage': 0,
                         'preclinical': 0,
                         'clinical-stage': 0,
-                        'market-product': 0
+                        'market-product': 0,
+                        'sample-design': 0,
+                        'type-inspection': 0
                     },
                     importanceCounts: {
                         'very-important': 0,
                         'important': 0,
-                        'normal': 0,
-                        'not-important': 0
+                        'normal': 0
                     },
                     departmentCounts: {},
                     leaderCounts: {},
@@ -466,8 +488,8 @@ const OtherProjectsPage: React.FC = () => {
 
                 allProjects.forEach((project: UnifiedProject) => {
                     // 状态统计
-                    if (project.status && stats.statusCounts[project.status] !== undefined) {
-                        stats.statusCounts[project.status]++
+                    if (project.status && (stats.statusCounts as any)[project.status] !== undefined) {
+                        (stats.statusCounts as any)[project.status]++
                     }
 
                     // 重要程度统计  
@@ -508,7 +530,7 @@ const OtherProjectsPage: React.FC = () => {
                   .slice(-12)
                   .map(([month, count]) => ({ month, count }))
 
-                setStats(stats)
+                setStats(stats as ProjectStats)
                 setError(null)
             } else {
                 throw new Error(response.error || `获取${currentProjectType.label}统计数据失败`)
@@ -551,7 +573,7 @@ const OtherProjectsPage: React.FC = () => {
       // 重置表单
       const resetForm = useCallback(() => {
         setFormData({
-          department: 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
+          department: 'transfer-investment-dept-1',
           source: '',
           name: '',
           leader: 'to-be-determined',
@@ -559,13 +581,12 @@ const OtherProjectsPage: React.FC = () => {
           indication: '',
           importance: 'normal',
           status: 'early-stage',
-          transformRequirement: '',
-          transformProgress: '',
+          transformRequirements: [],
+          dockingCompany: '',
           hospitalDoctor: '',
           patent: '',
           clinicalData: '',
-          marketSize: '',
-          competitorStatus: '',
+          transformAmount: '',
           conclusion: ''
         })
       }, [])
@@ -579,21 +600,20 @@ const OtherProjectsPage: React.FC = () => {
       // 处理编辑项目
       const handleEditProject = useCallback((project: UnifiedProject) => {
         setFormData({
-          department: project.department || 'transfer-investment-dept-1', // 使用正确的英文enum值，对应转移转化与投资一部
+          department: project.department || 'transfer-investment-dept-1',
           source: project.source || '',
           name: project.name || '',
           leader: project.leader || 'to-be-determined',
-          startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
+          startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           indication: project.indication || '',
           importance: project.importance || 'normal',
-          status: project.status || 'early-stage',
-          transformRequirement: project.transformRequirement || '',
-          transformProgress: project.transformProgress || '',
+          status: (project.status || 'early-stage') as any,
+          transformRequirements: project.transformRequirements || [],
+          dockingCompany: project.dockingCompany || '',
           hospitalDoctor: project.hospitalDoctor || '',
           patent: project.patent || '',
           clinicalData: project.clinicalData || '',
-          marketSize: project.marketSize || '',
-          competitorStatus: project.competitorStatus || '',
+          transformAmount: project.transformAmount?.toString() || '',
           conclusion: project.conclusion || ''
         })
         setEditingProject(project)
@@ -650,7 +670,7 @@ const OtherProjectsPage: React.FC = () => {
       if (currentProjectType.key !== 'internal-preparation') {
         if (!data.leader.trim()) return '负责人不能为空'
         if (!data.startDate.trim()) return '开始日期不能为空'
-        if (!data.transformRequirement.trim()) return '转化需求不能为空'
+        if (!data.transformRequirements.length) return '转化需求不能为空'
       }
       
       return null
@@ -668,12 +688,26 @@ const OtherProjectsPage: React.FC = () => {
           return
         }
 
-        const submitData = {
-          ...formData,
+        const submissionData = {
+          department: formData.department,
+          source: formData.source.trim(),
+          name: formData.name.trim(),
+          leader: formData.leader,
+          startDate: formData.startDate,
+          indication: formData.indication.trim(),
+          importance: formData.importance,
+          status: formData.status as any,
+          transformRequirements: formData.transformRequirements,
+          dockingCompany: formData.dockingCompany.trim(),
+          hospitalDoctor: formData.hospitalDoctor.trim(),
+          patent: formData.patent.trim(),
+          clinicalData: formData.clinicalData.trim(),
+          transformAmount: formData.transformAmount ? parseFloat(formData.transformAmount) : undefined,
+          conclusion: formData.conclusion.trim(),
           projectType: currentProjectType.key
         }
 
-        const response = await ApiClient.post<ApiResponse<UnifiedProject>>('/projects', submitData)
+        const response = await ApiClient.post<ApiResponse<UnifiedProject>>('/projects', submissionData)
 
         if (response.success) {
           setShowCreateModal(false)
@@ -706,12 +740,26 @@ const OtherProjectsPage: React.FC = () => {
           return
         }
 
-        const submitData = {
-          ...formData,
+        const submissionData = {
+          department: formData.department,
+          source: formData.source.trim(),
+          name: formData.name.trim(),
+          leader: formData.leader,
+          startDate: formData.startDate,
+          indication: formData.indication.trim(),
+          importance: formData.importance,
+          status: formData.status as any,
+          transformRequirements: formData.transformRequirements,
+          dockingCompany: formData.dockingCompany.trim(),
+          hospitalDoctor: formData.hospitalDoctor.trim(),
+          patent: formData.patent.trim(),
+          clinicalData: formData.clinicalData.trim(),
+          transformAmount: formData.transformAmount ? parseFloat(formData.transformAmount) : undefined,
+          conclusion: formData.conclusion.trim(),
           projectType: currentProjectType.key
         }
 
-        const response = await ApiClient.put<ApiResponse<UnifiedProject>>(`/projects/${editingProject._id}`, submitData)
+        const response = await ApiClient.put<ApiResponse<UnifiedProject>>(`/projects/${editingProject._id}`, submissionData)
 
         if (response.success) {
           setShowEditModal(false)
@@ -976,11 +1024,6 @@ const OtherProjectsPage: React.FC = () => {
                                 <span className="importance-label">一般</span>
                                 <span className="importance-count">{stats.importanceCounts.normal}</span>
                               </div>
-                              <div className="importance-item not-important">
-                                <div className="importance-dot"></div>
-                                <span className="importance-label">不重要</span>
-                                <span className="importance-count">{stats.importanceCounts['not-important']}</span>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -1081,10 +1124,11 @@ const OtherProjectsPage: React.FC = () => {
                           className="filter-select"
                         >
                           <option value="">全部状态</option>
-                          <option value="early-stage">早期</option>
-                          <option value="preclinical">临床前</option>
-                          <option value="clinical-stage">临床阶段</option>
-                          <option value="market-product">上市产品</option>
+                          {getStatusOptions(currentProjectType.key).map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
@@ -1100,7 +1144,6 @@ const OtherProjectsPage: React.FC = () => {
                           <option value="very-important">非常重要</option>
                           <option value="important">重要</option>
                           <option value="normal">一般</option>
-                          <option value="not-important">不重要</option>
                         </select>
                       </div>
 
@@ -1380,7 +1423,6 @@ const OtherProjectsPage: React.FC = () => {
                       <option value="very-important">非常重要</option>
                       <option value="important">重要</option>
                       <option value="normal">一般</option>
-                      <option value="not-important">不重要</option>
                     </select>
                   </div>
 
@@ -1390,10 +1432,11 @@ const OtherProjectsPage: React.FC = () => {
                       value={formData.status}
                       onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
                     >
-                      <option value="early-stage">早期</option>
-                      <option value="preclinical">临床前</option>
-                      <option value="clinical-stage">临床阶段</option>
-                      <option value="market-product">上市产品</option>
+                      {getStatusOptions(currentProjectType.key).map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -1418,34 +1461,72 @@ const OtherProjectsPage: React.FC = () => {
                     />
                   </div>
 
-                  {/* 第六行：转化需求、转化推进状态 */}
-                  <div className="form-group">
+                  {/* 第六行：转化需求 */}
+                  <div className="form-group full-width">
                     <label>转化需求</label>
-                    <select
-                      value={formData.transformRequirement}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transformRequirement: e.target.value }))}
-                    >
-                      <option value="">请选择转化需求</option>
-                      <option value="license">许可</option>
-                      <option value="transfer">转让</option>
-                      <option value="company-operation">公司化运营</option>
-                      <option value="other">其他</option>
-                    </select>
+                    <div className="transform-requirements">
+                      {formData.transformRequirements.map((requirement, index) => (
+                        <div key={index} className="transform-requirement">
+                          <input
+                            type="text"
+                            value={requirement.type}
+                            onChange={(e) => {
+                              const newRequirements = [...formData.transformRequirements]
+                              newRequirements[index].type = e.target.value
+                              setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
+                            }}
+                            placeholder="请输入转化需求类型"
+                          />
+                          <input
+                            type="text"
+                            value={requirement.currentProgress}
+                            onChange={(e) => {
+                              const newRequirements = [...formData.transformRequirements]
+                              newRequirements[index].currentProgress = e.target.value
+                              setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
+                            }}
+                            placeholder="请输入当前进度"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newRequirements = [...formData.transformRequirements]
+                              newRequirements.splice(index, 1)
+                              setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
+                            }}
+                            className="remove-requirement"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newRequirements = [...formData.transformRequirements]
+                          newRequirements.push({ type: '', currentProgress: '' })
+                          setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
+                        }}
+                        className="add-requirement"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                        添加转化需求
+                      </button>
+                    </div>
                   </div>
 
+                  {/* 第七行：对接公司 */}
                   <div className="form-group">
-                    <label>转化推进状态</label>
-                    <select
-                      value={formData.transformProgress}
-                      onChange={(e) => setFormData(prev => ({ ...prev, transformProgress: e.target.value }))}
-                    >
-                      <option value="">请选择推进状态</option>
-                      <option value="contract-completed">签约已完成</option>
-                      <option value="contract-incomplete">签约未完成</option>
-                    </select>
+                    <label>对接公司</label>
+                    <input
+                      type="text"
+                      value={formData.dockingCompany}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dockingCompany: e.target.value }))}
+                      placeholder="请输入对接公司"
+                    />
                   </div>
 
-                  {/* 第七行：专利信息 */}
+                  {/* 第八行：专利信息 */}
                   <div className="form-group full-width">
                     <label>专利信息</label>
                     <textarea
@@ -1457,7 +1538,7 @@ const OtherProjectsPage: React.FC = () => {
                     />
                   </div>
 
-                  {/* 第八行：临床数据 */}
+                  {/* 第九行：临床数据 */}
                   <div className="form-group full-width">
                     <label>临床数据</label>
                     <textarea
@@ -1469,24 +1550,14 @@ const OtherProjectsPage: React.FC = () => {
                     />
                   </div>
 
-                  {/* 第九行：市场规模、竞品状态 */}
+                  {/* 第十行：转化金额 */}
                   <div className="form-group">
-                    <label>市场规模</label>
+                    <label>转化金额</label>
                     <input
-                      type="text"
-                      value={formData.marketSize}
-                      onChange={(e) => setFormData(prev => ({ ...prev, marketSize: e.target.value }))}
-                      placeholder="请输入市场规模"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>竞品状态</label>
-                    <input
-                      type="text"
-                      value={formData.competitorStatus}
-                      onChange={(e) => setFormData(prev => ({ ...prev, competitorStatus: e.target.value }))}
-                      placeholder="请输入竞品状态"
+                      type="number"
+                      value={formData.transformAmount}
+                      onChange={(e) => setFormData(prev => ({ ...prev, transformAmount: e.target.value }))}
+                      placeholder="请输入转化金额"
                     />
                   </div>
 
@@ -1602,19 +1673,17 @@ const OtherProjectsPage: React.FC = () => {
                   <div className="form-group">
                     <label>转化需求</label>
                     <div className="readonly-field">
-                      {formData.transformRequirement === 'license' ? '许可' :
-                       formData.transformRequirement === 'transfer' ? '转让' :
-                       formData.transformRequirement === 'company-operation' ? '公司化运营' :
-                       formData.transformRequirement === 'other' ? '其他' : '-'}
+                      {viewingProject.transformRequirements?.map(requirement => (
+                        <div key={requirement.type}>
+                          <span>{requirement.type}：{requirement.currentProgress}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label>转化推进状态</label>
-                    <div className="readonly-field">
-                      {formData.transformProgress === 'contract-completed' ? '签约已完成' :
-                       formData.transformProgress === 'contract-incomplete' ? '签约未完成' : '-'}
-                    </div>
+                    <label>对接公司</label>
+                    <div className="readonly-field">{viewingProject.dockingCompany || '-'}</div>
                   </div>
 
                   <div className="form-group full-width">
@@ -1632,13 +1701,8 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>市场规模</label>
-                    <div className="readonly-field">{viewingProject.marketSize || '-'}</div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>竞品状态</label>
-                    <div className="readonly-field">{viewingProject.competitorStatus || '-'}</div>
+                    <label>转化金额</label>
+                    <div className="readonly-field">{viewingProject.transformAmount || '-'}</div>
                   </div>
 
                   <div className="form-group full-width">
@@ -2044,10 +2108,6 @@ const OtherProjectsPage: React.FC = () => {
           background: #6b7280;
         }
 
-        .importance-item.not-important .importance-dot {
-          background: #a3a3a3;
-        }
-
         .importance-label {
           flex: 1;
           font-size: 14px;
@@ -2310,10 +2370,6 @@ const OtherProjectsPage: React.FC = () => {
 
         .importance-badge.normal {
           color: #6b7280;
-        }
-
-        .importance-badge.not-important {
-          color: #a3a3a3;
         }
 
         .actions-cell {

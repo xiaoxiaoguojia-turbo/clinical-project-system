@@ -1854,7 +1854,7 @@ const OtherProjectsPage: React.FC = () => {
           font-weight: 500;
           color: #6b7280;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s ease;
           border-bottom: 2px solid transparent;
         }
 
@@ -3103,6 +3103,341 @@ const OtherProjectsPage: React.FC = () => {
           font-size: 14px;
           font-weight: 600;
           color: #1e293b;
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* 模态框容器样式优化 */
+        .modal-container {
+          background: white;
+          border-radius: 16px;
+          max-width: 900px;
+          width: 100%;
+          max-height: 90vh;
+          overflow: hidden;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* 详情展示样式 */
+        .detail-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          padding: 8px 0;
+        }
+
+        .detail-section {
+          background: #f8fafc;
+          border-radius: 12px;
+          padding: 24px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .detail-section-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0 0 20px 0;
+          padding-bottom: 12px;
+          border-bottom: 2px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .detail-group {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 20px;
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .detail-item.full-width {
+          grid-column: 1 / -1;
+        }
+
+        .detail-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .detail-value {
+          font-size: 14px;
+          color: #1e293b;
+          padding: 12px 16px;
+          background: white;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+        }
+
+        .detail-value.detail-text {
+          white-space: pre-wrap;
+          line-height: 1.6;
+          min-height: 60px;
+          align-items: flex-start;
+          padding-top: 12px;
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* 转化需求组件样式 */
+        .transform-requirements {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .transform-requirement {
+          display: grid;
+          grid-template-columns: 1fr 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 12px;
+          background: #f8fafc;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .transform-requirement input {
+          padding: 10px 14px;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          font-size: 14px;
+          transition: all 0.2s ease;
+        }
+
+        .transform-requirement input:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .remove-requirement {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: #fee2e2;
+          color: #dc2626;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .remove-requirement:hover {
+          background: #fecaca;
+          transform: scale(1.05);
+        }
+
+        .add-requirement {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 10px 16px;
+          border: 2px dashed #cbd5e1;
+          background: white;
+          color: #64748b;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .add-requirement:hover {
+          border-color: #3b82f6;
+          color: #3b82f6;
+          background: #eff6ff;
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* 优化的徽章样式 - 状态徽章 */
+        .status-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 500;
+          white-space: nowrap;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .status-badge::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          transition: left 0.5s ease;
+        }
+
+        .status-badge:hover::before {
+          left: 100%;
+        }
+
+        .status-badge:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-badge.early-stage {
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+          color: #92400e;
+          border: 1px solid #fbbf24;
+        }
+
+        .status-badge.preclinical {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          color: #1e40af;
+          border: 1px solid #60a5fa;
+        }
+
+        .status-badge.sample-design {
+          background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+          color: #3730a3;
+          border: 1px solid #818cf8;
+        }
+
+        .status-badge.type-inspection {
+          background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+          color: #831843;
+          border: 1px solid #f472b6;
+        }
+
+        .status-badge.clinical-stage {
+          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+          color: #065f46;
+          border: 1px solid #34d399;
+        }
+
+        .status-badge.market-product {
+          background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
+          color: #6b21a8;
+          border: 1px solid #a855f7;
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* 优化的徽章样式 - 重要程度徽章 */
+        .importance-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 500;
+          white-space: nowrap;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .importance-badge::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          transition: left 0.5s ease;
+        }
+
+        .importance-badge:hover::before {
+          left: 100%;
+        }
+
+        .importance-badge:hover {
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        }
+
+        .importance-badge.very-important {
+          background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+          color: #991b1b;
+          border: 1px solid #f87171;
+          box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+        }
+
+        .importance-badge.very-important:hover {
+          box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+        }
+
+        .importance-badge.important {
+          background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+          color: #9a3412;
+          border: 1px solid #fb923c;
+          box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+        }
+
+        .importance-badge.important:hover {
+          box-shadow: 0 4px 16px rgba(249, 115, 22, 0.4);
+        }
+
+        .importance-badge.normal {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          color: #1e40af;
+          border: 1px solid #60a5fa;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+
+        .importance-badge.normal:hover {
+          box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* 优化的表单输入样式 */
+        .form-input {
+          padding: 14px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          color: #374151;
+          transition: all 0.2s ease;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input.error {
+          border-color: #ef4444;
+        }
+
+        .form-input.error:focus {
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+
+        .error-text {
+          font-size: 12px;
+          color: #ef4444;
+          margin-top: 4px;
         }
       `}</style>
     </DashboardLayout>

@@ -116,7 +116,7 @@ export class CozeService {
       // 选填字段（提供默认空字符串）
       guige: project.specification || '',
       nianxian: project.duration || '',
-      yongliang: project.marketSize || '',
+      yongliang: project.clinicalData || '',
       beianhao: project.recordNumber || '',
       zhuanli: project.patent || ''
     }

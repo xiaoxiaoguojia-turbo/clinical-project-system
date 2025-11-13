@@ -137,14 +137,6 @@ const PROJECT_TYPES: ProjectTypeConfig[] = [
 // 统计数据接口
 interface ProjectStats {
   totalCount: number
-  statusCounts: {
-    'early-stage': number
-    'preclinical': number
-    'clinical-stage': number
-    'market-product': number
-    'sample-design': number
-    'type-inspection': number
-  }
   importanceCounts: {
     'very-important': number
     'important': number
@@ -152,7 +144,6 @@ interface ProjectStats {
   }
   departmentCounts: { [key: string]: number }
   leaderCounts: { [key: string]: number }
-  monthlyStats: { month: string; count: number }[]
 }
 
 // 筛选条件接口
@@ -468,30 +459,16 @@ const OtherProjectsPage: React.FC = () => {
                 // 计算统计数据
                 const stats: ProjectStats = {
                     totalCount: allProjects.length,
-                    statusCounts: {
-                        'early-stage': 0,
-                        'preclinical': 0,
-                        'clinical-stage': 0,
-                        'market-product': 0,
-                        'sample-design': 0,
-                        'type-inspection': 0
-                    },
                     importanceCounts: {
                         'very-important': 0,
                         'important': 0,
                         'normal': 0
                     },
                     departmentCounts: {},
-                    leaderCounts: {},
-                    monthlyStats: []
+                    leaderCounts: {}
                 }
 
                 allProjects.forEach((project: UnifiedProject) => {
-                    // 状态统计
-                    if (project.status && (stats.statusCounts as any)[project.status] !== undefined) {
-                        (stats.statusCounts as any)[project.status]++
-                    }
-
                     // 重要程度统计  
                     if (project.importance && stats.importanceCounts[project.importance] !== undefined) {
                         stats.importanceCounts[project.importance]++
@@ -507,28 +484,6 @@ const OtherProjectsPage: React.FC = () => {
                         stats.leaderCounts[project.leader] = (stats.leaderCounts[project.leader] || 0) + 1
                     }
                 })
-
-                // 月度统计 - 更安全的日期处理
-                const monthlyMap: { [key: string]: number } = {}
-                allProjects.forEach((project: UnifiedProject) => {
-                    try {
-                        const createDate = new Date(project.createTime)
-                        if (!isNaN(createDate.getTime())) {
-                            const month = createDate.toLocaleDateString('zh-CN', { 
-                                year: 'numeric', 
-                                month: '2-digit' 
-                            })
-                            monthlyMap[month] = (monthlyMap[month] || 0) + 1
-                        }
-                    } catch (e) {
-                        console.warn('无效的创建时间格式:', project.createTime)
-                    }
-                })
-
-                stats.monthlyStats = Object.entries(monthlyMap)
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .slice(-12)
-                  .map(([month, count]) => ({ month, count }))
 
                 setStats(stats as ProjectStats)
                 setError(null)
@@ -898,26 +853,6 @@ const OtherProjectsPage: React.FC = () => {
                         </div>
 
                         <div className="metric-card">
-                          <div className="metric-icon progress">
-                            <PlayCircleIcon className="w-8 h-8" />
-                          </div>
-                          <div className="metric-content">
-                            <h3 className="metric-value">{stats.statusCounts['early-stage']}</h3>
-                            <p className="metric-label">早期</p>
-                          </div>
-                        </div>
-
-                        <div className="metric-card">
-                          <div className="metric-icon success">
-                            <CheckCircleIcon className="w-8 h-8" />
-                          </div>
-                          <div className="metric-content">
-                            <h3 className="metric-value">{stats.statusCounts['clinical-stage']}</h3>
-                            <p className="metric-label">临床阶段</p>
-                          </div>
-                        </div>
-
-                        <div className="metric-card">
                           <div className="metric-icon important">
                             <StarIcon className="w-8 h-8" />
                           </div>
@@ -928,165 +863,34 @@ const OtherProjectsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* 图表区域 */}
-                      <div className="charts-grid">
-                        {/* 项目状态分布 */}
-                        <div className="chart-card">
-                          <div className="chart-header">
-                            <h3 className="chart-title">项目状态分布</h3>
-                            <ChartBarIcon className="w-5 h-5" />
-                          </div>
-                          <div className="chart-content">
-                            <div className="status-chart">
-                              <div className="status-item">
-                                <div className="status-bar">
-                                  <div 
-                                    className="status-fill early-stage"
-                                    style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['early-stage'] / stats.totalCount * 100) : 0}%` 
-                                    }}
-                                  ></div>
-                                </div>
-                                <div className="status-info">
-                                  <span className="status-label">早期</span>
-                                  <span className="status-count">{stats.statusCounts['early-stage']}</span>
-                                </div>
-                              </div>
-
-                              <div className="status-item">
-                                <div className="status-bar">
-                                  <div 
-                                    className="status-fill preclinical"
-                                    style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts.preclinical / stats.totalCount * 100) : 0}%` 
-                                    }}
-                                  ></div>
-                                </div>
-                                <div className="status-info">
-                                  <span className="status-label">临床前</span>
-                                  <span className="status-count">{stats.statusCounts.preclinical}</span>
-                                </div>
-                              </div>
-
-                              <div className="status-item">
-                                <div className="status-bar">
-                                  <div 
-                                    className="status-fill clinical-stage"
-                                    style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['clinical-stage'] / stats.totalCount * 100) : 0}%` 
-                                    }}
-                                  ></div>
-                                </div>
-                                <div className="status-info">
-                                  <span className="status-label">临床阶段</span>
-                                  <span className="status-count">{stats.statusCounts['clinical-stage']}</span>
-                                </div>
-                              </div>
-
-                              <div className="status-item">
-                                <div className="status-bar">
-                                  <div 
-                                    className="status-fill market-product"
-                                    style={{ 
-                                      width: `${stats.totalCount > 0 ? (stats.statusCounts['market-product'] / stats.totalCount * 100) : 0}%` 
-                                    }}
-                                  ></div>
-                                </div>
-                                <div className="status-info">
-                                  <span className="status-label">上市产品</span>
-                                  <span className="status-count">{stats.statusCounts['market-product']}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                      {/* 负责人工作量 */}
+                      <div className="chart-card">
+                        <div className="chart-header">
+                          <h3 className="chart-title">负责人工作量</h3>
+                          <UserIcon className="w-5 h-5" />
                         </div>
-
-                        {/* 重要程度分布 */}
-                        <div className="chart-card">
-                          <div className="chart-header">
-                            <h3 className="chart-title">重要程度分布</h3>
-                            <StarIcon className="w-5 h-5" />
-                          </div>
-                          <div className="chart-content">
-                            <div className="importance-chart">
-                              <div className="importance-item very-important">
-                                <div className="importance-dot"></div>
-                                <span className="importance-label">非常重要</span>
-                                <span className="importance-count">{stats.importanceCounts['very-important']}</span>
-                              </div>
-                              <div className="importance-item important">
-                                <div className="importance-dot"></div>
-                                <span className="importance-label">重要</span>
-                                <span className="importance-count">{stats.importanceCounts.important}</span>
-                              </div>
-                              <div className="importance-item normal">
-                                <div className="importance-dot"></div>
-                                <span className="importance-label">一般</span>
-                                <span className="importance-count">{stats.importanceCounts.normal}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 负责人工作量 */}
-                        <div className="chart-card">
-                          <div className="chart-header">
-                            <h3 className="chart-title">负责人工作量</h3>
-                            <UserIcon className="w-5 h-5" />
-                          </div>
-                          <div className="chart-content">
-                            <div className="leader-list">
-                              {Object.entries(stats.leaderCounts)
-                                .sort(([,a], [,b]) => b - a)
-                                .slice(0, 10)
-                                .map(([leader, count]) => (
-                                  <div key={leader} className="leader-item">
-                                    <span className="leader-name">{getLeaderLabel(leader)}</span>
-                                    <div className="leader-bar">
-                                      <div 
-                                        className="leader-fill"
-                                        style={{ 
-                                          width: `${Math.max(count / Math.max(...Object.values(stats.leaderCounts)) * 100, 5)}%` 
-                                        }}
-                                      ></div>
-                                    </div>
-                                    <span className="leader-count">{count}</span>
+                        <div className="chart-content">
+                          <div className="leader-list">
+                            {Object.entries(stats.leaderCounts)
+                              .sort(([,a], [,b]) => b - a)
+                              .slice(0, 10)
+                              .map(([leader, count]) => (
+                                <div key={leader} className="leader-item">
+                                  <span className="leader-name">{getLeaderLabel(leader)}</span>
+                                  <div className="leader-bar">
+                                    <div 
+                                      className="leader-fill"
+                                      style={{ 
+                                        width: `${Math.max(count / Math.max(...Object.values(stats.leaderCounts)) * 100, 5)}%` 
+                                      }}
+                                    ></div>
                                   </div>
-                                ))}
-                            </div>
+                                  <span className="leader-count">{count}</span>
+                                </div>
+                              ))}
                           </div>
                         </div>
                       </div>
-
-                      {/* 月度趋势 */}
-                      {stats.monthlyStats.length > 0 && (
-                        <div className="trend-section">
-                          <div className="chart-card full-width">
-                            <div className="chart-header">
-                              <h3 className="chart-title">项目创建趋势</h3>
-                              <CalendarIcon className="w-5 h-5" />
-                            </div>
-                            <div className="chart-content">
-                              <div className="monthly-chart">
-                                {stats.monthlyStats.map(({ month, count }) => (
-                                  <div key={month} className="month-item">
-                                    <div className="month-bar">
-                                      <div 
-                                        className="month-fill"
-                                        style={{ 
-                                          height: `${Math.max(count / Math.max(...stats.monthlyStats.map(s => s.count)) * 100, 10)}%` 
-                                        }}
-                                      ></div>
-                                    </div>
-                                    <span className="month-label">{month}</span>
-                                    <span className="month-count">{count}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </>
                   ) : (
                     <div className="stats-loading">
@@ -1949,16 +1753,6 @@ const OtherProjectsPage: React.FC = () => {
           color: #0288d1;
         }
 
-        .metric-icon.progress {
-          background: #fff3e0;
-          color: #f57c00;
-        }
-
-        .metric-icon.success {
-          background: #e8f5e8;
-          color: #388e3c;
-        }
-
         .metric-icon.important {
           background: #fef7cd;
           color: #f59e0b;
@@ -1981,145 +1775,6 @@ const OtherProjectsPage: React.FC = () => {
           margin: 0;
         }
 
-        .charts-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 24px;
-          margin-bottom: 32px;
-        }
-
-        .chart-card {
-          background: white;
-          border-radius: 12px;
-          padding: 24px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .chart-card.full-width {
-          grid-column: 1 / -1;
-        }
-
-        .chart-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 20px;
-        }
-
-        .chart-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0;
-        }
-
-        .chart-content {
-          min-height: 200px;
-        }
-
-        /* 状态图表 */
-        .status-chart {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .status-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .status-bar {
-          flex: 1;
-          height: 8px;
-          background: #e5e7eb;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-
-        .status-fill {
-          height: 100%;
-          border-radius: 4px;
-          transition: width 0.3s ease;
-        }
-
-        .status-fill.early-stage {
-          background: #f59e0b;
-        }
-
-        .status-fill.preclinical {
-          background: #3b82f6;
-        }
-
-        .status-fill.clinical-stage {
-          background: #10b981;
-        }
-
-        .status-fill.market-product {
-          background: #8b5cf6;
-        }
-
-        .status-info {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          min-width: 120px;
-        }
-
-        .status-label {
-          font-size: 14px;
-          color: #374151;
-        }
-
-        .status-count {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        /* 重要程度图表 */
-        .importance-chart {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .importance-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .importance-dot {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-        }
-
-        .importance-item.very-important .importance-dot {
-          background: #ef4444;
-        }
-
-        .importance-item.important .importance-dot {
-          background: #f59e0b;
-        }
-
-        .importance-item.normal .importance-dot {
-          background: #6b7280;
-        }
-
-        .importance-label {
-          flex: 1;
-          font-size: 14px;
-          color: #374151;
-        }
-
-        .importance-count {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        /* 负责人列表 */
         .leader-list {
           display: flex;
           flex-direction: column;
@@ -2163,56 +1818,6 @@ const OtherProjectsPage: React.FC = () => {
           background: #3b82f6;
           border-radius: 4px;
           transition: width 0.3s ease;
-        }
-
-        /* 月度趋势 */
-        .trend-section {
-          margin-top: 32px;
-        }
-
-        .monthly-chart {
-          display: flex;
-          align-items: end;
-          gap: 12px;
-          height: 200px;
-          overflow-x: auto;
-          padding: 20px 0;
-        }
-
-        .month-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          min-width: 60px;
-        }
-
-        .month-bar {
-          width: 24px;
-          height: 120px;
-          background: #e5e7eb;
-          border-radius: 4px;
-          display: flex;
-          align-items: end;
-          overflow: hidden;
-        }
-
-        .month-fill {
-          width: 100%;
-          background: #3b82f6;
-          border-radius: 4px 4px 0 0;
-          transition: height 0.3s ease;
-        }
-
-        .month-label {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .month-count {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1f2937;
         }
 
         /* ------------------------------------------------------------------------------------------ */
@@ -2342,13 +1947,23 @@ const OtherProjectsPage: React.FC = () => {
           color: #2563eb;
         }
 
+        .status-badge.sample-design {
+          background: #e0e7ff;
+          color: #3730a3;
+        }
+
+        .status-badge.type-inspection {
+          background: #fce7f3;
+          color: #831843;
+        }
+
         .status-badge.clinical-stage {
           background: #d1fae5;
           color: #059669;
         }
 
         .status-badge.market-product {
-          background: #ede9fe;
+          background: #e9d5ff;
           color: #7c3aed;
         }
 
@@ -2391,7 +2006,7 @@ const OtherProjectsPage: React.FC = () => {
           border: none;
           border-radius: 6px;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s ease;
         }
 
         .action-btn.view {
@@ -2747,10 +2362,6 @@ const OtherProjectsPage: React.FC = () => {
           }
 
           .metrics-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .charts-grid {
             grid-template-columns: 1fr;
           }
 

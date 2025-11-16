@@ -85,7 +85,9 @@ import {
   DashboardStats, 
   DashboardFilters, 
   StatCard as StatCardType,
-  CHART_COLORS 
+  CHART_COLORS,
+  TRANSFORM_REQUIREMENT_LABELS,
+  DEPARTMENT_LABELS
 } from '@/types/dashboard'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -130,6 +132,13 @@ export default function Dashboard() {
   
   // 数据状态
   const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null)
+  const [unfilteredData, setUnfilteredData] = useState<DashboardStats | null>(null) // 保存未筛选的数据（用于5个小卡片）
+  
+  // 筛选状态
+  const [selectedTransformTypes, setSelectedTransformTypes] = useState<string[]>([])
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([])
+  const [selectedSources, setSelectedSources] = useState<string[]>([])
+  const [allSources, setAllSources] = useState<string[]>([]) // 所有医院来源列表
 
   /* ------------------------------------------------------------------------------------------ */
 
@@ -160,26 +169,53 @@ export default function Dashboard() {
   /* ------------------------------------------------------------------------------------------ */
 
   // 加载Dashboard数据
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (applyFilters = false) => {
     try {
       console.log('开始加载Dashboard数据...')
       setLoading(true)
-      console.log('开始加载Dashboard数据...')
 
-      const result = await authenticatedFetch('/api/dashboard/stats', {
+      // 构建查询参数
+      const queryParams = new URLSearchParams()
+      
+      // 如果需要应用筛选
+      if (applyFilters) {
+        if (selectedTransformTypes.length > 0) {
+          queryParams.append('transformRequirementTypes', selectedTransformTypes.join(','))
+        }
+        if (selectedDepartments.length > 0) {
+          queryParams.append('departments', selectedDepartments.join(','))
+        }
+        if (selectedSources.length > 0) {
+          queryParams.append('sources', selectedSources.join(','))
+        }
+      }
+
+      const url = `/api/dashboard/stats${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+      const result = await authenticatedFetch(url, {
         method: 'GET'
       })
       
       if (result.success) {
         console.log('Dashboard数据加载成功:', result.data)
-        setDashboardData(result.data)
+        
+        if (applyFilters) {
+          // 筛选后的数据只更新dashboardData（用于图表）
+          setDashboardData(result.data)
+        } else {
+          // 未筛选的数据同时更新两个状态
+          setDashboardData(result.data)
+          setUnfilteredData(result.data)
+          
+          // 提取所有医院来源
+          const sources = result.data.overview.bySource.map((item: any) => item.label)
+          setAllSources(sources)
+        }
       } else {
         console.error('Dashboard数据加载失败:', result.error)
         alert('加载统计数据失败: ' + result.error)
       }
     } catch (error) {
       console.error('Dashboard数据加载异常:', error)
-      // 如果是令牌过期错误或未找到令牌错误，不显示alert（因为已经跳转）
       if (error instanceof Error && (
         error.message === '认证令牌已过期' || 
         error.message === '未找到认证令牌'
@@ -196,16 +232,48 @@ export default function Dashboard() {
   // 刷新数据
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadDashboardData()
+    await loadDashboardData(false)
+  }
+
+  // 应用筛选
+  const applyFilters = async () => {
+    await loadDashboardData(true)
+  }
+
+  // 重置筛选
+  const resetFilters = async () => {
+    setSelectedTransformTypes([])
+    setSelectedDepartments([])
+    setSelectedSources([])
+    await loadDashboardData(false)
+  }
+
+  // 筛选器变化处理
+  const handleTransformTypeChange = (type: string) => {
+    setSelectedTransformTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    )
+  }
+
+  const handleDepartmentChange = (dept: string) => {
+    setSelectedDepartments(prev => 
+      prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
+    )
+  }
+
+  const handleSourceChange = (source: string) => {
+    setSelectedSources(prev => 
+      prev.includes(source) ? prev.filter(s => s !== source) : [...prev, source]
+    )
   }
 
   /* ------------------------------------------------------------------------------------------ */
 
-  // 生成统计卡片数据
+  // 生成统计卡片数据（始终使用未筛选的数据）
   const getStatCards = (): StatCard[] => {
-    if (!dashboardData) return []
+    if (!unfilteredData) return []
 
-    const { overview } = dashboardData
+    const { overview } = unfilteredData
 
     return [
       {
@@ -223,14 +291,14 @@ export default function Dashboard() {
         color: 'green'
       },
       {
-        title: '公司化运营',
+        title: '公司化运营项目',
         value: overview.companyOperationCount,
         unit: '个',
         icon: BuildingOffice2Icon,
         color: 'purple'
       },
       {
-        title: '许可转让',
+        title: '许可转让项目',
         value: overview.licenseTransferCount,
         unit: '个',
         icon: DocumentTextIcon,
@@ -429,6 +497,90 @@ export default function Dashboard() {
               ))}
             </div>
 
+            {/* 筛选器区域 */}
+            <div className="filters-section">
+              <div className="filters-header">
+                <div className="filters-title">
+                  <FunnelIcon className="w-5 h-5" />
+                  <h2>数据筛选</h2>
+                </div>
+                <div className="filters-actions">
+                  <button
+                    className="filter-btn apply-btn"
+                    onClick={applyFilters}
+                  >
+                    <CheckCircleIcon className="w-4 h-4" />
+                    应用筛选
+                  </button>
+                  <button
+                    className="filter-btn reset-btn"
+                    onClick={resetFilters}
+                  >
+                    <ArrowPathIcon className="w-4 h-4" />
+                    重置
+                  </button>
+                </div>
+              </div>
+
+              <div className="filters-content">
+                {/* 转化需求类型筛选 */}
+                <div className="filter-group">
+                  <label className="filter-label">转化需求类型</label>
+                  <div className="filter-options">
+                    {Object.entries(TRANSFORM_REQUIREMENT_LABELS).map(
+                      ([key, label]) => (
+                        <label key={key} className="checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={selectedTransformTypes.includes(key)}
+                            onChange={() => handleTransformTypeChange(key)}
+                            className="checkbox-input"
+                          />
+                          <span className="checkbox-text">{label}</span>
+                        </label>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* 归属部门筛选 */}
+                <div className="filter-group">
+                  <label className="filter-label">归属部门</label>
+                  <div className="filter-options">
+                    {Object.entries(DEPARTMENT_LABELS).map(([key, label]) => (
+                      <label key={key} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={selectedDepartments.includes(key)}
+                          onChange={() => handleDepartmentChange(key)}
+                          className="checkbox-input"
+                        />
+                        <span className="checkbox-text">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 医院来源筛选 */}
+                <div className="filter-group">
+                  <label className="filter-label">医院来源</label>
+                  <div className="filter-options">
+                    {allSources.map((source) => (
+                      <label key={source} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.includes(source)}
+                          onChange={() => handleSourceChange(source)}
+                          className="checkbox-input"
+                        />
+                        <span className="checkbox-text">{source}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* 图表容器 */}
             <div className="charts-container">
               {getChartConfigs && (
@@ -556,6 +708,149 @@ export default function Dashboard() {
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 24px;
           margin-bottom: 28px;
+        }
+
+        /* 筛选器区域 */
+        .filters-section {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          margin-bottom: 28px;
+          overflow: hidden;
+        }
+
+        .filters-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border-bottom: 2px solid #e5e7eb;
+        }
+
+        .filters-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .filters-title :global(svg) {
+          color: #f59e0b;
+        }
+
+        .filters-title h2 {
+          font-size: 18px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .filters-actions {
+          display: flex;
+          gap: 12px;
+        }
+
+        .filter-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .apply-btn {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+
+        .apply-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .reset-btn {
+          background: #f1f5f9;
+          color: #64748b;
+          border: 2px solid #e2e8f0;
+        }
+
+        .reset-btn:hover {
+          background: #e2e8f0;
+          border-color: #cbd5e1;
+        }
+
+        .filters-content {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 24px;
+          padding: 24px;
+        }
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .filter-label {
+          font-size: 14px;
+          font-weight: 600;
+          color: #475569;
+          margin: 0;
+        }
+
+        .filter-options {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: #f8fafc;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          user-select: none;
+        }
+
+        .checkbox-label:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+
+        .checkbox-input {
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+          accent-color: #f59e0b;
+        }
+
+        .checkbox-text {
+          font-size: 14px;
+          color: #334155;
+          font-weight: 500;
+        }
+
+        .checkbox-label:has(.checkbox-input:checked) {
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+          border-color: #f59e0b;
+        }
+
+        .checkbox-label:has(.checkbox-input:checked) .checkbox-text {
+          color: #92400e;
+          font-weight: 600;
         }
 
         .stat-card {

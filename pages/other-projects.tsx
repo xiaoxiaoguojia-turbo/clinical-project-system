@@ -247,7 +247,7 @@ const OtherProjectsPage: React.FC = () => {
     // 负责人选项数据定义
     const leaderOptions = [
       { value: 'to-be-determined', label: '待定' },
-      { value: 'yangfeng', label: '杨逢' },
+      { value: 'yangfeng', label: '杨锋' },
       { value: 'qinqingsong', label: '秦青松' },
       { value: 'haojingjing', label: '郝晶晶' },
       { value: 'chenlong', label: '陈龙' },

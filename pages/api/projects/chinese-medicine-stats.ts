@@ -2,17 +2,14 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import connectDB from '@/lib/mongodb'
 import UnifiedProject from '@/models/UnifiedProject'
 import { authMiddleware, AuthenticatedRequest } from '@/middleware/auth'
-import { 
-  DashboardStats, 
-  ProjectOverviewStats, 
-  StatItem,
-  DEPARTMENT_LABELS,
-  PROJECT_TYPE_LABELS
+import {
+  DEPARTMENT_LABELS
 } from '@/types/dashboard'
 
 /* ------------------------------------------------------------------------------------------ */
 
-async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiResponse) {
+// 中药现代化项目统计接口
+async function handleChineseMedicineStats(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
@@ -24,26 +21,9 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
     // 连接数据库
     await connectDB()
 
-    // 获取筛选参数
-    const { transformRequirementTypes, departments, sources } = req.query
-
-    // 构建查询条件
-    const matchConditions: any = {}
-    
-    // 转化需求类型筛选（查询transformRequirements数组）
-    if (transformRequirementTypes && typeof transformRequirementTypes === 'string') {
-      const types = transformRequirementTypes.split(',')
-      matchConditions['transformRequirements.type'] = { $in: types }
-    }
-
-    // 部门筛选
-    if (departments && typeof departments === 'string') {
-      matchConditions.department = { $in: departments.split(',') }
-    }
-
-    // 医院来源筛选
-    if (sources && typeof sources === 'string') {
-      matchConditions.source = { $in: sources.split(',') }
+    // 查询中药现代化项目
+    const matchConditions: any = {
+      projectType: 'chinese-medicine-modernization'
     }
 
     // 聚合管道获取完整统计
@@ -78,12 +58,6 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
             { $count: 'count' }
           ],
           
-          // 按项目类型分组
-          byProjectType: [
-            { $group: { _id: '$projectType', count: { $sum: 1 } } },
-            { $sort: { count: -1 } }
-          ],
-          
           // 按部门分组
           byDepartment: [
             { $group: { _id: '$department', count: { $sum: 1 } } },
@@ -96,32 +70,16 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
             { $sort: { count: -1 } }
           ],
           
-          // 转化金额统计
-          transformAmountStats: [
-            { $match: { transformAmount: { $exists: true, $ne: null, $gt: 0 } } },
-            {
-              $group: {
-                _id: null,
-                total: { $sum: '$transformAmount' },
-                average: { $avg: '$transformAmount' },
-                count: { $sum: 1 }
-              }
-            }
+          // 按项目进展状态分组
+          byStatus: [
+            { $group: { _id: '$status', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
           ],
           
-          // 转化金额分布（按区间）
-          transformAmountDistribution: [
-            { $match: { transformAmount: { $exists: true, $ne: null, $gt: 0 } } },
-            {
-              $bucket: {
-                groupBy: '$transformAmount',
-                boundaries: [0, 100, 500, 1000, 100000],
-                default: 'other',
-                output: {
-                  count: { $sum: 1 }
-                }
-              }
-            }
+          // 按重要程度分组
+          byImportance: [
+            { $group: { _id: '$importance', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
           ]
         }
       }
@@ -133,55 +91,47 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
     const companyOperationCount = stats.companyOperationCount[0]?.count || 0
     const licenseTransferCount = stats.licenseTransferCount[0]?.count || 0
     const pendingCount = stats.pendingCount[0]?.count || 0
-    
-    // 转化金额统计
-    const transformAmountStats = stats.transformAmountStats[0] || { total: 0, average: 0, count: 0 }
-    const totalTransformAmount = Math.round(transformAmountStats.total || 0)
-    const averageTransformAmount = Math.round(transformAmountStats.average || 0)
-    
-    // 格式化转化金额分布
-    const transformAmountDistribution: StatItem[] = (stats.transformAmountDistribution || []).map((item: any) => {
-      let label = ''
-      if (item._id === 0) label = '0-100万'
-      else if (item._id === 100) label = '100-500万'
-      else if (item._id === 500) label = '500-1000万'
-      else if (item._id === 1000) label = '1000万以上'
-      else label = '其他'
-      
-      return {
-        label,
-        value: item.count,
-        percentage: totalProjects > 0 ? Math.round((item.count / totalProjects) * 100) : 0
-      }
-    })
+
+    // 状态标签映射（中药现代化专用）
+    const STATUS_LABELS: Record<string, string> = {
+      'hospital-preparation': '院内制剂',
+      'experience-formula': '经验方',
+      'protocol-formula': '协定方',
+      'early-research': '早期研究'
+    }
+
+    // 重要程度标签映射
+    const IMPORTANCE_LABELS: Record<string, string> = {
+      'very-important': '非常重要',
+      'important': '重要',
+      'normal': '一般'
+    }
 
     // 构建响应数据
-    const overview: ProjectOverviewStats = {
+    const overview = {
       totalProjects,
       investmentCount,
       companyOperationCount,
       licenseTransferCount,
       pendingCount,
-      byProjectType: formatStatItems(stats.byProjectType, PROJECT_TYPE_LABELS, totalProjects),
       byDepartment: formatStatItems(stats.byDepartment, DEPARTMENT_LABELS, totalProjects),
       bySource: formatStatItems(stats.bySource, {}, totalProjects),
-      totalTransformAmount,
-      averageTransformAmount,
-      transformAmountDistribution
+      byStatus: formatStatItems(stats.byStatus, STATUS_LABELS, totalProjects),
+      byImportance: formatStatItems(stats.byImportance, IMPORTANCE_LABELS, totalProjects)
     }
 
-    const dashboardStats: DashboardStats = {
+    const statsData = {
       overview,
       lastUpdated: new Date().toISOString()
     }
 
     res.status(200).json({
       success: true,
-      data: dashboardStats
+      data: statsData
     })
 
   } catch (error) {
-    console.error('Dashboard统计API错误:', error)
+    console.error('中药现代化统计API错误:', error)
     res.status(500).json({
       success: false,
       error: '获取统计数据失败'
@@ -190,7 +140,7 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
 }
 
 // 使用认证中间件包装处理函数
-export default authMiddleware(handleDashboardStats)
+export default authMiddleware(handleChineseMedicineStats)
 
 /* ------------------------------------------------------------------------------------------ */
 
@@ -199,7 +149,7 @@ function formatStatItems(
   aggregateResults: Array<{_id: string, count: number}>, 
   labelMap: Record<string, string>,
   total: number
-): StatItem[] {
+): Array<{label: string, value: number, percentage: number}> {
   return aggregateResults.map(item => ({
     label: labelMap[item._id] || item._id || '未分类',
     value: item.count,

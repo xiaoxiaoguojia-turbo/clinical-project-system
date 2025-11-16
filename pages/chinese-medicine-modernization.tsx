@@ -26,7 +26,9 @@ import {
   ExclamationTriangleIcon,
   ArrowPathIcon,
   StarIcon,
-  ClockIcon
+  ClockIcon,
+  BanknotesIcon,
+  CubeIcon
 } from '@heroicons/react/24/outline'
 import { 
   ApiResponse, 
@@ -36,7 +38,14 @@ import {
 } from '@/types'
 import { TokenManager, authenticatedFetch } from '@/utils/auth'
 import TransformRequirementsForm from '@/components/TransformRequirementsForm'
+import { CHART_COLORS } from '@/types/dashboard'
 
+// Chart.js 类型声明
+declare global {
+  interface Window {
+    Chart: any
+  }
+}
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -66,10 +75,15 @@ const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayou
 })
 
 interface PreparationStats {
-  totalPreparations: number
-  veryImportantCount: number
-  hospitalPreparationCount: number
-  experienceFormulaCount: number
+  totalProjects: number
+  investmentCount: number
+  companyOperationCount: number
+  licenseTransferCount: number
+  pendingCount: number
+  byDepartment: Array<{label: string; value: number; percentage: number}>
+  bySource: Array<{label: string; value: number; percentage: number}>
+  byStatus: Array<{label: string; value: number; percentage: number}>
+  byImportance: Array<{label: string; value: number; percentage: number}>
 }
 
 interface StatCard {
@@ -91,10 +105,15 @@ export default function InternalPreparationsPage() {
   const [statusFilter, setStatusFilter] = useState('全部状态')
   
   const [preparationStats, setPreparationStats] = useState<PreparationStats>({
-    totalPreparations: 0,
-    veryImportantCount: 0,
-    hospitalPreparationCount: 0,
-    experienceFormulaCount: 0
+    totalProjects: 0,
+    investmentCount: 0,
+    companyOperationCount: 0,
+    licenseTransferCount: 0,
+    pendingCount: 0,
+    byDepartment: [],
+    bySource: [],
+    byStatus: [],
+    byImportance: []
   })
   
   const [preparations, setPreparations] = useState<UnifiedProject[]>([])
@@ -172,6 +191,201 @@ export default function InternalPreparationsPage() {
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
+  // 加载统计数据
+  const loadStatisticsData = async () => {
+    try {
+      setLoading(true)
+      
+      const result = await authenticatedFetch('/api/projects/chinese-medicine-stats', {
+        method: 'GET'
+      })
+  
+      if (result.success && result.data) {
+        console.log('统计数据加载成功:', result.data)  // 添加日志
+        setPreparationStats(result.data.overview)
+      
+        // 初始化图表 - 需要等待DOM渲染
+        setTimeout(() => {
+          console.log('开始初始化图表')  // 添加日志
+          initCharts(result.data.overview)
+        }, 500)  // 增加延迟到500ms
+      } else {
+        console.error('加载统计数据失败:', result.error)
+      }
+    } catch (error) {
+      console.error('加载统计数据异常:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  /* ------------------------------------------------------------------------------------------ */
+
+  // 初始化图表
+  const initCharts = (stats: PreparationStats) => {
+    console.log('initCharts 被调用，数据:', stats)  // 添加日志
+
+    if (typeof window === 'undefined' || !window.Chart) {
+      console.log('Chart.js 未加载')  // 添加日志
+      return
+    }
+
+    const Chart = window.Chart
+    console.log('Chart.js 已加载')  // 添加日志
+
+    // 销毁旧图表
+    Object.values(charts).forEach(chart => {
+      if (chart) chart.destroy()
+    })
+
+    const newCharts: {[key: string]: any} = {}
+
+    // 1. 归属部门分布图
+    const deptCanvas = document.getElementById('departmentChart') as HTMLCanvasElement
+    if (deptCanvas) {
+      newCharts.department = new Chart(deptCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: stats.byDepartment.map(item => item.label),
+          datasets: [{
+            data: stats.byDepartment.map(item => item.value),
+            backgroundColor: CHART_COLORS.department,
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              usePointStyle: true,
+              font: { size: 11 }
+            }
+          }
+        }
+      }
+    })
+    }
+
+    // 2. 医院来源分布图
+    const sourceCanvas = document.getElementById('sourceChart') as HTMLCanvasElement
+    if (sourceCanvas) {
+      newCharts.source = new Chart(sourceCanvas, {
+        type: 'bar',
+        data: {
+          labels: stats.bySource.map(item => item.label),
+          datasets: [{
+            label: '项目数量',
+            data: stats.bySource.map(item => item.value),
+            backgroundColor: CHART_COLORS.source,
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    })
+  }
+
+  // 3. 项目进展状态图
+  const statusCanvas = document.getElementById('statusChart') as HTMLCanvasElement
+  if (statusCanvas) {
+    newCharts.status = new Chart(statusCanvas, {
+      type: 'bar',
+      data: {
+        labels: stats.byStatus.map(item => item.label),
+        datasets: [{
+          label: '项目数量',
+          data: stats.byStatus.map(item => item.value),
+          backgroundColor: CHART_COLORS.status,
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    })
+  }
+
+  // 4. 重要程度分布图
+  const importanceCanvas = document.getElementById('importanceChart') as HTMLCanvasElement
+  if (importanceCanvas) {
+    newCharts.importance = new Chart(importanceCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: stats.byImportance.map(item => item.label),
+        datasets: [{
+          data: stats.byImportance.map(item => item.value),
+          backgroundColor: CHART_COLORS.importance,
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              usePointStyle: true,
+              font: { size: 11 }
+            }
+          }
+        }
+      }
+    })
+  }
+
+  setCharts(newCharts)
+}
+  
+  // 加载 Chart.js
+  useEffect(() => {
+    const loadChartJS = () => {
+      if (typeof window !== 'undefined' && !window.Chart) {
+        const script = document.createElement('script')
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
+        script.async = false  // 同步加载，确保在使用前加载完成
+        script.onload = () => {
+          console.log('Chart.js 加载完成')
+        }
+        script.onerror = () => {
+          console.error('Chart.js 加载失败')
+        }
+        document.head.appendChild(script)
+      }
+    }
+    
+    loadChartJS()
+  }, [])
+
   // 认证检查和数据加载
   useEffect(() => {
     setMounted(true)
@@ -184,7 +398,7 @@ export default function InternalPreparationsPage() {
         }
         
         setIsAuthenticated(true)
-        await loadPreparationData()
+        await loadStatisticsData()
       } catch (error) {
         console.error('认证检查失败:', error)
         window.location.href = '/login'
@@ -193,13 +407,6 @@ export default function InternalPreparationsPage() {
 
     checkAuth()
   }, [])
-
-  // 图表初始化
-  useEffect(() => {
-    if (!loading && typeof window !== 'undefined' && activeTab === 'statistics') {
-      initializeCharts()
-    }
-  }, [loading, activeTab, preparationStats])
 
   // 项目列表数据加载
   useEffect(() => {
@@ -248,228 +455,36 @@ export default function InternalPreparationsPage() {
   }
 
   const calculateStats = (projects: UnifiedProject[]): PreparationStats => {
-    const totalPreparations = projects.length
-    const veryImportantCount = projects.filter(p => p.importance === 'very-important').length
-    const hospitalPreparationCount = projects.filter(p => p.status === 'hospital-preparation').length
-    const experienceFormulaCount = projects.filter(p => p.status === 'experience-formula').length
+    const totalProjects = projects.length
+    const investmentCount = projects.filter(p => 
+      p.transformRequirements?.some(req => req.type === 'investment')
+    ).length
+    const companyOperationCount = projects.filter(p => 
+      p.transformRequirements?.some(req => req.type === 'company-operation')
+    ).length
+    const licenseTransferCount = projects.filter(p => 
+      p.transformRequirements?.some(req => req.type === 'license-transfer')
+    ).length
+    const pendingCount = projects.filter(p => 
+      p.transformRequirements?.some(req => req.type === 'pending')
+    ).length
 
     return {
-      totalPreparations,
-      veryImportantCount,
-      hospitalPreparationCount,
-      experienceFormulaCount
+      totalProjects,
+      investmentCount,
+      companyOperationCount,
+      licenseTransferCount,
+      pendingCount,
+      byDepartment: [],
+      bySource: [],
+      byStatus: [],
+      byImportance: []
     }
   }
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
-  // 图表初始化函数
-  const initializeCharts = async () => {
-    try {
-      // 动态导入 Chart.js
-      const Chart = (await import('chart.js/auto')).default
-      
-      // 先清理所有现有的图表实例
-      const chartIds = ['departmentChart', 'sourceChart', 'importanceChart', 'statusChart']
-      chartIds.forEach(chartId => {
-        const existingChart = Chart.getChart(chartId)
-        if (existingChart) {
-          existingChart.destroy()
-        }
-      })
-      
-      const chartConfigs = getChartConfigs()
-      const newCharts: {[key: string]: any} = {}
-
-      // 添加延迟确保DOM元素已渲染和旧图表已清理
-      setTimeout(() => {
-        Object.entries(chartConfigs).forEach(([key, config]) => {
-          const canvas = document.getElementById(key) as HTMLCanvasElement
-          if (canvas) {
-            // 再次检查是否有现有图表实例
-            const existingChart = Chart.getChart(canvas)
-            if (existingChart) {
-              existingChart.destroy()
-            }
-            
-            const ctx = canvas.getContext('2d')
-            if (ctx) {
-              newCharts[key] = new Chart(ctx, config as any)
-            }
-          }
-        })
-        setCharts(newCharts)
-      }, 100)
-    } catch (error) {
-      console.error('图表初始化失败:', error)
-    }
-  }
-
-  const getChartConfigs = () => {
-    // 1. 归属部门统计
-    const departmentData = preparations.reduce((acc, prep) => {
-      acc[prep.department] = (acc[prep.department] || 0) + 1
-      return acc
-    }, {} as {[key: string]: number})
-    
-    const departmentLabels = Object.keys(departmentData).map(key => {
-      const labels: {[key: string]: string} = {
-        'transfer-investment-dept-1': '转移转化与投资一部',
-        'transfer-investment-dept-2': '转移转化与投资二部',
-        'transfer-investment-dept-3': '转移转化与投资三部'
-      }
-      return labels[key] || key
-    })
-    const departmentValues = Object.values(departmentData)
-
-    // 2. 医院来源统计
-    const sourceData = preparations.reduce((acc, prep) => {
-      acc[prep.source] = (acc[prep.source] || 0) + 1
-      return acc
-    }, {} as {[key: string]: number})
-    
-    const sourceLabels = Object.keys(sourceData).slice(0, 10)
-    const sourceValues = sourceLabels.map(label => sourceData[label])
-
-    // 3. 重要程度统计
-    const importanceData = preparations.reduce((acc, prep) => {
-      acc[prep.importance] = (acc[prep.importance] || 0) + 1
-      return acc
-    }, {} as {[key: string]: number})
-    
-    const importanceLabels = Object.keys(importanceData).map(key => {
-      const labels: {[key: string]: string} = {
-        'very-important': '非常重要',
-        'important': '重要',
-        'normal': '一般'
-      }
-      return labels[key] || key
-    })
-    const importanceValues = Object.values(importanceData)
-
-    // 4. 项目进展状态统计
-    const statusData = preparations.reduce((acc, prep) => {
-      acc[prep.status] = (acc[prep.status] || 0) + 1
-      return acc
-    }, {} as {[key: string]: number})
-    
-    const statusLabels = Object.keys(statusData).map(key => {
-      const labels: {[key: string]: string} = {
-        'hospital-preparation': '院内制剂',
-        'experience-formula': '经验方',
-        'protocol-formula': '协定方',
-        'early-research': '早期研究'
-      }
-      return labels[key] || key
-    })
-    const statusValues = Object.values(statusData)
-
-    return {
-      // 1. 归属部门 - 柱状图
-      departmentChart: {
-        type: 'bar' as const,
-        data: {
-          labels: departmentLabels,
-          datasets: [{
-            label: '项目数量',
-            data: departmentValues,
-            backgroundColor: '#3b82f6',
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
-      },
-
-      // 2. 医院来源 - 柱状图
-      sourceChart: {
-        type: 'bar' as const,
-        data: {
-          labels: sourceLabels,
-          datasets: [{
-            label: '项目数量',
-            data: sourceValues,
-            backgroundColor: '#10b981',
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
-      },
-
-      // 3. 重要程度 - 饼图
-      importanceChart: {
-        type: 'pie' as const,
-        data: {
-          labels: importanceLabels,
-          datasets: [{
-            data: importanceValues,
-            backgroundColor: ['#dc2626', '#ea580c', '#059669', '#6b7280'],
-            borderColor: '#ffffff',
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom' as const,
-              labels: { padding: 15, usePointStyle: true }
-            }
-          }
-        }
-      },
-
-      // 4. 项目进展状态 - 环形图
-      statusChart: {
-        type: 'doughnut' as const,
-        data: {
-          labels: statusLabels,
-          datasets: [{
-            data: statusValues,
-            backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'],
-            borderWidth: 0,
-            cutout: '60%'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom' as const,
-              labels: { padding: 15, usePointStyle: true }
-            }
-          }
-        }
-      }
-    }
-  }
+  
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -1068,31 +1083,38 @@ export default function InternalPreparationsPage() {
   const statisticCards: StatCard[] = [
     {
       title: '总项目数',
-      value: preparationStats.totalPreparations,
+      value: preparationStats.totalProjects,
       unit: '个',
-      icon: BeakerIcon,
+      icon: CubeIcon,
       color: 'blue'
     },
     {
-      title: '非常重要',
-      value: preparationStats.veryImportantCount,
+      title: '投资项目',
+      value: preparationStats.investmentCount,
       unit: '个',
-      icon: StarIcon,
-      color: 'red'
-    },
-    {
-      title: '院内制剂',
-      value: preparationStats.hospitalPreparationCount,
-      unit: '个',
-      icon: CheckCircleIcon,
+      icon: BanknotesIcon,
       color: 'green'
     },
     {
-      title: '经验方',
-      value: preparationStats.experienceFormulaCount,
+      title: '公司化运营项目',
+      value: preparationStats.companyOperationCount,
       unit: '个',
-      icon: ClipboardDocumentListIcon,
+      icon: BuildingOffice2Icon,
       color: 'purple'
+    },
+    {
+      title: '许可转让项目',
+      value: preparationStats.licenseTransferCount,
+      unit: '个',
+      icon: DocumentTextIcon,
+      color: 'emerald'
+    },
+    {
+      title: '待推进项目',
+      value: preparationStats.pendingCount,
+      unit: '个',
+      icon: ClockIcon,
+      color: 'amber'
     }
   ]
   
@@ -1216,6 +1238,18 @@ export default function InternalPreparationsPage() {
             <div className="charts-grid">
               <div className="chart-card">
                 <div className="chart-header">
+                  <h3>归属部门分布</h3>
+                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
+                    <EllipsisVerticalIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <canvas id="departmentChart"></canvas>
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
                   <h3>医院来源分布</h3>
                   <button className="chart-menu" onClick={() => console.log('Chart menu')}>
                     <EllipsisVerticalIcon className="w-4 h-4" />
@@ -1228,18 +1262,6 @@ export default function InternalPreparationsPage() {
 
               <div className="chart-card">
                 <div className="chart-header">
-                  <h3>重要程度分布</h3>
-                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
-                    <EllipsisVerticalIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="chart-container">
-                  <canvas id="importanceChart"></canvas>
-                </div>
-              </div>
-
-              <div className="chart-card">
-                <div className="chart-header">
                   <h3>项目进展状态</h3>
                   <button className="chart-menu" onClick={() => console.log('Chart menu')}>
                     <EllipsisVerticalIcon className="w-4 h-4" />
@@ -1247,6 +1269,18 @@ export default function InternalPreparationsPage() {
                 </div>
                 <div className="chart-container">
                   <canvas id="statusChart"></canvas>
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>重要程度分布</h3>
+                  <button className="chart-menu" onClick={() => console.log('Chart menu')}>
+                    <EllipsisVerticalIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="chart-container">
+                  <canvas id="importanceChart"></canvas>
                 </div>
               </div>
             </div>

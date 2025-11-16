@@ -40,8 +40,9 @@ export interface DashboardStatsResponse {
 
 // 筛选参数接口
 export interface DashboardFilters {
-  projectTypes?: string[]
-  departments?: string[]
+  transformRequirementTypes?: string[]  // 转化需求类型筛选
+  departments?: string[]                // 归属部门筛选
+  sources?: string[]                    // 医院来源筛选
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -116,10 +117,10 @@ export const LEADER_LABELS: Record<string, string> = {
 }
 
 export const TRANSFORM_REQUIREMENT_LABELS: Record<string, string> = {
-  'license': '许可',
-  'transfer': '转让',
+  'investment': '投资',
   'company-operation': '公司化运营',
-  'other': '其他'
+  'license-transfer': '许可转让',
+  'pending': '待推进'
 }
 
 export const TRANSFORM_PROGRESS_LABELS: Record<string, string> = {

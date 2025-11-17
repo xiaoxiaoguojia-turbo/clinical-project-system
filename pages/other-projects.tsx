@@ -37,9 +37,11 @@ import {
 import { 
   ApiResponse, 
   PaginatedResponse,
-  UnifiedProject 
+  UnifiedProject,
+  TransformRequirement
 } from '@/types'
 import { TokenManager, ApiClient } from '@/utils/auth'
+import TransformRequirementsForm from '@/components/TransformRequirementsForm'
 
 // 动态导入组件，禁用SSR
 const DashboardLayout = dynamic(() => import('@/components/layout/DashboardLayout'), {
@@ -163,7 +165,7 @@ interface ProjectFormData {
   indication: string
   importance: 'very-important' | 'important' | 'normal'
   status: 'early-stage' | 'preclinical' | 'clinical-stage' | 'market-product' | 'sample-design' | 'type-inspection'
-  transformRequirements: { type: string; currentProgress: string }[]
+  transformRequirements: TransformRequirement[]
   dockingCompany: string
   hospitalDoctor: string
   patent: string
@@ -237,6 +239,10 @@ const OtherProjectsPage: React.FC = () => {
       conclusion: ''
     })
 
+    // 表单验证错误状态
+    const [createFormErrors, setCreateFormErrors] = useState<Record<string, string>>({})
+    const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>({})
+
     // 部门选项数据定义
     const departmentOptions = [
       { value: 'transfer-investment-dept-1', label: '转移转化与投资一部' },
@@ -256,10 +262,35 @@ const OtherProjectsPage: React.FC = () => {
       { value: 'xiaolanchuan', label: '肖兰川' }
     ]
 
+    // 项目类型选项数据定义
+    const projectTypeOptions = [
+      { value: 'ai-medical-research', label: 'AI医疗及系统研究' },
+      { value: 'diagnostic-detection', label: '检测诊断' },
+      { value: 'cell-therapy', label: '细胞治疗' },
+      { value: 'drug', label: '药物研发' },
+      { value: 'medical-device', label: '医疗器械' },
+      { value: 'medical-material', label: '医用材料' },
+      { value: 'other', label: '其他项目' }
+    ]
+
+    // 转化需求类型选项数据定义
+    const transformRequirementOptions = [
+      { value: 'investment', label: '投资' },
+      { value: 'company-operation', label: '公司化运营' },
+      { value: 'license-transfer', label: '许可转让' },
+      { value: 'pending', label: '待推进' }
+    ]
+
     // 字段映射函数 - 将英文枚举值转换为中文显示
     const getLeaderLabel = (value: string): string => {
       const leader = leaderOptions.find(opt => opt.value === value)
       return leader?.label || value
+    }
+
+    // 转化需求类型选项数据定义
+    const getTransformRequirementLabel = (value: string): string => {
+      const transformRequirement = transformRequirementOptions.find(opt => opt.value === value)
+      return transformRequirement?.label || value
     }
 
     const getStatusLabel = (value: string): string => {
@@ -544,11 +575,14 @@ const OtherProjectsPage: React.FC = () => {
           transformAmount: '',
           conclusion: ''
         })
+        setCreateFormErrors({})
+        setEditFormErrors({})
       }, [])
     
       // 处理创建项目
       const handleCreateProject = useCallback(() => {
         resetForm()
+        setCreateFormErrors({})
         setShowCreateModal(true)
       }, [resetForm])
     
@@ -572,6 +606,7 @@ const OtherProjectsPage: React.FC = () => {
           conclusion: project.conclusion || ''
         })
         setEditingProject(project)
+        setEditFormErrors({})
         setShowEditModal(true)
       }, [])
     
@@ -606,40 +641,77 @@ const OtherProjectsPage: React.FC = () => {
 
     // 表单提交处理
     const handleSubmitProject = async (e: React.FormEvent) => {
-        e.preventDefault()
-    
-        if (showCreateModal) {
-          await handleCreateSubmit()
-        } else if (showEditModal) {
-          await handleEditSubmit()
-        }
-    }
-
-    // 数据验证函数
-    const validateFormData = (data: ProjectFormData): string | null => {
-      if (!data.name.trim()) return '项目名称不能为空'
-      // 移除部门验证，因为有默认值和下拉选择
-      if (!data.source.trim()) return '项目来源不能为空'
-      
-      // 非院内制剂项目的特殊验证
-      if (currentProjectType.key !== 'internal-preparation') {
-        if (!data.leader.trim()) return '负责人不能为空'
-        if (!data.startDate.trim()) return '开始日期不能为空'
-        if (!data.transformRequirements.length) return '转化需求不能为空'
+      e.preventDefault()
+  
+      if (showCreateModal) {
+        await handleCreateSubmit()
+      } else if (showEditModal) {
+        await handleEditSubmit()
       }
-      
-      return null
+  }
+
+  // 数据验证函数 - 返回字段错误对象
+  const validateForm = (data: ProjectFormData): Record<string, string> => {
+    const errors: Record<string, string> = {}
+    
+    if (!data.name.trim()) {
+      errors.name = '项目名称不能为空'
     }
+    if (!data.source.trim()) {
+      errors.source = '医院来源不能为空'
+    }
+    if (!data.department) {
+      errors.department = '归属部门不能为空'
+    }
+    if (!data.leader) {
+      errors.leader = '负责人不能为空'
+    }
+    if (!data.startDate) {
+      errors.startDate = '开始日期不能为空'
+    }
+    if (data.transformRequirements.length === 0) {
+      errors.transformRequirements = '请至少添加一个转化需求'
+    }
+    
+    return errors
+  }
+  
+  // 创建表单变更处理
+  const handleCreateFormChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // 清除对应字段的错误
+    if (createFormErrors[field]) {
+      setCreateFormErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+  
+  // 编辑表单变更处理
+  const handleEditFormChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // 清除对应字段的错误
+    if (editFormErrors[field]) {
+      setEditFormErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
 
     // 创建项目提交
     const handleCreateSubmit = async () => {
       try {
         setLoading(true)
 
-        // 数据验证
-        const validationError = validateFormData(formData)
-        if (validationError) {
-          alert(validationError)
+        // 表单验证
+        const errors = validateForm(formData)
+        if (Object.keys(errors).length > 0) {
+          setCreateFormErrors(errors)
+          setLoading(false)
           return
         }
 
@@ -688,10 +760,11 @@ const OtherProjectsPage: React.FC = () => {
       try {
         setLoading(true)
 
-        // 数据验证
-        const validationError = validateFormData(formData)
-        if (validationError) {
-          alert(validationError)
+        // 表单验证
+        const errors = validateForm(formData)
+        if (Object.keys(errors).length > 0) {
+          setEditFormErrors(errors)
+          setLoading(false)
           return
         }
 
@@ -1159,10 +1232,18 @@ const OtherProjectsPage: React.FC = () => {
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => {
+                        if (showCreateModal) {
+                          handleCreateFormChange('name', e.target.value)
+                        } else {
+                          handleEditFormChange('name', e.target.value)
+                        }
+                      }}
                       placeholder="请输入项目名称"
-                      required
+                      className={`form-input ${showCreateModal ? (createFormErrors.name ? 'error' : '') : (editFormErrors.name ? 'error' : '')}`}
                     />
+                    {showCreateModal && createFormErrors.name && <span className="error-text">{createFormErrors.name}</span>}
+                    {showEditModal && editFormErrors.name && <span className="error-text">{editFormErrors.name}</span>}
                   </div>
 
                   {/* 第二行：部门、来源 */}
@@ -1170,8 +1251,14 @@ const OtherProjectsPage: React.FC = () => {
                     <label>部门 *</label>
                     <select
                       value={formData.department}
-                      onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                      required
+                      onChange={(e) => {
+                        if (showCreateModal) {
+                          handleCreateFormChange('department', e.target.value)
+                        } else {
+                          handleEditFormChange('department', e.target.value)
+                        }
+                      }}
+                      className={`form-input ${showCreateModal ? (createFormErrors.department ? 'error' : '') : (editFormErrors.department ? 'error' : '')}`}
                     >
                       {departmentOptions.map(option => (
                         <option key={option.value} value={option.value}>
@@ -1182,13 +1269,22 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>来源</label>
+                    <label>来源 *</label>
                     <input
                       type="text"
                       value={formData.source}
-                      onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
-                      placeholder="请输入项目来源"
+                      onChange={(e) => {
+                        if (showCreateModal) {
+                          handleCreateFormChange('source', e.target.value)
+                        } else {
+                          handleEditFormChange('source', e.target.value)
+                        }
+                      }}
+                      placeholder="请输入医院来源"
+                      className={`form-input ${showCreateModal ? (createFormErrors.source ? 'error' : '') : (editFormErrors.source ? 'error' : '')}`}
                     />
+                    {showCreateModal && createFormErrors.source && <span className="error-text">{createFormErrors.source}</span>}
+                    {showEditModal && editFormErrors.source && <span className="error-text">{editFormErrors.source}</span>}
                   </div>
 
                   {/* 第三行：负责人、开始日期 */}
@@ -1196,8 +1292,14 @@ const OtherProjectsPage: React.FC = () => {
                     <label>负责人 *</label>
                     <select
                       value={formData.leader}
-                      onChange={(e) => setFormData(prev => ({ ...prev, leader: e.target.value }))}
-                      required
+                      onChange={(e) => {
+                        if (showCreateModal) {
+                          handleCreateFormChange('leader', e.target.value)
+                        } else {
+                          handleEditFormChange('leader', e.target.value)
+                        }
+                      }}
+                      className={`form-input ${showCreateModal ? (createFormErrors.leader ? 'error' : '') : (editFormErrors.leader ? 'error' : '')}`}
                     >
                       {leaderOptions.map(option => (
                         <option key={option.value} value={option.value}>
@@ -1208,12 +1310,21 @@ const OtherProjectsPage: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>开始日期</label>
+                    <label>开始日期 *</label>
                     <input
                       type="date"
                       value={formData.startDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                      onChange={(e) => {
+                        if (showCreateModal) {
+                          handleCreateFormChange('startDate', e.target.value)
+                        } else {
+                          handleEditFormChange('startDate', e.target.value)
+                        }
+                      }}
+                      className={`form-input ${showCreateModal ? (createFormErrors.startDate ? 'error' : '') : (editFormErrors.startDate ? 'error' : '')}`}
                     />
+                    {showCreateModal && createFormErrors.startDate && <span className="error-text">{createFormErrors.startDate}</span>}
+                    {showEditModal && editFormErrors.startDate && <span className="error-text">{editFormErrors.startDate}</span>}
                   </div>
 
                   {/* 第四行：重要程度、项目状态 */}
@@ -1267,56 +1378,20 @@ const OtherProjectsPage: React.FC = () => {
 
                   {/* 第六行：转化需求 */}
                   <div className="form-group full-width">
-                    <label>转化需求</label>
-                    <div className="transform-requirements">
-                      {formData.transformRequirements.map((requirement, index) => (
-                        <div key={index} className="transform-requirement">
-                          <input
-                            type="text"
-                            value={requirement.type}
-                            onChange={(e) => {
-                              const newRequirements = [...formData.transformRequirements]
-                              newRequirements[index].type = e.target.value
-                              setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
-                            }}
-                            placeholder="请输入转化需求类型"
-                          />
-                          <input
-                            type="text"
-                            value={requirement.currentProgress}
-                            onChange={(e) => {
-                              const newRequirements = [...formData.transformRequirements]
-                              newRequirements[index].currentProgress = e.target.value
-                              setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
-                            }}
-                            placeholder="请输入当前进度"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newRequirements = [...formData.transformRequirements]
-                              newRequirements.splice(index, 1)
-                              setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
-                            }}
-                            className="remove-requirement"
-                          >
-                            <XMarkIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newRequirements = [...formData.transformRequirements]
-                          newRequirements.push({ type: '', currentProgress: '' })
-                          setFormData(prev => ({ ...prev, transformRequirements: newRequirements }))
-                        }}
-                        className="add-requirement"
-                      >
-                        <PlusIcon className="w-4 h-4" />
-                        添加转化需求
-                      </button>
-                    </div>
+                    <TransformRequirementsForm
+                      value={formData.transformRequirements}
+                      onChange={(requirements) => {
+                        if (showCreateModal) {
+                          handleCreateFormChange('transformRequirements', requirements)
+                        } else {
+                          handleEditFormChange('transformRequirements', requirements)
+                        }
+                      }}
+                      errors={showCreateModal 
+                        ? (createFormErrors.transformRequirements ? [createFormErrors.transformRequirements] : []) 
+                        : (editFormErrors.transformRequirements ? [editFormErrors.transformRequirements] : [])
+                      }
+                    />
                   </div>
 
                   {/* 第七行：对接公司 */}
@@ -1479,7 +1554,7 @@ const OtherProjectsPage: React.FC = () => {
                     <div className="readonly-field">
                       {viewingProject.transformRequirements?.map(requirement => (
                         <div key={requirement.type}>
-                          <span>{requirement.type}：{requirement.currentProgress}</span>
+                          <span>{getTransformRequirementLabel(requirement.type)}：{requirement.currentProgress}</span>
                         </div>
                       ))}
                     </div>
@@ -2178,35 +2253,37 @@ const OtherProjectsPage: React.FC = () => {
           padding: 20px;
         }
 
+        .modal-container,
         .modal-content {
           background: white;
           border-radius: 12px;
-          max-width: 800px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+          max-width: 900px;
           width: 100%;
           max-height: 90vh;
-          overflow-y: auto;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .modal-content.small {
           max-width: 420px;
-          border-radius: 0.75rem;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
         .modal-header {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          padding: 20px 24px;
-          border-bottom: 1px solid #e5e7eb;
+          align-items: center;
+          padding: 24px 32px;
+          border-bottom: 1px solid #f1f5f9;
+          background: #fafbfc;
         }
 
         .modal-header h2 {
-          margin: 0;
-          font-size: 18px;
+          font-size: 20px;
           font-weight: 600;
-          color: #1f2937;
+          color: #1e293b;
+          margin: 0;
         }
 
         .modal-header h3 {
@@ -2214,6 +2291,25 @@ const OtherProjectsPage: React.FC = () => {
           font-weight: 700;
           color: #1e293b;
           margin: 0;
+        }
+
+        .modal-close {
+          width: 36px;
+          height: 36px;
+          border: none;
+          background: #f8fafc;
+          color: #64748b;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+          background: #f1f5f9;
+          color: #475569;
         }
 
         .close-btn {
@@ -2235,70 +2331,93 @@ const OtherProjectsPage: React.FC = () => {
           color: #475569;
         }
 
-        .modal-close {
-          background: none;
-          border: none;
-          color: #6b7280;
-          cursor: pointer;
-          padding: 4px;
-          border-radius: 4px;
-        }
-
-        .modal-close:hover {
-          background: #f3f4f6;
-        }
-
         .modal-body {
-          padding: 24px;
-          max-height: 60vh;
+          flex: 1;
           overflow-y: auto;
+          padding: 32px;
         }
 
         .form-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.5rem 2rem;
-          padding: 1.5rem 0;
-          max-width: 100%;
+          gap: 24px 28px;
+          margin-bottom: 26px;
         }
 
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 10px;
+        }
+
+        .form-group.full-width {
+          grid-column: 1 / -1;
         }
 
         .form-group label {
+          font-size: 14px;
           font-weight: 600;
-          font-size: 0.875rem;
           color: #374151;
-          margin-bottom: 0.25rem;
+          margin-bottom: 2px;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-          width: 100%;
-          padding: 0.75rem 1rem;
-          border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-          background-color: #ffffff;
+        .form-input, .form-textarea {
+          padding: 14px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          color: #374151;
           transition: all 0.2s ease;
+          width: 100%;
           box-sizing: border-box;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
+        .form-input:focus, .form-textarea:focus {
           outline: none;
           border-color: #3b82f6;
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-          color: #9ca3af;
+        .form-input.error, .form-textarea.error {
+          border-color: #dc2626;
+          box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .form-textarea {
+          resize: vertical;
+          min-height: 100px;
+          font-family: inherit;
+        }
+
+        .error-text {
+          font-size: 12px;
+          color: #dc2626;
+          margin-top: 4px;
+          font-weight: 500;
+        }
+
+        /* 兼容旧的表单样式 */
+        .form-group input:not(.form-input),
+        .form-group select:not(.form-input),
+        .form-group textarea:not(.form-textarea) {
+          padding: 14px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          color: #374151;
+          transition: all 0.2s ease;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .form-group input:not(.form-input):focus,
+        .form-group select:not(.form-input):focus,
+        .form-group textarea:not(.form-textarea):focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .form-group select {
@@ -2309,27 +2428,6 @@ const OtherProjectsPage: React.FC = () => {
           background-size: 1rem;
           padding-right: 2.5rem;
           appearance: none;
-        }
-
-        .form-group.full-width {
-          grid-column: 1 / -1;
-        }
-
-        .form-group textarea {
-          resize: vertical;
-          min-height: 6rem;
-        }
-
-        .form-textarea {
-          padding: 14px 16px;
-          border: 2px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 14px;
-          background: white;
-          color: #374151;
-          transition: all 0.2s ease;
-          width: 100%;
-          box-sizing: border-box;
         }
           
 
@@ -2401,11 +2499,12 @@ const OtherProjectsPage: React.FC = () => {
         /* 模态框底部按钮样式 */
         .modal-footer {
           display: flex;
-          justify-content: flex-end;
+          flex-direction: row;
           gap: 16px;
           padding: 24px 32px;
           border-top: 1px solid #f1f5f9;
           background: #fafbfc;
+          margin-top: 16px;
         }
 
         .btn-secondary {
@@ -2418,7 +2517,7 @@ const OtherProjectsPage: React.FC = () => {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
-          min-width: 100px;
+          // min-width: 100px;
         }
 
         .btn-secondary:hover {
@@ -2438,7 +2537,7 @@ const OtherProjectsPage: React.FC = () => {
           cursor: pointer;
           transition: all 0.2s ease;
           box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-          min-width: 120px;
+          // min-width: 120px;
         }
 
         .btn-primary:hover:not(:disabled) {
@@ -3015,40 +3114,6 @@ const OtherProjectsPage: React.FC = () => {
 
         .importance-badge.normal:hover {
           box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
-        }
-
-        /* ------------------------------------------------------------------------------------------ */
-        /* 优化的表单输入样式 */
-        .form-input {
-          padding: 14px 16px;
-          border: 2px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 14px;
-          background: white;
-          color: #374151;
-          transition: all 0.2s ease;
-          width: 100%;
-          box-sizing: border-box;
-        }
-
-        .form-input:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
-
-        .form-input.error {
-          border-color: #ef4444;
-        }
-
-        .form-input.error:focus {
-          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-        }
-
-        .error-text {
-          font-size: 12px;
-          color: #ef4444;
-          margin-top: 4px;
         }
       `}</style>
     </DashboardLayout>

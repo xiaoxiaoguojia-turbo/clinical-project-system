@@ -393,10 +393,12 @@ export default function InternalPreparationsPage() {
     const checkAuth = async () => {
       try {
         if (!TokenManager.isAuthenticated()) {
+          console.log('未检测到认证令牌，跳转到登录页面...')
           window.location.href = '/login'
           return
         }
         
+        console.log('认证检查通过')
         setIsAuthenticated(true)
         await loadStatisticsData()
       } catch (error) {
@@ -407,6 +409,19 @@ export default function InternalPreparationsPage() {
 
     checkAuth()
   }, [])
+
+  // 【新增】监听标签切换，重新渲染图表
+  useEffect(() => {
+    // 当切换到统计报表标签，且有统计数据，且Chart.js已加载时
+    if (activeTab === 'statistics' && preparationStats.totalProjects > 0 && window.Chart) {
+      console.log('标签切换到统计报表，重新渲染图表')
+      
+      // 添加延迟确保DOM已完全渲染
+      setTimeout(() => {
+        initCharts(preparationStats)
+      }, 300)
+    }
+  }, [activeTab, preparationStats])
 
   // 项目列表数据加载
   useEffect(() => {

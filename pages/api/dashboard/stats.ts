@@ -122,6 +122,21 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
                 }
               }
             }
+          ],
+          
+          // 转化需求进度分布（用于单一类型筛选时展示）
+          byTransformProgress: [
+            { $unwind: '$transformRequirements' },
+            {
+              $group: {
+                _id: {
+                  type: '$transformRequirements.type',
+                  progress: '$transformRequirements.currentProgress'
+                },
+                count: { $sum: 1 }
+              }
+            },
+            { $sort: { '_id.type': 1, count: -1 } }
           ]
         }
       }
@@ -154,6 +169,28 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
         percentage: totalProjects > 0 ? Math.round((item.count / totalProjects) * 100) : 0
       }
     })
+    
+    // 处理转化需求进度分布（仅当单选转化需求类型时）
+    let byTransformProgress: StatItem[] | undefined = undefined
+    const selectedTypes = transformRequirementTypes && typeof transformRequirementTypes === 'string' 
+      ? transformRequirementTypes.split(',') 
+      : []
+    
+    // 只有当选择了单一转化需求类型时，才返回进度分布
+    if (selectedTypes.length === 1) {
+      const selectedType = selectedTypes[0]
+      const progressData = (stats.byTransformProgress || [])
+        .filter((item: any) => item._id.type === selectedType)
+        .map((item: any) => ({
+          label: item._id.progress || '未分类',
+          value: item.count,
+          percentage: totalProjects > 0 ? Math.round((item.count / totalProjects) * 100 * 10) / 10 : 0
+        }))
+      
+      if (progressData.length > 0) {
+        byTransformProgress = progressData
+      }
+    }
 
     // 构建响应数据
     const overview: ProjectOverviewStats = {
@@ -167,7 +204,8 @@ async function handleDashboardStats(req: AuthenticatedRequest, res: NextApiRespo
       bySource: formatStatItems(stats.bySource, {}, totalProjects),
       totalTransformAmount,
       averageTransformAmount,
-      transformAmountDistribution
+      transformAmountDistribution,
+      byTransformProgress  // 添加进度分布数据
     }
 
     const dashboardStats: DashboardStats = {

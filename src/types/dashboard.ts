@@ -23,6 +23,7 @@ export interface ProjectOverviewStats {
   totalTransformAmount: number            // 转化金额总计（万元）
   averageTransformAmount: number          // 平均转化金额（万元）
   transformAmountDistribution: StatItem[] // 转化金额分布（按区间）
+  byTransformProgress?: StatItem[]        // 转化需求进度分布（仅单选时）
 }
 
 // 完整的Dashboard数据接口
@@ -81,7 +82,7 @@ export const DEPARTMENT_LABELS: Record<string, string> = {
 }
 
 export const PROJECT_TYPE_LABELS: Record<string, string> = {
-  'internal-preparation': '院内制剂',
+  'chinese-medicine-modernization': '中药现代化',  // 原院内制剂
   'ai-medical-research': 'AI医疗及系统研究',
   'diagnostic-detection': '检测诊断',
   'cell-therapy': '细胞治疗',

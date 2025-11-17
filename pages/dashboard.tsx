@@ -435,7 +435,34 @@ export default function Dashboard() {
             }
           }
         }
-      }
+      },
+      
+      // 5. 转化需求进度分布 - 柱状图（仅单选时）
+      transformProgress: overview.byTransformProgress ? {
+        data: {
+          labels: overview.byTransformProgress.map(item => item.label),
+          datasets: [{
+            label: '项目数量',
+            data: overview.byTransformProgress.map(item => item.value),
+            backgroundColor: '#10B981',
+            borderWidth: 1,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          ...baseOptions,
+          plugins: {
+            ...baseOptions.plugins,
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      } : null
     }
   }, [dashboardData])
 
@@ -585,6 +612,23 @@ export default function Dashboard() {
             <div className="charts-container">
               {getChartConfigs && (
                 <>
+                  {/* 转化需求进度分布（仅单选转化需求类型时显示） */}
+                  {getChartConfigs.transformProgress && (
+                    <div className="chart-item chart-item-full" style={{ height: '350px', gridColumn: '1 / -1' }}>
+                      <h3 className="chart-title">
+                        转化需求进度分布 
+                        <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#6b7280', marginLeft: '10px' }}>
+                          (
+                          {selectedTransformTypes.length === 1 && 
+                            TRANSFORM_REQUIREMENT_LABELS[selectedTransformTypes[0] as keyof typeof TRANSFORM_REQUIREMENT_LABELS]
+                          }
+                          )
+                        </span>
+                      </h3>
+                      <Bar data={getChartConfigs.transformProgress.data} options={getChartConfigs.transformProgress.options} />
+                    </div>
+                  )}
+                  
                   <div className="chart-item" style={{ height: '350px' }}>
                     <h3 className="chart-title">部门分布</h3>
                     <Doughnut data={getChartConfigs.departments.data} options={getChartConfigs.departments.options} />

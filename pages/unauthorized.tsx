@@ -9,6 +9,7 @@ import {
   HomeIcon
 } from '@heroicons/react/24/outline'
 import { TokenManager } from '@/utils/auth'
+import { getRoleLabel } from '@/utils/permissions'
 
 const UnauthorizedPage: NextPage = () => {
   /* ------------------------------------------------------------------------------------------ */
@@ -36,7 +37,7 @@ const UnauthorizedPage: NextPage = () => {
   /* ------------------------------------------------------------------------------------------ */
   // 联系信息数据
   const contactInfo = {
-    email: 'admin@clinical-innovation.com',
+    email: 'guojiaxu@moinai.com',
     department: '转移转化与投资部门',
     systemName: '临床创新项目管理系统'
   }
@@ -93,7 +94,7 @@ const UnauthorizedPage: NextPage = () => {
                   <p className="user-item">
                     <span className="user-label">用户角色：</span>
                     <span className="user-value">
-                      {currentUser.role === 'admin' ? '管理员' : '普通用户'}
+                      {getRoleLabel(currentUser.role)}
                     </span>
                   </p>
                 </div>

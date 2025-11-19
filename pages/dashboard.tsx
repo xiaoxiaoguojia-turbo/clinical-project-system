@@ -749,7 +749,7 @@ export default function Dashboard() {
 
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          grid-template-columns: repeat(5, 1fr);
           gap: 24px;
           margin-bottom: 28px;
         }
@@ -1184,7 +1184,19 @@ export default function Dashboard() {
         /* 响应式设计 */
         @media (max-width: 1024px) {
           .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+          }
+
+          .stat-card {
+            padding: 18px;
+          }
+
+          .card-title {
+            font-size: 13px;
+          }
+
+          .value {
+            font-size: 28px;
           }
         }
 
@@ -1206,24 +1218,28 @@ export default function Dashboard() {
           }
 
           .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 16px;
+            gap: 12px;
           }
 
           .stat-card {
-            padding: 20px;
+            padding: 12px;
           }
 
           .card-header {
-            margin-bottom: 12px;
+            margin-bottom: 6px;
+          }
+
+          .card-header svg {
+            width: 20px;
+            height: 20px;
           }
 
           .card-title {
-            font-size: 16px;
+            font-size: 12px;
           }
 
           .value {
-            font-size: 28px;
+            font-size: 20px;
           }
 
           .unit {

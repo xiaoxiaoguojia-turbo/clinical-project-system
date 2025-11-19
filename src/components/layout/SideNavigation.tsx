@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { 
   ChevronDownIcon,
@@ -14,8 +14,11 @@ import {
   CubeIcon,
   RectangleStackIcon,
   EllipsisHorizontalIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline'
+import { TokenManager } from '@/utils/auth'
+import { canAccessRoute, UserRole } from '@/utils/permissions'
 
 interface SideNavigationProps {
   className?: string
@@ -28,6 +31,7 @@ interface MenuItem {
   children?: MenuItem[]
   route?: string
   level: number
+  requiredRoles?: UserRole[] // 需要的角色权限，空数组表示所有角色都可访问
 }
 
 const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
@@ -35,7 +39,16 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
   // 状态和路由管理
   const router = useRouter()
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['dept-main', 'project-types']))
+  const [userRole, setUserRole] = useState<UserRole>('user')
   const currentPath = router.pathname
+
+  // 获取用户角色
+  useEffect(() => {
+    const user = TokenManager.getUser()
+    if (user && user.role) {
+      setUserRole(user.role as UserRole)
+    }
+  }, [])
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -52,6 +65,12 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
 
   const handleNavigation = (item: MenuItem) => {
     if (item.route) {
+      // 检查权限
+      const cleanRoute = item.route.split('?')[0]
+      if (!canAccessRoute(userRole, cleanRoute)) {
+        router.push('/unauthorized')
+        return
+      }
       router.push(item.route)
     } else if (item.children) {
       toggleExpanded(item.id)
@@ -89,6 +108,25 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
     }
     return false
   }
+
+  // 检查用户是否有权限访问菜单项
+  const canAccessMenuItem = (item: MenuItem): boolean => {
+    if (!item.requiredRoles || item.requiredRoles.length === 0) {
+      return true // 没有权限限制，所有人都可访问
+    }
+    return item.requiredRoles.includes(userRole)
+  }
+
+  // 递归过滤菜单项
+  const filterMenuItems = (items: MenuItem[]): MenuItem[] => {
+    return items
+      .filter(item => canAccessMenuItem(item))
+      .map(item => ({
+        ...item,
+        children: item.children ? filterMenuItems(item.children) : undefined
+      }))
+      .filter(item => !item.children || item.children.length > 0) // 移除子菜单被全部过滤后的父菜单
+  }
   /* ------------------------------------------------------------------------------------------ */
 
   /* ------------------------------------------------------------------------------------------ */
@@ -99,81 +137,103 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
       label: '转移转化与投资部门',
       icon: BuildingOfficeIcon,
       level: 1,
+      requiredRoles: [], // 所有角色都可见
       children: [
+        // {
+        //   id: 'user-management',
+        //   label: '用户管理',
+        //   icon: UsersIcon,
+        //   route: '/users',
+        //   level: 2,
+        //   requiredRoles: ['admin'] // 仅管理员可访问
+        // },
         {
           id: 'project-reports',
           label: '总项目报表统计',
           icon: ChartBarIcon,
           route: '/dashboard',
-          level: 2
+          level: 2,
+          requiredRoles: [] // 所有角色都可访问
         },
         {
           id: 'project-types',
           label: '项目分类型',
           icon: CubeIcon,
           level: 2,
+          requiredRoles: ['admin', 'user'], // 仅管理员和普通用户可见
           children: [
             {
               id: 'internal-preparations',
               label: '中药现代化',
               icon: PillIcon,
               route: '/chinese-medicine-modernization',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'ai-medical-research',
               label: 'AI医疗及系统研究',
               icon: CpuChipIcon,
               route: '/other-projects?type=ai-medical-research',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'diagnostic-detection',
               label: '检测诊断',
               icon: MagnifyingGlassIcon,
               route: '/other-projects?type=diagnostic-detection',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'cell-therapy',
               label: '细胞治疗',
               icon: BoltIcon,
               route: '/other-projects?type=cell-therapy',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'drug',
               label: '药物',
               icon: BeakerIcon,
               route: '/other-projects?type=drug',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'medical-device',
               label: '医疗器械',
               icon: WrenchScrewdriverIcon,
               route: '/other-projects?type=medical-device',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'medical-material',
               label: '医用材料',
               icon: RectangleStackIcon,
               route: '/other-projects?type=medical-material',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             },
             {
               id: 'other',
               label: '其他',
               icon: DocumentTextIcon,
               route: '/other-projects?type=other',
-              level: 3
+              level: 3,
+              requiredRoles: ['admin', 'user']
             }
           ]
         }
       ]
     }
   ]
+
+  // 根据用户角色过滤菜单项
+  const filteredMenuItems = filterMenuItems(menuItems)
   /* ------------------------------------------------------------------------------------------ */
 
   return (
@@ -184,7 +244,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ className = '' }) => {
       
       <div className="navigation-content">
         <ul className="menu-list">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isExpanded = expandedItems.has(item.id)
             const hasChildren = item.children && item.children.length > 0
             const active = isParentActive(item)

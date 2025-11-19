@@ -3,7 +3,7 @@ export interface User {
   _id: string
   username: string
   password: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'guest'
   email?: string
   realName?: string
   department?: string
@@ -18,7 +18,7 @@ export interface User {
 export interface UserResponse {
   _id: string
   username: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'guest'
   email?: string
   realName?: string
   department?: string

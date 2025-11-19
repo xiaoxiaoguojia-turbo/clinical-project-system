@@ -52,7 +52,7 @@ interface NewUser {
   username: string
   email: string
   realName: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'guest'
   department: string
   password: string
 }
@@ -65,7 +65,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user'>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user' | 'guest'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserDetail, setShowUserDetail] = useState(false)
@@ -210,7 +210,7 @@ export default function UsersPage() {
   }
 
   const handleRoleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRoleFilter(e.target.value as 'all' | 'admin' | 'user')
+    setRoleFilter(e.target.value as 'all' | 'admin' | 'user' | 'guest')
   }
 
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -418,9 +418,13 @@ export default function UsersPage() {
   const displayUsers = users // 直接使用从后端获取的用户列表
 
   const getRoleBadge = (role: string) => {
-    return role === 'admin' ? 
-      <span className="role-badge admin">管理员</span> : 
-      <span className="role-badge user">普通用户</span>
+    if (role === 'admin') {
+      return <span className="role-badge admin">系统管理员</span>
+    } else if (role === 'guest') {
+      return <span className="role-badge guest">游客</span>
+    } else {
+      return <span className="role-badge user">普通用户</span>
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -508,8 +512,9 @@ export default function UsersPage() {
               <FunnelIcon className="w-5 h-5" />
               <select value={roleFilter} onChange={handleRoleFilterChange} className="filter-select">
                 <option value="all">全部角色</option>
-                <option value="admin">管理员</option>
+                <option value="admin">系统管理员</option>
                 <option value="user">普通用户</option>
+                <option value="guest">游客</option>
               </select>
             </div>
             <div className="filter-item">
@@ -795,11 +800,12 @@ export default function UsersPage() {
                     <label>用户角色 *</label>
                     <select
                       value={editUser.role}
-                      onChange={(e) => handleEditUserInputChange('role', e.target.value as 'admin' | 'user')}
+                      onChange={(e) => handleEditUserInputChange('role', e.target.value as 'admin' | 'user' | 'guest')}
                       className={errors.role ? 'error' : ''}
                     >
                       <option value="user">普通用户</option>
-                      <option value="admin">管理员</option>
+                      <option value="admin">系统管理员</option>
+                      <option value="guest">游客</option>
                     </select>
                     {errors.role && <span className="error-text">{errors.role}</span>}
                   </div>
@@ -909,11 +915,12 @@ export default function UsersPage() {
                     <label>用户角色 *</label>
                     <select
                       value={newUser.role}
-                      onChange={(e) => handleNewUserInputChange('role', e.target.value as 'admin' | 'user')}
+                      onChange={(e) => handleNewUserInputChange('role', e.target.value as 'admin' | 'user' | 'guest')}
                       className={errors.role ? 'error' : ''}
                     >
                       <option value="user">普通用户</option>
-                      <option value="admin">管理员</option>
+                      <option value="admin">系统管理员</option>
+                      <option value="guest">游客</option>
                     </select>
                     {errors.role && <span className="error-text">{errors.role}</span>}
                   </div>
@@ -1235,6 +1242,11 @@ export default function UsersPage() {
         .role-badge.user {
           background: #dbeafe;
           color: #2563eb;
+        }
+
+        .role-badge.guest {
+          background: #e0e7ff;
+          color: #6366f1;
         }
 
         .status-badge {

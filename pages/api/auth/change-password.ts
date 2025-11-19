@@ -53,7 +53,7 @@ async function handler(
 
     // 验证当前密码是否正确（明文对比）
     if (user.password !== currentPassword) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         error: '当前密码不正确'
       })

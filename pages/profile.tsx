@@ -15,6 +15,7 @@ import {
   EyeSlashIcon
 } from '@heroicons/react/24/outline'
 import { TokenManager, ApiClient } from '@/utils/auth'
+import { getRoleLabel } from '@/utils/permissions'
 
 /* ------------------------------------------------------------------------------------------ */
 
@@ -347,14 +348,6 @@ const ProfilePage: React.FC = () => {
   /* ------------------------------------------------------------------------------------------ */
   
   // 工具函数
-  const getRoleLabel = (role: string): string => {
-    const roleLabels: {[key: string]: string} = {
-      'admin': '系统管理员',
-      'user': '普通用户'
-    }
-    return roleLabels[role] || role
-  }
-  
   const getStatusBadge = (status: string) => {
     if (status === 'active') {
       return <span className="status-badge active">正常</span>

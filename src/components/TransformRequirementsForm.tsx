@@ -352,6 +352,7 @@ export default function TransformRequirementsForm({
         .field-select:disabled,
         .field-input:disabled,
         .field-input.disabled {
+          width: 94%;
           background: #f3f4f6;
           color: #9ca3af;
           cursor: not-allowed;

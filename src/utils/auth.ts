@@ -3,7 +3,7 @@ import { User } from '@/types'
 export interface AuthUser {
   _id: string
   username: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'guest'
   realName?: string
   email?: string
   department?: string

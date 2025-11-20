@@ -55,7 +55,8 @@ export default function TransformRequirementsForm({
     const updated = [...localRequirements]
     updated[index] = {
       type: type as TransformRequirement['type'],
-      currentProgress: type === 'pending' ? '待推进' : ''
+      currentProgress: type === 'pending' ? '待推进' : '',
+      mode: type === 'company-operation' ? '待定' : undefined  // 公司化运营默认模式为“待定”
     }
     setLocalRequirements(updated)
     onChange(updated)
@@ -71,6 +72,16 @@ export default function TransformRequirementsForm({
     onChange(updated)
   }
 
+  const handleModeChange = (index: number, mode: string) => {
+    const updated = [...localRequirements]
+    updated[index] = {
+      ...updated[index],
+      mode: mode
+    }
+    setLocalRequirements(updated)
+    onChange(updated)
+  }
+
   /* ------------------------------------------------------------------------------------------ */
   // 数据定义
 
@@ -79,6 +90,13 @@ export default function TransformRequirementsForm({
     { value: TransformRequirementTypeEnum.COMPANY_OPERATION, label: '公司化运营' },
     { value: TransformRequirementTypeEnum.LICENSE_TRANSFER, label: '许可转让' },
     { value: TransformRequirementTypeEnum.PENDING, label: '待推进' }
+  ]
+
+  // 公司化运营模式选项
+  const modeOptions = [
+    { value: '待定', label: '待定' },
+    { value: '股权代持', label: '股权代持' },
+    { value: '许可加现金', label: '许可加现金' }
   ]
 
   const getProgressOptions = (type: string) => {
@@ -173,6 +191,25 @@ export default function TransformRequirementsForm({
                     </select>
                   )}
                 </div>
+
+                {/* 模式（仅公司化运营显示） */}
+                {requirement.type === 'company-operation' && (
+                  <div className="field-group">
+                    <label className="field-label">模式</label>
+                    <select
+                      value={requirement.mode || '待定'}
+                      onChange={(e) => handleModeChange(index, e.target.value)}
+                      disabled={disabled}
+                      className="field-select"
+                    >
+                      {modeOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* 删除按钮 */}

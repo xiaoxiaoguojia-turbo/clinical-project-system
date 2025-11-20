@@ -40,6 +40,7 @@ export type TransformRequirementType =
 export interface TransformRequirement {
   type: TransformRequirementType            // 转化需求（类型）
   currentProgress: string                   // 进展节点
+  mode?: string                             // 模式（仅公司化运营需要，可选）
 }
 
 // 统一项目类型定义
@@ -172,7 +173,7 @@ export const TransformRequirementProgressNodesMap = {
     '投资协议签署', '交割', '投后管理', '退出'
   ],
   'company-operation': [
-    '合同签署', '注册完成', '拟签约已过董事会或总裁会', '潜在待推进'
+    '合同签署', '注册完成', '拟签约已过董事会或总裁会', '待过医院院办', '实质性合同与医院讨论', '潜在待推进'
   ],
   'license-transfer': [
     '已完成', '院端已过会', '医企实质性谈判', '潜在待推进'

@@ -15,7 +15,8 @@ import {
   CheckCircleIcon,
   BanknotesIcon,
   BuildingOffice2Icon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -140,6 +141,12 @@ export default function Dashboard() {
   const [selectedSources, setSelectedSources] = useState<string[]>([])
   const [allSources, setAllSources] = useState<string[]>([]) // 所有医院来源列表
 
+  // 项目详情弹窗状态
+  const [showProjectModal, setShowProjectModal] = useState(false)
+  const [modalProjects, setModalProjects] = useState<any[]>([])
+  const [modalLoading, setModalLoading] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
+  const [modalChartType, setModalChartType] = useState('')
   /* ------------------------------------------------------------------------------------------ */
 
   // 认证检查
@@ -268,6 +275,67 @@ export default function Dashboard() {
   }
 
   /* ------------------------------------------------------------------------------------------ */
+  // 项目详情弹窗相关函数
+
+  // 获取项目详情列表
+  const fetchProjectDetails = async (chartType: string, filterValue: string, filterLabel: string) => {
+    try {
+      setModalLoading(true)
+      setShowProjectModal(true)
+      setModalChartType(chartType)
+      setModalTitle(filterLabel)
+      setModalProjects([])
+
+      // 构建请求参数
+      const params = new URLSearchParams({
+        chartType,
+        filterValue
+      })
+
+      // 添加全局筛选条件
+      if (selectedDepartments.length > 0) {
+        params.append('departments', selectedDepartments.join(','))
+      }
+      if (selectedSources.length > 0) {
+        params.append('sources', selectedSources.join(','))
+      }
+      if (selectedTransformTypes.length > 0) {
+        params.append('transformRequirementTypes', selectedTransformTypes.join(','))
+      }
+
+      const response = await fetch(`/api/dashboard/project-details?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${TokenManager.getToken()}`
+        }
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setModalProjects(result.data.projects || [])
+      } else {
+        console.error('获取项目详情失败:', result.error)
+        alert('获取项目详情失败，请稍后重试')
+        setShowProjectModal(false)
+      }
+    } catch (error) {
+      console.error('获取项目详情失败:', error)
+      alert('获取项目详情失败，请稍后重试')
+      setShowProjectModal(false)
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
+  // 关闭弹窗
+  const handleCloseModal = () => {
+    setShowProjectModal(false)
+    setModalProjects([])
+    setModalTitle('')
+    setModalChartType('')
+  }
+
+  /* ------------------------------------------------------------------------------------------ */
 
   // 生成统计卡片数据（始终使用未筛选的数据）
   const getStatCards = (): StatCard[] => {
@@ -352,7 +420,14 @@ export default function Dashboard() {
         },
         options: {
           ...baseOptions,
-          cutout: '50%'
+          cutout: '50%',
+          onClick: (event: any, elements: any[]) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index
+              const item = overview.byDepartment[index]
+              fetchProjectDetails('department', (item.key || item.label), `${item.label} - 项目列表`)
+            }
+          }
         }
       },
 
@@ -378,6 +453,13 @@ export default function Dashboard() {
             y: {
               beginAtZero: true,
               ticks: { stepSize: 1 }
+            }
+          },
+          onClick: (event: any, elements: any[]) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index
+              const item = overview.byProjectType[index]
+              fetchProjectDetails('projectType', (item.key || item.label), `${item.label} - 项目列表`)
             }
           }
         }
@@ -405,6 +487,13 @@ export default function Dashboard() {
             y: {
               beginAtZero: true,
               ticks: { stepSize: 1 }
+            }
+          },
+          onClick: (event: any, elements: any[]) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index
+              const item = overview.bySource[index]
+              fetchProjectDetails('source', (item.key || item.label), `${item.label} - 项目列表`)
             }
           }
         }
@@ -675,6 +764,84 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* 项目详情弹窗 */}
+      {showProjectModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            {/* 弹窗头部 */}
+            <div className="modal-header">
+              <div className="modal-title-section">
+                <h2 className="modal-title">{modalTitle}</h2>
+                <p className="modal-subtitle">
+                  共找到 <span className="highlight">{modalProjects.length}</span> 个项目
+                </p>
+              </div>
+              <button className="modal-close-btn" onClick={handleCloseModal}>
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* 弹窗内容 */}
+            <div className="modal-body">
+              {modalLoading ? (
+                <div className="modal-loading">
+                  <div className="loading-spinner"></div>
+                  <p>加载中...</p>
+                </div>
+              ) : modalProjects.length === 0 ? (
+                <div className="modal-empty">
+                  <p>暂无项目数据</p>
+                </div>
+              ) : (
+                <div className="modal-table-container">
+                  <table className="modal-table">
+                    <thead>
+                      <tr>
+                        <th>序号</th>
+                        <th>项目名称</th>
+                        <th>归属部门</th>
+                        <th>医院来源</th>
+                        <th>转化需求</th>
+                        <th>对接企业</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modalProjects.map((project, index) => (
+                        <tr key={project._id}>
+                          <td>{index + 1}</td>
+                          <td className="project-name">{project.name}</td>
+                          <td>{DEPARTMENT_LABELS[project.department as keyof typeof DEPARTMENT_LABELS] || project.department}</td>
+                          <td>{project.source}</td>
+                          <td>
+                            <div className="transform-requirements-cell">
+                              {project.transformRequirements && project.transformRequirements.length > 0 ? (
+                                project.transformRequirements.map((req: any, idx: number) => (
+                                  <div key={idx} className="requirement-item">
+                                    <span className="requirement-type">
+                                      {TRANSFORM_REQUIREMENT_LABELS[req.type as keyof typeof TRANSFORM_REQUIREMENT_LABELS] || req.type}
+                                    </span>
+                                    {req.currentProgress && (
+                                      <span className="requirement-progress"> - {req.currentProgress}</span>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <span className="empty-text">-</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>{project.dockingCompany || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .dashboard-page {
@@ -1300,6 +1467,240 @@ export default function Dashboard() {
 
           .chart-title {
             font-size: 16px;
+          }
+        }
+
+        /* 项目详情弹窗样式 */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 20px;
+          backdrop-filter: blur(4px);
+        }
+
+        .modal-container {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          width: 100%;
+          max-width: 1200px;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 24px 32px;
+          border-bottom: 2px solid #e5e7eb;
+          background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        }
+
+        .modal-title-section {
+          flex: 1;
+        }
+
+        .modal-title {
+          font-size: 24px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0 0 8px 0;
+        }
+
+        .modal-subtitle {
+          font-size: 14px;
+          color: #64748b;
+          margin: 0;
+        }
+
+        .modal-subtitle .highlight {
+          font-weight: 700;
+          color: #3b82f6;
+          font-size: 16px;
+        }
+
+        .modal-close-btn {
+          background: #f1f5f9;
+          border: none;
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: #64748b;
+          transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+        }
+
+        .modal-body {
+          flex: 1;
+          overflow: auto;
+          padding: 24px 32px;
+        }
+
+        .modal-loading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 20px;
+          color: #64748b;
+        }
+
+        .modal-loading .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #e5e7eb;
+          border-top-color: #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 16px;
+        }
+
+        .modal-empty {
+          text-align: center;
+          padding: 60px 20px;
+          color: #94a3b8;
+          font-size: 16px;
+        }
+
+        .modal-table-container {
+          overflow-x: auto;
+          overflow-y: auto;
+          max-height: calc(90vh - 200px);
+        }
+
+        .modal-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 14px;
+        }
+
+        .modal-table thead {
+          position: sticky;
+          top: 0;
+          background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+          z-index: 10;
+        }
+
+        .modal-table th {
+          padding: 16px 12px;
+          text-align: left;
+          font-weight: 600;
+          color: #1e293b;
+          border-bottom: 2px solid #cbd5e1;
+          white-space: nowrap;
+        }
+
+        .modal-table th:first-child {
+          width: 60px;
+          text-align: center;
+        }
+
+        .modal-table tbody tr {
+          border-bottom: 1px solid #e5e7eb;
+          transition: background 0.2s ease;
+        }
+
+        .modal-table tbody tr:hover {
+          background: #f8fafc;
+        }
+
+        .modal-table td {
+          padding: 16px 12px;
+          color: #475569;
+          vertical-align: top;
+        }
+
+        .modal-table td:first-child {
+          text-align: center;
+          font-weight: 600;
+          color: #94a3b8;
+        }
+
+        .modal-table .project-name {
+          font-weight: 600;
+          color: #1e293b;
+          max-width: 300px;
+        }
+
+        .transform-requirements-cell {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .requirement-item {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          padding: 6px 10px;
+          background: #f1f5f9;
+          border-radius: 6px;
+          font-size: 13px;
+        }
+
+        .requirement-type {
+          font-weight: 600;
+          color: #3b82f6;
+        }
+
+        .requirement-progress {
+          color: #64748b;
+          font-size: 12px;
+        }
+
+        .empty-text {
+          color: #cbd5e1;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+          .modal-container {
+            max-width: 100%;
+            max-height: 95vh;
+          }
+
+          .modal-header {
+            padding: 20px;
+          }
+
+          .modal-title {
+            font-size: 20px;
+          }
+
+          .modal-body {
+            padding: 20px;
+          }
+
+          .modal-table {
+            font-size: 12px;
+          }
+
+          .modal-table th,
+          .modal-table td {
+            padding: 12px 8px;
+          }
+
+          .modal-table .project-name {
+            max-width: 200px;
           }
         }
 

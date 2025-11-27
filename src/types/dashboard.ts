@@ -6,6 +6,7 @@
 export interface StatItem {
   label: string
   value: number
+  key?: string        // 原始键值（如department ID、projectType ID等）
   percentage?: number
   color?: string
 }

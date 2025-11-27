@@ -241,6 +241,7 @@ function formatStatItems(
   return aggregateResults.map(item => ({
     label: labelMap[item._id] || item._id || '未分类',
     value: item.count,
+    key: item._id,  // 保存原始键值（用于前端点击图表时传递给API）
     percentage: total > 0 ? Math.round((item.count / total) * 100 * 10) / 10 : 0
   }))
 }

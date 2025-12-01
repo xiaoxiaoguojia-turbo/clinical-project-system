@@ -277,8 +277,30 @@ export default function Dashboard() {
   /* ------------------------------------------------------------------------------------------ */
   // 项目详情弹窗相关函数
 
+  // 解析金额区间标签（如“0-100万”、“100-500万”）
+  const parseAmountRange = (label: string): { min: number, max: number | string } => {
+    if (label.includes('1000万以上')) {
+      return { min: 1000, max: 'Infinity' }
+    }
+    const match = label.match(/(\d+)-(\d+)万/)
+    if (match) {
+      return { min: parseInt(match[1]), max: parseInt(match[2]) }
+    }
+    return { min: 0, max: 0 }
+  }
+
   // 获取项目详情列表
-  const fetchProjectDetails = async (chartType: string, filterValue: string, filterLabel: string) => {
+  const fetchProjectDetails = async (
+    chartType: string, 
+    filterValue: string, 
+    filterLabel: string,
+    extraParams?: {
+      minAmount?: number
+      maxAmount?: number | string
+      progressNode?: string
+      requirementType?: string
+    }
+  ) => {
     try {
       setModalLoading(true)
       setShowProjectModal(true)
@@ -289,8 +311,24 @@ export default function Dashboard() {
       // 构建请求参数
       const params = new URLSearchParams({
         chartType,
-        filterValue
+        ...(filterValue && { filterValue })
       })
+
+      // 添加额外参数（金额区间、进度节点等）
+      if (extraParams) {
+        if (extraParams.minAmount !== undefined) {
+          params.append('minAmount', extraParams.minAmount.toString())
+        }
+        if (extraParams.maxAmount !== undefined) {
+          params.append('maxAmount', extraParams.maxAmount.toString())
+        }
+        if (extraParams.progressNode) {
+          params.append('progressNode', extraParams.progressNode)
+        }
+        if (extraParams.requirementType) {
+          params.append('requirementType', extraParams.requirementType)
+        }
+      }
 
       // 添加全局筛选条件
       if (selectedDepartments.length > 0) {
@@ -522,6 +560,19 @@ export default function Dashboard() {
               beginAtZero: true,
               ticks: { stepSize: 1 }
             }
+          },
+          onClick: (event: any, elements: any[]) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index
+              const item = overview.transformAmountDistribution[index]
+              const { min, max } = parseAmountRange(item.label)
+              fetchProjectDetails(
+                'transformAmount',
+                '',
+                `${item.label} - 项目列表`,
+                { minAmount: min, maxAmount: max }
+              )
+            }
           }
         }
       },
@@ -548,6 +599,22 @@ export default function Dashboard() {
             y: {
               beginAtZero: true,
               ticks: { stepSize: 1 }
+            }
+          },
+          onClick: (event: any, elements: any[]) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index
+              const item = (overview.byTransformProgress || [])[index]
+              // 获取当前选中的转化需求类型（应该只有一个）
+              const requirementType = selectedTransformTypes.length === 1 ? selectedTransformTypes[0] : ''
+              if (requirementType) {
+                fetchProjectDetails(
+                  'transformProgress',
+                  '',
+                  `${TRANSFORM_REQUIREMENT_LABELS[requirementType as keyof typeof TRANSFORM_REQUIREMENT_LABELS]} - ${item.label} - 项目列表`,
+                  { progressNode: item.label, requirementType }
+                )
+              }
             }
           }
         }

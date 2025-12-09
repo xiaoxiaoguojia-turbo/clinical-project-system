@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 上海临转院AI智能体报告生成平台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+                   'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 背景装饰波浪 */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+      background-size: cover;
+      background-position: bottom;
+      opacity: 0.3;
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 450px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 24px;
+      padding: 48px 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo-section {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      width: 300px;
+      height: 120px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+      margin: 0 auto 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: white;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 如果图片加载失败，显示emoji */
+    .logo:empty::before {
+      content: '🤖';
+      font-size: 40px;
+    }
+
+    .system-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .system-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 400;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px 14px 48px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 15px;
+      color: #1f2937;
+      transition: all 0.3s ease;
+      background: #f9fafb;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .remember-forgot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .checkbox-wrapper label {
+      color: #6b7280;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .forgot-link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .forgot-link:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 32px 0;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    .divider::before {
+      margin-right: 12px;
+    }
+
+    .divider::after {
+      margin-left: 12px;
+    }
+
+    .other-options {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .option-button {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .option-button:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: #f3f4f6;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+    }
+
+    .footer a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 36px 24px;
+        border-radius: 20px;
+      }
+
+      .system-title {
+        font-size: 20px;
+      }
+
+      .logo {
+        width: 64px;
+        height: 64px;
+        font-size: 32px;
+      }
+    }
+
+    /* 成功提示 */
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.success {
+      border-left: 4px solid #10b981;
+    }
+
+    .toast-icon {
+      font-size: 24px;
+    }
+
+    .toast-message {
+      color: #1f2937;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Logo 和标题 -->
+      <div class="logo-section">
+        <div class="logo">
+          <img src="./logo.png" alt="AI智能体平台" onerror="this.style.display='none'; this.parentElement.innerHTML='🤖'">
+          <!-- 如果有实际Logo图片，请替换src路径 -->
+          <!-- <img src="./logo.png" alt="AI智能体平台" onerror="this.style.display='none'; this.parentElement.innerHTML='🤖'"> -->
+          <!-- 🤖 -->
+        </div>
+        <h1 class="system-title">上海临转院AI智能体平台</h1>
+        <p class="system-subtitle">临床创新项目报告生成平台</p>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">用户名</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input 
+              type="text" 
+              class="form-input" 
+              id="username" 
+              placeholder="请输入用户名" 
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input 
+              type="password" 
+              class="form-input" 
+              id="password" 
+              placeholder="请输入密码" 
+              required
+            />
+          </div>
+        </div>
+
+        <div class="remember-forgot">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="remember" />
+            <label for="remember">记住我</label>
+          </div>
+          <a href="#" class="forgot-link">忘记密码?</a>
+        </div>
+
+        <button type="submit" class="login-button">
+          登录
+        </button>
+      </form>
+
+      <!-- 其他登录方式 -->
+      <div class="divider">或</div>
+      
+      <div class="other-options">
+        <button class="option-button" onclick="handleSSO()">
+          <span>🏢</span>
+          <span>单点登录</span>
+        </button>
+        <button class="option-button" onclick="handleQRCode()">
+          <span>📱</span>
+          <span>扫码登录</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 页脚信息 -->
+    <div class="footer">
+      <p>© 2025 上海临床创新转化研究院 | <a href="#">隐私政策</a> | <a href="#">使用协议</a></p>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div class="toast success" id="toast">
+    <span class="toast-icon">✅</span>
+    <span class="toast-message">登录成功！</span>
+  </div>
+
+  <script>
+    // 登录表单提交处理
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault()
+      
+      const username = document.getElementById('username').value
+      const password = document.getElementById('password').value
+      const remember = document.getElementById('remember').checked
+      
+      // 模拟登录验证
+      if (username && password) {
+        // 显示加载状态
+        const button = document.querySelector('.login-button')
+        button.textContent = '登录中...'
+        button.disabled = true
+        
+        // 模拟网络请求
+        setTimeout(() => {
+          // 显示成功提示
+          const toast = document.getElementById('toast')
+          toast.style.display = 'flex'
+          
+          setTimeout(() => {
+            toast.style.display = 'none'
+            // 跳转到主页（这里仅作演示）
+            console.log('登录成功！', { username, remember })
+            alert(`欢迎，${username}！\n\n这是一个演示页面，实际使用时将跳转到主界面。`)
+          }, 2000)
+          
+          // 恢复按钮状态
+          button.textContent = '登录'
+          button.disabled = false
+        }, 1000)
+      }
+    })
+    
+    // 单点登录
+    function handleSSO() {
+      alert('单点登录功能开发中...\n\n将集成企业统一身份认证系统')
+    }
+    
+    // 扫码登录
+    function handleQRCode() {
+      alert('扫码登录功能开发中...\n\n将支持微信/企业微信扫码登录')
+    }
+    
+    // 忘记密码
+    document.querySelector('.forgot-link').addEventListener('click', function(e) {
+      e.preventDefault()
+      alert('忘记密码功能开发中...\n\n请联系系统管理员重置密码')
+    })
+    
+    // 页面加载动画
+    window.addEventListener('load', function() {
+      document.querySelector('.login-card').style.opacity = '0'
+      setTimeout(() => {
+        document.querySelector('.login-card').style.opacity = '1'
+      }, 100)
+    })
+  </script>
+</body>
+</html>
